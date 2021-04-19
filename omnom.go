@@ -22,6 +22,7 @@ const (
 )
 
 var e *gin.Engine
+var cfg *config.Config
 
 var tplFuncMap = template.FuncMap{
 	"HasPrefix": strings.HasPrefix,
@@ -53,7 +54,8 @@ func renderHTML(c *gin.Context, status int, page string, vars map[string]interfa
 }
 
 func main() {
-	cfg, err := config.Load("config.yml")
+	var err error
+	cfg, err = config.Load("config.yml")
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +120,7 @@ func signup(c *gin.Context) {
 			})
 			return
 		}
-		if Cfg.App.Debug {
+		if cfg.App.Debug {
 			log.Println("New extension token generated:", u.SubmissionTokens[0])
 		}
 
@@ -146,7 +148,7 @@ func login(c *gin.Context) {
 			})
 			return
 		}
-		if Cfg.App.Debug {
+		if cfg.App.Debug {
 			log.Println("New login token generated:", u.LoginToken)
 		}
 		renderHTML(c, http.StatusOK, "login-confirm", nil)
