@@ -1,0 +1,35 @@
+summary {
+    outline: 0;
+    cursor: pointer;
+}
+#nav-toggle-state {
+  display: none;
+}
+#nav-toggle-state:checked ~ .navbar-menu {
+  display: block;
+}
+.navbar .is-active {
+  text-decoration: underline;
+  text-decoration-color: hsl(171, 100%, 41%);
+}
+.has-padding-top-50 {
+    padding-top: 50px!important;
+}
+.has-padding-bottom-50 {
+    padding-bottom: 50px!important;
+}
+.color-bg {
+    background: linear-gradient(to right, #f3f7ff, #ddfffa) !important;
+}
+.border-bottom {
+    border-bottom: 1px solid #888888;
+}
+.description {
+    font-size: 1.3em;
+}
+.s-title {
+    margin-bottom: 0 !important;
+}
+.is-transparent {
+    background-color: transparent !important;
+}

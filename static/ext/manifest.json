@@ -1,0 +1,28 @@
+{
+	"name": "omnom",
+	"version": "1.0",
+    "manifest_version": 2,
+	"description": "A bookmarking extension for omnom services.",
+	"content_scripts": [ {
+		"js": [ "omnom.js" ],
+		"matches": [ "http://*/*", "https://*/*", "ftp://*/*" ]
+	} ],
+	"browser_action": {
+		"default_icon": "icons/omnom.png",
+		"default_popup": "popup.html"
+	},
+	"icons": {
+		"256": "icons/omnom256.png",
+		"128": "icons/omnom128.png",
+		"32": "icons/omnom32.png",
+		"48": "icons/omnom48.png"
+	},
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true,
+        "chrome_style": false
+    },
+	"permissions": [
+		"bookmarks", "tabs", "<all_urls>", "storage", "webRequest"
+	]
+}
