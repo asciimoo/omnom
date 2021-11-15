@@ -39,7 +39,7 @@ var listenCmd = &cobra.Command{
 }
 
 var createUserCmd = &cobra.Command{
-	Use:    "create-user",
+	Use:    "create-user [username] [email]",
 	Short:  "Create new user",
 	Long:   `create-user [username] [email]`,
 	Args:   cobra.ExactArgs(2),
