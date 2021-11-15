@@ -44,15 +44,6 @@ func Init(c *config.Config) error {
 		&Tag{},
 		&Token{},
 	)
-
-	if c.App.Debug {
-		err := CreateUser("a", "a@b.c")
-		if err != nil {
-			log.Println("cannot create test user:", err)
-		} else {
-			log.Println("test user 'a' created")
-		}
-	}
 	return nil
 }
 
