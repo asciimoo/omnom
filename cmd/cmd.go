@@ -22,9 +22,10 @@ func initDB(cmd *cobra.Command, args []string) {
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "omnom",
-	Short: "A webpage bookmarking and snapshotting service.",
-	Long:  `A webpage bookmarking and snapshotting service.`,
+	Use:     "omnom",
+	Short:   "A webpage bookmarking and snapshotting service.",
+	Long:    `A webpage bookmarking and snapshotting service.`,
+	Version: "v0.1.0",
 }
 
 var listenCmd = &cobra.Command{
