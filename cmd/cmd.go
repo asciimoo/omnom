@@ -23,14 +23,14 @@ func initDB(cmd *cobra.Command, args []string) {
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "omnom",
-	Short:   "A webpage bookmarking and snapshotting service.",
+	Short:   "webpage bookmarking and snapshotting service.",
 	Long:    `A webpage bookmarking and snapshotting service.`,
 	Version: "v0.1.0",
 }
 
 var listenCmd = &cobra.Command{
 	Use:    "listen",
-	Short:  "Start server",
+	Short:  "start server",
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -40,7 +40,7 @@ var listenCmd = &cobra.Command{
 
 var createUserCmd = &cobra.Command{
 	Use:    "create-user [username] [email]",
-	Short:  "Create new user",
+	Short:  "create new user",
 	Long:   `create-user [username] [email]`,
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
@@ -65,7 +65,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yml", "config file (default is config.yml)")
 
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Turn on debug mode")
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "turn on debug mode")
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createUserCmd)
 }
