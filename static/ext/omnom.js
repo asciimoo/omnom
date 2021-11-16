@@ -5,6 +5,8 @@ var site_url = '';
 var is_ff = typeof InstallTrigger !== 'undefined';
 var is_chrome = !is_ff;
 var debug = false;
+var downloadCount = 0;
+var downloadedCount = 0;
 
 function debugPopup(content) {
     if(is_chrome) {
@@ -100,8 +102,8 @@ function rewriteAttributes(node) {
         }
         if(attr.nodeName.startsWith("on")) {
             attr.nodeValue = '';
-        } else if(attr.nodeName.startsWith("data-")) {
-            attr.nodeValue = '';
+        //} else if(attr.nodeName.startsWith("data-")) {
+        //    attr.nodeValue = '';
         } else if(attr.nodeValue.trim().toLowerCase().startsWith("javascript:")) {
             attr.nodeValue = '';
         }
@@ -136,9 +138,14 @@ function getDOMData() {
     var html = document.getElementsByTagName('html')[0];
     var ret = {
         'html': html.cloneNode(true),
+        'attributes': {},
         'title': '',
         'doctype': '',
     };
+    for(var k in html.attributes) {
+        var a = html.attributes[k];
+        ret.attributes[a.nodeName] = a.nodeValue;
+    }
     if(document.doctype) {
         ret.doctype = new XMLSerializer().serializeToString(document.doctype);
     }
@@ -146,16 +153,6 @@ function getDOMData() {
         ret.title = document.getElementsByTagName('title')[0].innerText;
     }
     var nodesToRemove = [];
-    var hiddenStyleKeys = [
-        'width',
-        'height',
-        'margin',
-        'padding',
-        'minWidth',
-        'maxWidth',
-        'minHeight',
-        'maxHeight',
-    ];
     walkDOM(html, async function(n) {
         if(n.nodeName == 'SCRIPT') {
             nodesToRemove.push(n);
@@ -188,6 +185,9 @@ async function createSnapshot() {
     await getDOM();
     var dom = document.createElement('html');
     dom.innerHTML = doc.html;
+    for(var k in doc.attributes) {
+        dom.setAttribute(k, doc.attributes[k]);
+    }
     await walkDOM(dom, async function(node) {
         if(node.nodeType !== Node.ELEMENT_NODE) {
             return;
@@ -197,7 +197,11 @@ async function createSnapshot() {
             return;
         }
         await rewriteAttributes(node);
-        if(node.nodeName == 'LINK' && node.attributes.type && node.attributes.type.nodeValue.trim().toLowerCase() == "text/css") {
+        if(node.nodeName == 'LINK' && node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
+            if(!node.attributes.href) {
+                console.log("no css href found", node);
+                return;
+            }
             var cssHref = node.attributes.href.nodeValue;
             var style = document.createElement('style');
             var cssText = await inlineFile(cssHref);
@@ -257,7 +261,8 @@ async function inlineFile(url) {
         options.cache = 'no-cache';
     }
 	var request = new Request(url, options);
-
+    downloadCount++;
+    updateStatus();
 	var obj = await fetch(request, options).then(async function(response) {
         var contentType = response.headers.get("Content-Type");
         if(contentType.toLowerCase().search("text") != -1) {
@@ -268,7 +273,11 @@ async function inlineFile(url) {
 	    var buff = await response.arrayBuffer()
         var base64Flag = 'data:'+contentType+';base64,';
         return base64Flag + arrayBufferToBase64(buff);
-	});
+	}).catch(function(error) {
+        console.log("MEH, network error", error)
+    });
+    downloadedCount++;
+    updateStatus();
     return obj;
 }
 
@@ -298,19 +307,52 @@ async function sanitizeCSS(cssText) {
     var rules = parseCSS(cssText);
     var sanitizedCSS = '';
     for(var k in rules) {
-        var v = rules[k];
-        if(!v || !v.style) {
-            continue;
+        var r = rules[k];
+        // TODO handle other rule types
+        // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
+        if(r.type == 1) {
+            sanitizedCSS += await sanitizeCSSRule(r);
+        } else if(r.type == 4) {
+            for(var k2 in r.cssRules) {
+                var r2 = r.cssRules[k];
+                await sanitizeCSSRule(r2);
+            }
+            sanitizedCSS += r.cssText;
+        } else {
+            console.log("MEEEH, unknown css rule type: ", r);
         }
-        var bgi = v.style.backgroundImage;
-        if(bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
-            var bgURL = bgi.substring(5, bgi.length-2);
-            inlineImg = await inlineFile(bgURL);
-            v.style.backgroundImage = 'url("'+inlineImg+'")';
-        }
-        sanitizedCSS += v.cssText;
     }
     return sanitizedCSS
+}
+
+async function sanitizeCSSRule(r) {
+    // huh? how can r be undefined?....
+    if(!r) {
+        return '';
+    }
+    // TODO handle fonts, list-style-images, ::xy { content: }
+    var bgi = r.style.backgroundImage;
+    if(bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
+        var bgURL = fullURL(bgi.substring(5, bgi.length-2));
+        if(!bgURL.startsWith("data:")) {
+            inlineImg = await inlineFile(bgURL);
+            if(inlineImg) {
+                try {
+                    r.style.backgroundImage = 'url("'+inlineImg+'")';
+                } catch(error) {
+                    console.log("failed to set background image ", error);
+                    r.style.backgroundImage = '';
+                }
+            } else {
+                r.style.backgroundImage = '';
+            }
+        }
+    }
+    return r.cssText;
+}
+
+function updateStatus() {
+    document.getElementById("omnom_status").innerHTML = '<h3>Downloading resources ('+downloadCount+'/'+downloadedCount+')</h3>';
 }
 
 document.addEventListener('DOMContentLoaded', displayPopup);
