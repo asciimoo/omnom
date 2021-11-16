@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log"
+	"os"
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
@@ -54,6 +55,45 @@ var createUserCmd = &cobra.Command{
 	},
 }
 
+var createTokenCmd = &cobra.Command{
+	Use:    "create-token [username] [token type (login/addon)]",
+	Short:  "create new user token",
+	Long:   `create-token [username] [token type (login/addon)]`,
+	Args:   cobra.ExactArgs(2),
+	PreRun: initDB,
+	Run: func(cmd *cobra.Command, args []string) {
+		if args[1] != "login" && args[1] != "addon" {
+			log.Println("Invalid token type. Allowed values are 'login' or 'addon'")
+			os.Exit(1)
+		}
+		u := model.GetUser(args[0])
+		if u == nil {
+			log.Println("User not found")
+			os.Exit(1)
+		}
+		tok := model.GenerateToken()
+		if args[1] == "login" {
+			u.LoginToken = tok
+			err := model.DB.Save(u).Error
+			if err != nil {
+				log.Println("Failed to set token:", err)
+				os.Exit(1)
+			}
+		} else {
+			t := &model.Token{
+				UserID: u.ID,
+				Text:   tok,
+			}
+			err := model.DB.Save(t).Error
+			if err != nil {
+				log.Println("Failed to set token:", err)
+				os.Exit(1)
+			}
+		}
+		log.Printf("Token %s created\n", tok)
+	},
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -68,6 +108,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "turn on debug mode")
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createUserCmd)
+	rootCmd.AddCommand(createTokenCmd)
 }
 
 func initConfig() {
