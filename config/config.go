@@ -26,5 +26,6 @@ func Load(filename string) (*Config, error) {
 		return c, err
 	}
 	err = yaml.Unmarshal(b, &c)
+	// TODO validate config
 	return c, err
 }

@@ -139,8 +139,5 @@ func GenerateToken() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	tok := fmt.Sprintf("%x", b)
-	if debug {
-		fmt.Println("new token generated:", tok)
-	}
 	return tok
 }
