@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"reflect"
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
@@ -36,6 +38,32 @@ var listenCmd = &cobra.Command{
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
 		webapp.Run(cfg)
+	},
+}
+
+var showUserCmd = &cobra.Command{
+	Use:    "show-user [username]",
+	Short:  "show user details",
+	Long:   `show-user [username]`,
+	Args:   cobra.ExactArgs(1),
+	PreRun: initDB,
+	Run: func(cmd *cobra.Command, args []string) {
+		u := model.GetUser(args[0])
+		if u == nil {
+			log.Println("Cannot find user:")
+			os.Exit(1)
+		}
+		s := reflect.ValueOf(u).Elem()
+		typeOfT := s.Type()
+
+		for i := 0; i < s.NumField(); i++ {
+			f := s.Field(i)
+			fname := typeOfT.Field(i).Name
+			if fname == "Model" || fname == "Bookmarks" || fname == "SubmissionTokens" {
+				continue
+			}
+			fmt.Printf("%20s: %v\n", fname, f.Interface())
+		}
 	},
 }
 
@@ -109,6 +137,7 @@ func init() {
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createUserCmd)
 	rootCmd.AddCommand(createTokenCmd)
+	rootCmd.AddCommand(showUserCmd)
 }
 
 func initConfig() {
