@@ -2,16 +2,27 @@ var br = chrome;
 var omnom_url = '';
 var omnom_token = '';
 var site_url = '';
+var is_ff = typeof InstallTrigger !== 'undefined';
+var is_chrome = !is_ff;
+var debug = false;
+
+function debugPopup(content) {
+    if(is_chrome) {
+        var win = window.open("", "omnomDebug", "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes");
+        win.document.write(content);
+    } else {
+        document.getElementsByTagName('html')[0].innerHTML = content;
+    }
+    console.log(content);
+}
 
 function saveBookmark(e) {
 	e.preventDefault();
     createSnapshot().then(async (result) => {
-        //var win = window.open("", "omnomDebug", "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes");
-        //if(win) {
-        //    win.document.write(result);
-        //}
-        //console.log(result);
-        //return
+        if(debug) {
+            debugPopup(result);
+            return;
+        }
         var form = new FormData(document.forms['add']);
         form.append("snapshot", result);
         fetch(omnom_url+'add_bookmark', {
@@ -25,7 +36,8 @@ function saveBookmark(e) {
             if(resp.status !== 200) {
                 throw Error(resp.statusText);
             }
-            window.close()
+            document.body.innerHTML = '<h1>Bookmark saved</h1>';
+            setTimeout(window.close, 2000);
         })
         .catch(err => {
             document.body.innerHTML = '<h1>Failed to save bookmark: '+err+'</h1>';
@@ -35,15 +47,21 @@ function saveBookmark(e) {
 
 function displayPopup() {
     document.querySelector("form").addEventListener("submit", saveBookmark);
-    br.storage.local.get(['omnom_url', 'omnom_token'], function(data) {
+    br.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug'], function(data) {
         omnom_url = data.omnom_url || '';
         omnom_token = data.omnom_token || '';
+        debug = data.omnom_debug || false;
+        document.getElementById("omnom_options").addEventListener("click", function() {
+            br.runtime.openOptionsPage(function() {
+                window.close();
+            });
+        });
         if(omnom_url == '') {
-            document.body.innerHTML = '<h1>Server URL not found. Specify it in the extension\'s options</h1><p>(right click on the extension\'s icon and select "options")';
+            document.getElementById("omnom_content").innerHTML = '<h1>Server URL not found. Specify it in the extension\'s options</h1>';
             return;
         }
         if(omnom_token == '') {
-            document.body.innerHTML = '<h1>Token not found. Specify it in the extension\'s options</h1><p>(right click on the extension\'s icon and select "options")';
+            document.getElementById("omnom_content").innerHTML = '<h1>Token not found. Specify it in the extension\'s options</h1>';
             return;
         }
         document.getElementById("omnom_url").innerHTML = "Server URL: "+omnom_url;
@@ -84,7 +102,7 @@ function rewriteAttributes(node) {
             attr.nodeValue = '';
         } else if(attr.nodeName.startsWith("data-")) {
             attr.nodeValue = '';
-        } else if(attr.nodeValue.startsWith("javascript:")) {
+        } else if(attr.nodeValue.trim().toLowerCase().startsWith("javascript:")) {
             attr.nodeValue = '';
         }
         if(attr.nodeName == "href") {
@@ -94,17 +112,6 @@ function rewriteAttributes(node) {
 }
 
 function getDOMData() {
-    function walkDOMS(node1, node2, func) {
-        func(node1, node2);
-        var children1 = node1.childNodes;
-        var children2 = node2.childNodes;
-        for (var i = 0; i < children1.length; i++) {
-            if(children1[i].nodeType != Node.ELEMENT_NODE) {
-                continue;
-            }
-            walkDOMS(children1[i], children2[i], func);
-        }
-    }
     function fullURL(url) {
         return new URL(url, window.location.origin).href
     }
@@ -119,21 +126,24 @@ function getDOMData() {
         }
         return text;
     }
-    var body = document.getElementsByTagName('body')[0];
+    function walkDOM(node, func) {
+        func(node);
+        var children = node.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            walkDOM(children[i], func);
+        }
+    }
+    var html = document.getElementsByTagName('html')[0];
     var ret = {
-        'body': body.cloneNode(true),
+        'html': html.cloneNode(true),
         'title': '',
         'doctype': '',
-        'htmlStyle': '',
     };
     if(document.doctype) {
         ret.doctype = new XMLSerializer().serializeToString(document.doctype);
     }
     if(document.getElementsByTagName('title').length > 0) {
         ret.title = document.getElementsByTagName('title')[0].innerText;
-    }
-    if(document.getElementsByTagName('html').length > 0) {
-        ret.htmlStyle = getCSSText(window.getComputedStyle(document.getElementsByTagName('html')[0]));
     }
     var nodesToRemove = [];
     var hiddenStyleKeys = [
@@ -146,28 +156,16 @@ function getDOMData() {
         'minHeight',
         'maxHeight',
     ];
-    walkDOMS(body, ret['body'], async function(n1, n2) {
-        if(n1.nodeName == 'SCRIPT' || n1.nodeName == 'STYLE') {
-            nodesToRemove.push(n2);
+    walkDOM(html, async function(n) {
+        if(n.nodeName == 'SCRIPT') {
+            nodesToRemove.push(n);
             return;
         }
-        // TODO optimize styles - build css from inline styles
-        n2.style = getCSSText(window.getComputedStyle(n1));
-        // compute dynamic height/width below
-        // TODO it's far from good..
-        //var display = n1.style.display;
-        //n1.style.display = "none";
-        //var s = window.getComputedStyle(n1);
-        //for(i in hiddenStyleKeys) {
-        //    var k = hiddenStyleKeys[i];
-        //    n2.style[k] = s[k];
-        //}
-        //n1.style.display = display;
     });
     for(i in nodesToRemove) {
         nodesToRemove[i].remove();
     }
-    ret.body = ret.body.outerHTML;
+    ret.html = ret.html.outerHTML;
     return ret;
 }
 
@@ -189,19 +187,29 @@ async function createSnapshot() {
     }
     await getDOM();
     var dom = document.createElement('html');
-    var body = document.createElement('html');
-    body.innerHTML = doc.body;
-    await walkDOM(body, async function(node) {
-        if(node.nodeType === Node.ELEMENT_NODE) {
-            rewriteAttributes(node);
-            if(node.nodeName == 'IMG') {
-                node.src = await inlineFile(node.getAttribute("src"));
-            }
+    dom.innerHTML = doc.html;
+    await walkDOM(dom, async function(node) {
+        if(node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+        }
+        if(node.nodeName == 'SCRIPT') {
+            node.remove();
+            return;
+        }
+        await rewriteAttributes(node);
+        if(node.nodeName == 'LINK' && node.attributes.type && node.attributes.type.nodeValue.trim().toLowerCase() == "text/css") {
+            var cssHref = node.attributes.href.nodeValue;
+            var style = document.createElement('style');
+            var cssText = await inlineFile(cssHref);
+            style.innerHTML = await sanitizeCSS(cssText);
+            node.parentNode.appendChild(style);
+            node.remove();
+            return;
+        }
+        if(node.nodeName == 'IMG') {
+            node.src = await inlineFile(node.getAttribute("src"));
         }
     });
-    dom.appendChild(body)
-    dom.style = doc.htmlStyle;
-    dom.style.width = '100%';
     return doc.doctype+dom.outerHTML;
 }
 
@@ -213,7 +221,7 @@ async function walkDOM(node, func) {
     }
 }
 
-function rewriteAttributes(node) {
+async function rewriteAttributes(node) {
     for(var i=0; i <  node.attributes.length; i++) {
         var attr = node.attributes[i];
         if(attr.nodeName === undefined) {
@@ -228,6 +236,10 @@ function rewriteAttributes(node) {
         if(attr.nodeName == "href") {
             attr.nodeValue = fullURL(attr.nodeValue);
         }
+        if(attr.nodeName == "style") {
+            var sanitizedValue = await sanitizeCSS('a{'+attr.nodeValue+'}');
+            attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length-6);
+        }
     }
 }
 
@@ -239,17 +251,25 @@ async function inlineFile(url) {
     console.log("fetching "+url);
 	var options = {
 	  method: 'GET',
-	  cache: 'default'
+	  cache: 'default',
 	};
-	var request = new Request(url);
+    if(debug) {
+        options.cache = 'no-cache';
+    }
+	var request = new Request(url, options);
 
-	var imgObj = await fetch(request, options).then(async function(response) {
+	var obj = await fetch(request, options).then(async function(response) {
         var contentType = response.headers.get("Content-Type");
+        if(contentType.toLowerCase().search("text") != -1) {
+            // TODO use charset of the response
+            var body = await response.text();
+            return body;
+        }
 	    var buff = await response.arrayBuffer()
         var base64Flag = 'data:'+contentType+';base64,';
         return base64Flag + arrayBufferToBase64(buff);
 	});
-    return imgObj;
+    return obj;
 }
 
 function arrayBufferToBase64(buffer) {
@@ -262,6 +282,35 @@ function arrayBufferToBase64(buffer) {
 
 function fullURL(url) {
     return new URL(url, site_url).href
+}
+
+function parseCSS(styleContent) {
+    var doc = document.implementation.createHTMLDocument("");
+    var styleElement = document.createElement("style");
+
+    styleElement.textContent = styleContent;
+    // the style will only be parsed once it is added to a document
+    doc.body.appendChild(styleElement);
+    return styleElement.sheet.cssRules;
+}
+
+async function sanitizeCSS(cssText) {
+    var rules = parseCSS(cssText);
+    var sanitizedCSS = '';
+    for(var k in rules) {
+        var v = rules[k];
+        if(!v || !v.style) {
+            continue;
+        }
+        var bgi = v.style.backgroundImage;
+        if(bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
+            var bgURL = bgi.substring(5, bgi.length-2);
+            inlineImg = await inlineFile(bgURL);
+            v.style.backgroundImage = 'url("'+inlineImg+'")';
+        }
+        sanitizedCSS += v.cssText;
+    }
+    return sanitizedCSS
 }
 
 document.addEventListener('DOMContentLoaded', displayPopup);

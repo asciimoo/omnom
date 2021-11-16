@@ -3,23 +3,24 @@
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
         <meta http-equiv="content-language" content="en" />
         <title>[!] omnom</title>
-        <script src="omnom.js"></script>
         <link rel="stylesheet" href="style.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
-        <h2>Add bookmark</h2>
-        <form name="add" id="add" method="post">
-            <table>
-                <tr><td><label for="url">URL</label></td><td><input type="text" name="url" id="url" /></td></tr>
-                <tr><td><label for="title">Title</label></td><td><input type="text" name="title" id="title" /></td></tr>
-                <tr><td><label for="notes">Notes</label></td><td><textarea id="notes" rows="10" cols="40" name="notes"></textarea></td></tr>
-                <tr><td><label for="tags">Tags</label></td><td><input type="text" name="tags" id="tags" /></td></tr>
-                <tr><td><label for="public">Public</label></td><td><input type="checkbox" name="public" id="public" /></td></tr>
-                <tr><td><input type="hidden" id="token" name="token" value=""/></td><td><input type="submit" value="save" /></td></tr>
-            </table>
-        </form>
-        <p id="omnom_url"></p>
-
-
+      <div id="omnom_content">
+          <h2>Add bookmark</h2>
+          <form name="add" id="add" method="post">
+              <table>
+                  <tr><td><label for="url">URL</label></td><td><input type="text" name="url" id="url" /></td></tr>
+                  <tr><td><label for="title">Title</label></td><td><input type="text" name="title" id="title" /></td></tr>
+                  <tr><td><label for="notes">Notes</label></td><td><textarea id="notes" rows="10" cols="40" name="notes"></textarea></td></tr>
+                  <tr><td><label for="tags">Tags</label></td><td><input type="text" name="tags" id="tags" /></td></tr>
+                  <tr><td><label for="public">Public</label></td><td><input type="checkbox" name="public" id="public" /></td></tr>
+                  <tr><td><input type="hidden" id="token" name="token" value=""/></td><td><input type="submit" value="save" /></td></tr>
+              </table>
+          </form>
+          <p id="omnom_url"></p>
+        </div>
+        <a href="#" id="omnom_options">options</a>
     </body>
+    <script src="omnom.js"></script>
 </html>
