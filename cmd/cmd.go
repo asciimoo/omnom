@@ -79,7 +79,9 @@ var createUserCmd = &cobra.Command{
 			log.Println("Cannot create new user:", err)
 			os.Exit(1)
 		}
+		u := model.GetUser(args[0])
 		log.Println("User", args[0], "successfully created")
+		log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, u.LoginToken)
 	},
 }
 
@@ -119,6 +121,9 @@ var createTokenCmd = &cobra.Command{
 			}
 		}
 		log.Printf("Token %s created\n", tok)
+		if args[1] == "login" {
+			log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
+		}
 	},
 }
 
