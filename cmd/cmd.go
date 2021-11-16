@@ -49,9 +49,9 @@ var createUserCmd = &cobra.Command{
 		err := model.CreateUser(args[0], args[1])
 		if err != nil {
 			log.Println("Cannot create new user:", err)
-		} else {
-			log.Println("User", args[0], "successfully created")
+			os.Exit(1)
 		}
+		log.Println("User", args[0], "successfully created")
 	},
 }
 
