@@ -338,12 +338,12 @@ async function sanitizeCSS(rules) {
             r.href = '';
         // CSSMediaRule
         } else if(r.type == 4) {
-            // TODO content currently isn't sanitized for some reason
+            sanitizedCSS += "@media " + r.media.mediaText + '{';
             for(var k2 in r.cssRules) {
-                var r2 = r.cssRules[k];
-                await sanitizeCSSRule(r2);
+                var r2 = r.cssRules[k2];
+                sanitizedCSS += await sanitizeCSSRule(r2);
             }
-            sanitizedCSS += r.cssText;
+            sanitizedCSS += '}';
         // CSSFontFaceRule
         } else if(r.type == 5) {
             var fontRule = await sanitizeCSSFontFace(r);
@@ -361,10 +361,10 @@ async function sanitizeCSS(rules) {
 
 async function sanitizeCSSRule(r) {
     // huh? how can r be undefined?....
-    if(!r) {
+    if(!r || !r.style) {
         return '';
     }
-    // TODO handle fonts, list-style-images, ::xy { content: }
+    // TODO handle ::xy { content: }
     await sanitizeCSSBgImage(r);
     await sanitizeCSSListStyleImage(r);
     return r.cssText;
