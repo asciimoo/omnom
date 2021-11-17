@@ -188,6 +188,8 @@ async function createSnapshot() {
     for(var k in doc.attributes) {
         dom.setAttribute(k, doc.attributes[k]);
     }
+    var nodesToAppend = [];
+    var nodesToRemove = [];
     await walkDOM(dom, async function(node) {
         if(node.nodeType !== Node.ELEMENT_NODE) {
             return;
@@ -206,14 +208,27 @@ async function createSnapshot() {
             var style = document.createElement('style');
             var cssText = await inlineFile(cssHref);
             style.innerHTML = await sanitizeCSS(cssText);
-            node.parentNode.appendChild(style);
-            node.remove();
+            nodesToAppend.push([style, node.parentNode]);
+            nodesToRemove.push(node);
+            return;
+        }
+        if(node.nodeName == 'STYLE') {
+            node.innerText = await sanitizeCSS(node.innerText);
             return;
         }
         if(node.nodeName == 'IMG') {
             node.src = await inlineFile(node.getAttribute("src"));
+            return;
         }
     });
+    for(var i in nodesToAppend) {
+        var elem = nodesToAppend[i][0]
+        var parent = nodesToAppend[i][1];
+        parent.appendChild(elem);
+    }
+    for(var i in nodesToRemove) {
+        nodesToRemove[i].remove();
+    }
     return doc.doctype+dom.outerHTML;
 }
 
@@ -303,20 +318,36 @@ function parseCSS(styleContent) {
     return styleElement.sheet.cssRules;
 }
 
-async function sanitizeCSS(cssText) {
-    var rules = parseCSS(cssText);
+async function sanitizeCSS(rules) {
+    if (typeof rules === 'string' || rules instanceof String) {
+        rules = parseCSS(rules);
+    }
     var sanitizedCSS = '';
     for(var k in rules) {
         var r = rules[k];
         // TODO handle other rule types
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
+
+        // CSSStyleRule
         if(r.type == 1) {
             sanitizedCSS += await sanitizeCSSRule(r);
+        // CSSimportRule
+        } else if(r.type == 3) {
+            // TODO handle import loops
+            console.log("IMPOOORT: ", r.href);
+            sanitizedCSS += await sanitizeCSS(r.href);
+            r.href = '';
+        // CSSMediaRule
         } else if(r.type == 4) {
+            // TODO content currently isn't sanitized for some reason
             for(var k2 in r.cssRules) {
                 var r2 = r.cssRules[k];
                 await sanitizeCSSRule(r2);
             }
+            sanitizedCSS += r.cssText;
+        // CSSFontFaceRule
+        } else if(r.type == 5) {
+            await sanitizeCSSFontFace(r);
             sanitizedCSS += r.cssText;
         } else {
             console.log("MEEEH, unknown css rule type: ", r);
@@ -331,16 +362,22 @@ async function sanitizeCSSRule(r) {
         return '';
     }
     // TODO handle fonts, list-style-images, ::xy { content: }
+    await sanitizeCSSBgImage(r);
+    await sanitizeCSSListStyleImage(r);
+    return r.cssText;
+}
+
+async function sanitizeCSSBgImage(r) {
     var bgi = r.style.backgroundImage;
     if(bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
         var bgURL = fullURL(bgi.substring(5, bgi.length-2));
         if(!bgURL.startsWith("data:")) {
-            inlineImg = await inlineFile(bgURL);
+            var inlineImg = await inlineFile(bgURL);
             if(inlineImg) {
                 try {
                     r.style.backgroundImage = 'url("'+inlineImg+'")';
                 } catch(error) {
-                    console.log("failed to set background image ", error);
+                    console.log("failed to set background image: ", error);
                     r.style.backgroundImage = '';
                 }
             } else {
@@ -348,7 +385,44 @@ async function sanitizeCSSRule(r) {
             }
         }
     }
-    return r.cssText;
+}
+
+async function sanitizeCSSListStyleImage(r) {
+    var lsi = r.style.listStyleImage;
+    if(lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
+        var iURL = fullURL(lsi.substring(5, lsi.length-2));
+        if(!iURL.startsWith("data:")) {
+            var inlineImg = await inlineFile(iURL);
+            if(inlineImg) {
+                try {
+                    r.style.listStyleImage = 'url("'+inlineImg+'")';
+                } catch(error) {
+                    console.log("failed to set list-style-image:", error);
+                    r.style.listStyleImage = '';
+                }
+            } else {
+                r.style.listStyleImage = '';
+            }
+        }
+    }
+}
+
+async function sanitizeCSSFontFace(r) {
+    // TODO
+    var src = r.style.getPropertyValue("src");
+    var srcParts = src.split(/\s+/);
+    var inlineImg;
+    for(var i in srcParts) {
+        var part = srcParts[i];
+        if(part && part.startsWith('url("') && part.endsWith('")')) {
+            var iURL = fullURL(part.substring(5, part.length-2));
+            if(!iURL.startsWith("data:")) {
+                var inlineImg = await inlineFile(iURL);
+                srcParts[i] = 'url("'+inlineImg+'")';
+            }
+            r.style.listStyleImage = 'url("'+inlineImg+'")';
+        }
+    }
 }
 
 function updateStatus() {
