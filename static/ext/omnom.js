@@ -334,7 +334,6 @@ async function sanitizeCSS(rules) {
         // CSSimportRule
         } else if(r.type == 3) {
             // TODO handle import loops
-            console.log("IMPOOORT: ", r.href);
             sanitizedCSS += await sanitizeCSS(r.href);
             r.href = '';
         // CSSMediaRule
@@ -347,8 +346,12 @@ async function sanitizeCSS(rules) {
             sanitizedCSS += r.cssText;
         // CSSFontFaceRule
         } else if(r.type == 5) {
-            await sanitizeCSSFontFace(r);
-            sanitizedCSS += r.cssText;
+            var fontRule = await sanitizeCSSFontFace(r);
+            if(fontRule) {
+                sanitizedCSS += fontRule;
+            } else {
+                sanitizedCSS += r.cssText;
+            }
         } else {
             console.log("MEEEH, unknown css rule type: ", r);
         }
@@ -408,10 +411,10 @@ async function sanitizeCSSListStyleImage(r) {
 }
 
 async function sanitizeCSSFontFace(r) {
-    // TODO
     var src = r.style.getPropertyValue("src");
     var srcParts = src.split(/\s+/);
     var inlineImg;
+    var changed = false;
     for(var i in srcParts) {
         var part = srcParts[i];
         if(part && part.startsWith('url("') && part.endsWith('")')) {
@@ -419,8 +422,16 @@ async function sanitizeCSSFontFace(r) {
             if(!iURL.startsWith("data:")) {
                 var inlineImg = await inlineFile(iURL);
                 srcParts[i] = 'url("'+inlineImg+'")';
+                var changed = true;
             }
-            r.style.listStyleImage = 'url("'+inlineImg+'")';
+        }
+    }
+    if(changed) {
+        try {
+            return '@font-face {'+r.style.cssText.replace(src, srcParts.join(" "))+'}';
+        } catch(error) {
+            console.log("failed to set font-src:", error);
+            r.style.src = '';
         }
     }
 }
