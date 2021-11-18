@@ -25,7 +25,10 @@
 
     <div id="navbar-menu" class="navbar-menu is-size-5">
       <div class="navbar-start">
-        <a href="/bookmarks" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Bookmarks</a>
+        {{ if .User }}
+          <a href="/my_bookmarks" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
+        {{ end }}
+        <a href="/bookmarks" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item">
@@ -104,3 +107,18 @@
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
+
+{{ define "bookmark" }}
+<div class="box media">
+    <div class="media-content">
+    <h4 class="title">{{ if .Favicon }}<img src="{{ .Favicon | ToURL }}" alt="favicon" /> {{ end }}<a href="{{ .URL }}" target="_blank">{{ .Title }}</a></h4>
+    <p>{{ .Notes }}</p>
+    </div>
+    <div class="media-right">
+        {{ range $i,$s := .Snapshots }}
+        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }}</a>
+        {{ end }}
+        {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
+    </div>
+</div>
+{{ end}}

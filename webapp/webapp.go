@@ -39,6 +39,7 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("login", tplFuncMap, "templates/layout/base.tpl", "templates/login.tpl")
 	r.AddFromFilesFuncs("login-confirm", tplFuncMap, "templates/layout/base.tpl", "templates/login_confirm.tpl")
 	r.AddFromFilesFuncs("bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/bookmarks.tpl")
+	r.AddFromFilesFuncs("my-bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/my_bookmarks.tpl")
 	r.AddFromFilesFuncs("profile", tplFuncMap, "templates/layout/base.tpl", "templates/profile.tpl")
 	return r
 }
@@ -101,6 +102,7 @@ func Run(cfg *config.Config) {
 	authorized.GET("/profile", profile)
 	authorized.GET("/generate_addon_token", generateAddonToken)
 	authorized.GET("/delete_addon_token", deleteAddonToken)
+	authorized.GET("/my_bookmarks", myBookmarks)
 
 	log.Println("Starting server")
 	e.Run(cfg.Server.Address)
@@ -249,10 +251,18 @@ func snapshot(c *gin.Context) {
 }
 
 func bookmarks(c *gin.Context) {
+	var bs []*model.Bookmark
+	model.DB.Where("bookmarks.public = 1").Preload("Snapshots").Order("created_at desc").Find(&bs)
+	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
+		"Bookmarks": bs,
+	})
+}
+
+func myBookmarks(c *gin.Context) {
 	u, _ := c.Get("user")
 	var bs []*model.Bookmark
 	model.DB.Model(u).Preload("Snapshots").Order("created_at desc").Association("Bookmarks").Find(&bs)
-	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
+	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks": bs,
 	})
 }
