@@ -8,7 +8,8 @@ import (
 
 type Config struct {
 	App struct {
-		Debug bool `yaml:"debug"`
+		Debug            bool  `yaml:"debug"`
+		BookmarksPerPage int64 `yaml:"bookmarks_per_page"`
 	} `yaml:"app"`
 	Server struct {
 		Address string `yaml:"address"`

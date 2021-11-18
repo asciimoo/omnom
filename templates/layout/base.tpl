@@ -122,3 +122,16 @@
     </div>
 </div>
 {{ end}}
+
+{{ define "paging" }}
+<div class="columns is-centered">
+    <div class="column is-narrow">
+        {{ if gt .Pageno 1 }}
+        <a href="?pageno={{ dec .Pageno }}" class="button is-primary is-medium is-outlined"><span class="icon"><i class="fas fa-angle-left"></i></span><span>Previous page</span></a>
+        {{ end }}
+        {{ if .HasNextPage }}
+        <a href="?pageno={{ inc .Pageno }}" class="button is-primary is-medium is-outlined"><span>Next page</span><span class="icon"><i class="fas fa-angle-right"></i></span></a>
+        {{ end }}
+    </div>
+</div>
+{{ end }}

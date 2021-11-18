@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +30,11 @@ var tplFuncMap = template.FuncMap{
 	"ToAttr":    func(s string) template.HTMLAttr { return template.HTMLAttr(s) },
 	"ToURL":     func(s string) template.URL { return template.URL(s) },
 	"ToDate":    func(t time.Time) string { return t.Format("2006-01-02") },
+	"inc":       func(i int64) int64 { return i + 1 },
+	"dec":       func(i int64) int64 { return i - 1 },
 }
+
+var bookmarksPerPage int64 = 20
 
 func createRenderer() multitemplate.Renderer {
 	r := multitemplate.DynamicRender{}
@@ -80,6 +85,9 @@ func Run(cfg *config.Config) {
 	e = gin.Default()
 	if !cfg.App.Debug {
 		gin.SetMode(gin.ReleaseMode)
+	}
+	if cfg.App.BookmarksPerPage > 0 {
+		bookmarksPerPage = cfg.App.BookmarksPerPage
 	}
 	e.HTMLRender = createRenderer()
 	e.Use(sessions.Sessions("SID", sessions.NewCookieStore([]byte("secret"))))
@@ -252,18 +260,42 @@ func snapshot(c *gin.Context) {
 
 func bookmarks(c *gin.Context) {
 	var bs []*model.Bookmark
-	model.DB.Where("bookmarks.public = 1").Preload("Snapshots").Order("created_at desc").Find(&bs)
+	var pageno int64 = 1
+	if pagenoStr, ok := c.GetQuery("pageno"); ok {
+		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
+			pageno = int64(userPageno)
+		}
+	}
+	offset := (pageno - 1) * bookmarksPerPage
+	var bookmarkCount int64
+	model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1").Count(&bookmarkCount)
+	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Order("created_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
-		"Bookmarks": bs,
+		"Bookmarks":     bs,
+		"Pageno":        pageno,
+		"BookmarkCount": bookmarkCount,
+		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 	})
 }
 
 func myBookmarks(c *gin.Context) {
 	u, _ := c.Get("user")
 	var bs []*model.Bookmark
-	model.DB.Model(u).Preload("Snapshots").Order("created_at desc").Association("Bookmarks").Find(&bs)
+	var pageno int64 = 1
+	if pagenoStr, ok := c.GetQuery("pageno"); ok {
+		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
+			pageno = int64(userPageno)
+		}
+	}
+	offset := (pageno - 1) * bookmarksPerPage
+	var bookmarkCount int64
+	model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Count(&bookmarkCount)
+	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Order("created_at desc").Association("Bookmarks").Find(&bs)
 	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
-		"Bookmarks": bs,
+		"Bookmarks":     bs,
+		"Pageno":        pageno,
+		"BookmarkCount": bookmarkCount,
+		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 	})
 }
 

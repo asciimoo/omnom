@@ -1,5 +1,6 @@
 app:
   debug: true
+  bookmarks_per_page: 20
 server:
   address: "127.0.0.1:7331"
 db:
