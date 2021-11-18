@@ -115,7 +115,7 @@ func GetUserByLoginToken(tok string) *User {
 
 func GetUserBySubmissionToken(tok string) *User {
 	var u User
-	err := DB.Model(&User{}).Select("*").Joins("left join tokens on tokens.user_id = users.id").Where("tokens.text = ?", tok).First(&u).Error
+	err := DB.Model(&User{}).Select("users.*").Joins("left join tokens on tokens.user_id = users.id").Where("tokens.text = ?", tok).First(&u).Error
 	if err != nil {
 		return nil
 	}
