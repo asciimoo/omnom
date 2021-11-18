@@ -48,6 +48,15 @@
 
 <div class="section {{ block "content-class" . }}{{ end }}">
     <div class="bd-main-container container">
+        {{ if .Error }}
+        {{ block "error" .Error }}{{ end }}
+        {{ end }}
+        {{ if .Warning }}
+        {{ block "warning" .Warning }}{{ end }}
+        {{ end }}
+        {{ if .Info }}
+        {{ block "info" .Info }}{{ end }}
+        {{ end }}
 
         {{ block "content" . }}{{ end }}
     </div>
@@ -65,6 +74,12 @@
 </body>
 </html>
 
+{{ define "error" }}
+<article class="message is-danger">
+  <div class="message-body">{{ . | ToHTML }}</div>
+</article>
+{{ end }}
+
 {{ define "warning" }}
 <article class="message is-warning">
   <div class="message-header">
@@ -76,15 +91,16 @@
 
 {{ define "info" }}
 <article class="message is-info">
-  <div class="message-header">
-    <p>Note</p>
-  </div>
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
 
-{{ define "attention" }}
-<article class="message is-warning">
+
+{{ define "note" }}
+<article class="message is-info">
+  <div class="message-header">
+    <p>Note</p>
+  </div>
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}

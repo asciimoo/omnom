@@ -9,6 +9,7 @@ import (
 	"github.com/asciimoo/omnom/config"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	//"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -18,14 +19,16 @@ var DB *gorm.DB
 var debug = false
 
 func Init(c *config.Config) error {
+	dbCfg := &gorm.Config{}
 	if c.App.Debug {
 		debug = true
 		log.Println("Using database", c.DB.Connection)
+		dbCfg.Logger = logger.Default.LogMode(logger.Info)
 	}
 	var err error
 	switch c.DB.Type {
 	case "sqlite":
-		DB, err = gorm.Open(sqlite.Open(c.DB.Connection), &gorm.Config{})
+		DB, err = gorm.Open(sqlite.Open(c.DB.Connection), dbCfg)
 		if err != nil {
 			return err
 		}

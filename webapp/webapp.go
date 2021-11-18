@@ -37,14 +37,35 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("login", tplFuncMap, "templates/layout/base.tpl", "templates/login.tpl")
 	r.AddFromFilesFuncs("login-confirm", tplFuncMap, "templates/layout/base.tpl", "templates/login_confirm.tpl")
 	r.AddFromFilesFuncs("bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/bookmarks.tpl")
+	r.AddFromFilesFuncs("profile", tplFuncMap, "templates/layout/base.tpl", "templates/profile.tpl")
 	return r
 }
 
 func renderHTML(c *gin.Context, status int, page string, vars map[string]interface{}) {
+	session := sessions.Default(c)
 	u, _ := c.Get("user")
 	tplVars := gin.H{
 		"Page": page,
 		"User": u,
+	}
+	sessChanged := false
+	if s := session.Get("Error"); s != nil {
+		tplVars["Error"] = s.(string)
+		session.Delete("Error")
+		sessChanged = true
+	}
+	if s := session.Get("Warning"); s != nil {
+		tplVars["Warning"] = s.(string)
+		session.Delete("Warning")
+		sessChanged = true
+	}
+	if s := session.Get("Info"); s != nil {
+		tplVars["Info"] = s.(string)
+		session.Delete("Info")
+		sessChanged = true
+	}
+	if sessChanged {
+		session.Save()
 	}
 	for k, v := range vars {
 		tplVars[k] = v
@@ -76,6 +97,8 @@ func Run(cfg *config.Config) {
 	e.POST("/add_bookmark", addBookmark)
 
 	authorized.GET("/profile", profile)
+	authorized.GET("/generate_addon_token", generateAddonToken)
+	authorized.GET("/delete_addon_token", deleteAddonToken)
 
 	log.Println("Starting server")
 	e.Run(cfg.Server.Address)
@@ -186,7 +209,19 @@ func logout(c *gin.Context) {
 }
 
 func profile(c *gin.Context) {
-	c.Redirect(http.StatusFound, "/")
+	u, _ := c.Get("user")
+	tplData := map[string]interface{}{}
+	if u == nil {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
+	var ts []*model.Token
+	err := model.DB.Where("user_id = ?", u.(*model.User).ID).Find(&ts).Error
+	if err != nil {
+		tplData["Error"] = err.Error()
+	}
+	tplData["AddonTokens"] = ts
+	renderHTML(c, http.StatusOK, "profile", tplData)
 }
 
 func snapshot(c *gin.Context) {
@@ -248,6 +283,37 @@ func addBookmark(c *gin.Context) {
 	}
 	model.DB.Save(b)
 	c.Redirect(http.StatusFound, "/")
+}
+
+func generateAddonToken(c *gin.Context) {
+	session := sessions.Default(c)
+	u, _ := c.Get("user")
+	tok := &model.Token{
+		Text:   model.GenerateToken(),
+		UserID: u.(*model.User).ID,
+	}
+	err := model.DB.Create(tok).Error
+	if err != nil {
+		session.Set("Error", err.Error())
+	} else {
+		session.Set("Info", "Token created")
+	}
+	session.Save()
+	c.Redirect(http.StatusFound, "/profile")
+}
+
+func deleteAddonToken(c *gin.Context) {
+	session := sessions.Default(c)
+	id, _ := c.GetQuery("id")
+	u, _ := c.Get("user")
+	err := model.DB.Where("user_id = ? AND id = ?", u.(*model.User).ID, id).Delete(&model.Token{}).Error
+	if err != nil {
+		session.Set("Error", err.Error())
+	} else {
+		session.Set("Info", "Token deleted")
+	}
+	session.Save()
+	c.Redirect(http.StatusFound, "/profile")
 }
 
 func authRequired(c *gin.Context) {
