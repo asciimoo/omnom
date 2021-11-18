@@ -199,18 +199,26 @@ async function createSnapshot() {
             return;
         }
         await rewriteAttributes(node);
-        if(node.nodeName == 'LINK' && node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
-            if(!node.attributes.href) {
-                console.log("no css href found", node);
+        if(node.nodeName == 'LINK') {
+            if(node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
+                if(!node.attributes.href) {
+                    console.log("no css href found", node);
+                    return;
+                }
+                var cssHref = node.attributes.href.nodeValue;
+                var style = document.createElement('style');
+                var cssText = await inlineFile(cssHref);
+                style.innerHTML = await sanitizeCSS(cssText);
+                nodesToAppend.push([style, node.parentNode]);
+                nodesToRemove.push(node);
                 return;
             }
-            var cssHref = node.attributes.href.nodeValue;
-            var style = document.createElement('style');
-            var cssText = await inlineFile(cssHref);
-            style.innerHTML = await sanitizeCSS(cssText);
-            nodesToAppend.push([style, node.parentNode]);
-            nodesToRemove.push(node);
-            return;
+            if((node.getAttribute("rel") || '').trim().toLowerCase() == "icon" || (node.getAttribute("rel") || '').trim().toLowerCase() == "shortcut icon") {
+                var favicon = await inlineFile(node.href);
+                document.getElementById('favicon').value = favicon;
+                node.href = favicon;
+                return;
+            }
         }
         if(node.nodeName == 'STYLE') {
             node.innerText = await sanitizeCSS(node.innerText);

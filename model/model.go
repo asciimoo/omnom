@@ -67,6 +67,7 @@ type Bookmark struct {
 	URL       string
 	Title     string
 	Notes     string
+	Favicon   string
 	Tags      []Tag `gorm:"foreignKey:ID"`
 	Snapshots []Snapshot
 	Public    bool

@@ -26,6 +26,8 @@ var e *gin.Engine
 var tplFuncMap = template.FuncMap{
 	"HasPrefix": strings.HasPrefix,
 	"ToHTML":    func(s string) template.HTML { return template.HTML(s) },
+	"ToAttr":    func(s string) template.HTMLAttr { return template.HTMLAttr(s) },
+	"ToURL":     func(s string) template.URL { return template.URL(s) },
 	"ToDate":    func(t time.Time) string { return t.Format("2006-01-02") },
 }
 
@@ -265,10 +267,11 @@ func addBookmark(c *gin.Context) {
 		return
 	}
 	b := &model.Bookmark{
-		Title:  c.PostForm("title"),
-		URL:    c.PostForm("url"),
-		Notes:  c.PostForm("notes"),
-		UserID: u.ID,
+		Title:   c.PostForm("title"),
+		URL:     c.PostForm("url"),
+		Notes:   c.PostForm("notes"),
+		Favicon: c.PostForm("favicon"),
+		UserID:  u.ID,
 	}
 	if c.PostForm("public") != "" {
 		b.Public = true

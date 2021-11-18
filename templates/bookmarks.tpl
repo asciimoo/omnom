@@ -7,7 +7,7 @@
     {{ range .Bookmarks }}
     <div class="box media">
       <div class="media-content">
-        <h4 class="title"><a href="{{ .URL }}" target="_blank">{{ .Title }}</a></h4>
+        <h4 class="title">{{ if .Favicon }}<img src="{{ .Favicon | ToURL }}" alt="favicon" /> {{ end }}<a href="{{ .URL }}" target="_blank">{{ .Title }}</a></h4>
         <p>{{ .Notes }}</p>
       </div>
       <div class="media-right">
