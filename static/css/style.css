@@ -33,3 +33,9 @@ summary {
 .is-transparent {
     background-color: transparent !important;
 }
+.pure-list {
+    list-style: none;
+}
+.ml-3 {
+    margin-left: 0.75rem;
+}
