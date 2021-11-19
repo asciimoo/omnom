@@ -237,6 +237,16 @@ async function createSnapshot() {
     for(var i in nodesToRemove) {
         nodesToRemove[i].remove();
     }
+    if(!document.getElementById("favicon").value) {
+        var favicon = await inlineFile(fullURL('/favicon.ico'));
+        if(favicon) {
+            document.getElementById('favicon').value = favicon;
+            var faviconElement = document.createElement("style");
+            faviconElement.setAttribute("rel", "icon");
+            faviconElement.setAttribute("href", favicon);
+            document.getElementsByTagName("head")[0].appendChild(faviconElement);
+        }
+    }
     return doc.doctype+dom.outerHTML;
 }
 
