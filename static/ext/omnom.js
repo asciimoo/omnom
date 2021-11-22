@@ -3,7 +3,12 @@
 const br = chrome;
 const is_ff = typeof InstallTrigger !== 'undefined';
 const is_chrome = !is_ff;
-
+const nodeTransformationFunctons = new Map([
+    ['SCRIPT', (node) => node.remove()],
+    ['LINK', transformLink],
+    ['STYLE', transformStyle],
+    ['IMG', transfromImg]
+]);
 let downloadedCount = 0;
 let downloadCount = 0;
 let debug = false;
@@ -22,34 +27,9 @@ function debugPopup(content) {
     console.log(content);
 }
 
-function saveBookmark(e) {
-    e.preventDefault();
-    createSnapshot().then(async (result) => {
-        if (debug) {
-            debugPopup(result);
-            return;
-        }
-        let form = new FormData(document.forms['add']);
-        form.append("snapshot", result);
-        fetch(omnom_url + 'add_bookmark', {
-            method: 'POST',
-            body: form,
-            //headers: {
-            //    'Content-type': 'application/json; charset=UTF-8'
-            //}
-        })
-            .then(resp => {
-                if (resp.status !== 200) {
-                    throw Error(resp.statusText);
-                }
-                document.body.innerHTML = '<h1>Bookmark saved</h1>';
-                // setTimeout(window.close, 2000);
-            })
-            .catch(err => {
-                document.body.innerHTML = '<h1>Failed to save bookmark: ' + err + '</h1>';
-            });
-    });
-}
+/* ---------------------------------*
+ * Diplay extension popup           *
+ * ---------------------------------*/
 
 function displayPopup() {
     document.querySelector("form").addEventListener("submit", saveBookmark);
@@ -59,11 +39,6 @@ function displayPopup() {
         });
     });
     setOmnomSettings().then(fillFormFields, renderError);
-}
-
-function renderError(errorMessage) {
-    console.log(errorMessage);
-    document.getElementById("omnom_content").innerHTML = `<h1>${errorMessage}</h1>`;
 }
 
 function getOmnomDataFromLocal() {
@@ -88,181 +63,79 @@ async function setOmnomSettings() {
     return Promise.resolve();
 }
 
-function fillFormFields() {
+async function fillFormFields() {
     document.getElementById("omnom_url").innerHTML = "Server URL: " + omnom_url;
     document.querySelector("form").action = omnom_url + 'add_bookmark';
     document.getElementById("token").value = omnom_token;
+
     // fill url input field
-    br.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-        document.getElementById('url').value = tabs[0].url;
-        site_url = tabs[0].url;
-        tabId = tabs[0].tabId;
-    });
+    const tab = await queryTabsToPromise();
+    if (tab) {
+        document.getElementById('url').value = tab.url;
+        site_url = tab.url;
+        tabId = tab.tabId;
+    }
+
     // fill title input field
-    br.tabs.executeScript({
-        code: 'document.title;'
-    }, (title) => {
-        if (title && title[0]) {
-            document.getElementById('title').value = title[0];
-        }
-    });
+    const title = await executeScriptToPromise(() => document.title);
+    if (title && title[0]) {
+        document.getElementById('title').value = title[0];
+    }
+
     // fill notes input field
-    br.tabs.executeScript({
-        code: "window.getSelection().toString();"
-    }, function (selection) {
-        if (selection && selection[0]) {
-            document.getElementById("notes").value = selection[0];
-        }
-    });
-}
-
-function rewriteAttributes(node) {
-    for (let i = 0; i < node.attributes.length; i++) {
-        let attr = node.attributes[i];
-        if (attr.nodeName === undefined) {
-            continue;
-        }
-        if (attr.nodeName.startsWith("on")) {
-            attr.nodeValue = '';
-            //} else if(attr.nodeName.startsWith("data-")) {
-            //    attr.nodeValue = '';
-        } else if (attr.nodeValue.trim().toLowerCase().startsWith("javascript:")) {
-            attr.nodeValue = '';
-        }
-        if (attr.nodeName == "href") {
-            attr.nodeValue = fullURL(attr.nodeValue);
-        }
+    const selection = await executeScriptToPromise(() => window.getSelection().toString());
+    if (selection && selection[0]) {
+        document.getElementById("notes").value = selection[0];
     }
 }
 
-function getDOMData() {
-    function fullURL(url) {
-        return new URL(url, window.location.origin).href
-    }
-    function getCSSText(obj) {
-        if (obj.cssText) {
-            return obj.cssText;
-        }
-        let text = '';
-        for (let i = 0; i < obj.length; i++) {
-            let key = obj.item(i);
-            text += key + ':' + obj[key] + ';';
-        }
-        return text;
-    }
-    function walkDOM(node, func) {
-        func(node);
-        let children = node.childNodes;
-        for (let i = 0; i < children.length; i++) {
-            walkDOM(children[i], func);
-        }
-    }
-    let html = document.getElementsByTagName('html')[0];
-    let ret = {
-        'html': html.cloneNode(true),
-        'attributes': {},
-        'title': '',
-        'doctype': '',
-    };
-    for (let k in html.attributes) {
-        let a = html.attributes[k];
-        ret.attributes[a.nodeName] = a.nodeValue;
-    }
-    if (document.doctype) {
-        ret.doctype = new XMLSerializer().serializeToString(document.doctype);
-    }
-    if (document.getElementsByTagName('title').length > 0) {
-        ret.title = document.getElementsByTagName('title')[0].innerText;
-    }
-    let nodesToRemove = [];
-    walkDOM(html, async function (n) {
-        if (n.nodeName == 'SCRIPT') {
-            nodesToRemove.push(n);
+/* ---------------------------------*
+ * Save bookmarks                   *
+ * ---------------------------------*/
+
+function saveBookmark(e) {
+    e.preventDefault();
+    console.time('createSnapshot');
+    createSnapshot().then(async (result) => {
+        console.timeEnd('createSnapshot');
+        if (debug) {
+            debugPopup(result);
             return;
         }
+        const form = new FormData(document.forms['add']);
+        form.append("snapshot", result);
+        fetch(omnom_url + 'add_bookmark', {
+            method: 'POST',
+            body: form,
+            //headers: {
+            //    'Content-type': 'application/json; charset=UTF-8'
+            //}
+        })
+            .then(resp => {
+                if (resp.status !== 200) {
+                    throw Error(resp.statusText);
+                }
+                document.body.innerHTML = '<h1>Bookmark saved</h1>';
+                // setTimeout(window.close, 2000);
+            })
+            .catch(err => {
+                document.body.innerHTML = '<h1>Failed to save bookmark: ' + err + '</h1>';
+            });
     });
-    for (i in nodesToRemove) {
-        nodesToRemove[i].remove();
-    }
-    ret.html = ret.html.outerHTML;
-    return ret;
 }
 
-//
-async function getDOM() {
-    const data = await br.tabs.executeScript({
-        code: `(${getDOMData})()`
-    });
+/* ---------------------------------*
+ * Create Snapshot                  *
+ * ---------------------------------*/
 
-    if (data && data[0]) {
-        return Promise.resolve(data[0]);
-    } else {
-        return Promise.reject('meh')
-    }
-}
-
-function getDomNew() {
-    br.scripting.executeScript({
-        target: { tabId },
-        func: () => getDOMData()
-    }, ([data]) => data ? console.log('yay data: ', data) : console.log('meeh data: ', data));
-}
 async function createSnapshot() {
-    let doc = await getDOM();
+    const doc = await getDOM();
     let dom = document.createElement('html');
     dom.innerHTML = doc.html;
     for (let k in doc.attributes) {
         dom.setAttribute(k, doc.attributes[k]);
     }
-    let nodesToAppend = [];
-    let nodesToRemove = [];
-    await walkDOM(dom, async function (node) {
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-        }
-        if (node.nodeName == 'SCRIPT') {
-            node.remove();
-            return;
-        }
-        await rewriteAttributes(node);
-        if (node.nodeName == 'LINK') {
-            if (node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
-                if (!node.attributes.href) {
-                    console.log("no css href found", node);
-                    return;
-                }
-                let cssHref = node.attributes.href.nodeValue;
-                let style = document.createElement('style');
-                let cssText = await inlineFile(cssHref);
-                style.innerHTML = await sanitizeCSS(cssText);
-                nodesToAppend.push([style, node.parentNode]);
-                nodesToRemove.push(node);
-                return;
-            }
-            if ((node.getAttribute("rel") || '').trim().toLowerCase() == "icon" || (node.getAttribute("rel") || '').trim().toLowerCase() == "shortcut icon") {
-                let favicon = await inlineFile(node.href);
-                document.getElementById('favicon').value = favicon;
-                node.href = favicon;
-                return;
-            }
-        }
-        if (node.nodeName == 'STYLE') {
-            node.innerText = await sanitizeCSS(node.innerText);
-            return;
-        }
-        if (node.nodeName == 'IMG') {
-            node.src = await inlineFile(node.getAttribute("src"));
-            return;
-        }
-    });
-    for (let i in nodesToAppend) {
-        let elem = nodesToAppend[i][0]
-        let parent = nodesToAppend[i][1];
-        parent.appendChild(elem);
-    }
-    for (let i in nodesToRemove) {
-        nodesToRemove[i].remove();
-    }
+    await walkDOM(dom, transformNode);
     if (!document.getElementById("favicon").value) {
         let favicon = await inlineFile(fullURL('/favicon.ico'));
         if (favicon) {
@@ -276,11 +149,75 @@ async function createSnapshot() {
     return doc.doctype + dom.outerHTML;
 }
 
-async function walkDOM(node, func) {
-    await func(node);
-    let children = node.childNodes;
-    for (let i = 0; i < children.length; i++) {
-        await walkDOM(children[i], func);
+async function transformNode(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+        return;
+    }
+    const transformationFunction = nodeTransformationFunctons.get(node.nodeName);
+    await rewriteAttributes(node);
+    if (transformationFunction) {
+        await transformationFunction(node);
+        return;
+    }
+    return;
+}
+
+async function transformLink(node) {
+    if (node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
+        if (!node.attributes.href) {
+            return;
+        }
+        let cssHref = node.attributes.href.nodeValue;
+        let style = document.createElement('style');
+        return inlineFile(cssHref).then(async (cssText) => {
+            style.innerHTML = await sanitizeCSS(cssText);
+            node.parentNode.appendChild(style);
+            node.remove();
+        });
+    }
+    if ((node.getAttribute("rel") || '').trim().toLowerCase() == "icon" || (node.getAttribute("rel") || '').trim().toLowerCase() == "shortcut icon") {
+        return inlineFile(node.href).then(async (favicon) => {
+            document.getElementById('favicon').value = favicon;
+            node.href = favicon;
+        });
+    }
+}
+
+async function transformStyle(node) {
+    node.innerText = await sanitizeCSS(node.innerText);
+    return;
+}
+
+async function transfromImg(node) {
+    return inlineFile(node.getAttribute("src")).then(async (src) => {
+        node.src = src;
+    });
+}
+
+function getDOMData() {
+    let html = document.getElementsByTagName('html')[0];
+    let ret = {
+        'html': html.cloneNode(true),
+        'attributes': {},
+        'title': '',
+        'doctype': '',
+    };
+    if (document.doctype) {
+        ret.doctype = new XMLSerializer().serializeToString(document.doctype);
+    }
+    if (document.getElementsByTagName('title').length > 0) {
+        ret.title = document.getElementsByTagName('title')[0].innerText;
+    }
+    ret.html = ret.html.outerHTML;
+    return ret;
+}
+
+async function getDOM() {
+    const data = await executeScriptToPromise(getDOMData);
+    if (data && data[0]) {
+        return Promise.resolve(data[0]);
+    } else {
+        return Promise.reject('meh')
     }
 }
 
@@ -322,7 +259,7 @@ async function inlineFile(url) {
     let request = new Request(url, options);
     downloadCount++;
     updateStatus();
-    let obj = await fetch(request, options).then(async function (response) {
+    let obj = fetch(request, options).then(async function (response) {
         let contentType = response.headers.get("Content-Type");
         if (contentType.toLowerCase().search("text") != -1) {
             // TODO use charset of the response
@@ -339,6 +276,10 @@ async function inlineFile(url) {
     updateStatus();
     return obj;
 }
+
+/* ---------------------------------*
+ * Utility functions                *
+ * ---------------------------------*/
 
 function arrayBufferToBase64(buffer) {
     let binary = '';
@@ -362,45 +303,81 @@ function parseCSS(styleContent) {
     return styleElement.sheet.cssRules;
 }
 
+function executeScriptToPromise(functionToExecute) {
+    return new Promise(resolve => {
+        br.tabs.executeScript({
+            code: `(${functionToExecute})()`
+        },
+            (data) => {
+                resolve(data);
+            });
+    });
+}
+
+function renderError(errorMessage) {
+    console.log(errorMessage);
+    document.getElementById("omnom_content").innerHTML = `<h1>${errorMessage}</h1>`;
+}
+
+function queryTabsToPromise() {
+    return new Promise(resolve => {
+        br.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => resolve(tab));
+    });
+}
+
+async function walkDOM(node, func) {
+    await func(node);
+    let children = Array.from(node.childNodes);
+    return Promise.allSettled(children.map(async (node, index) => {
+        await walkDOM(node, func)
+    }));
+}
+
 async function sanitizeCSS(rules) {
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
     }
-    let sanitizedCSS = '';
-    for (let k in rules) {
-        let r = rules[k];
+    let cssMap = new Map();
+    const rulesArray = Array.from(rules);
+    await Promise.allSettled(rulesArray.map(async (r, index) => {
         // TODO handle other rule types
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
 
-        // CSSStyleRule
+        // CSSStyleRule        
         if (r.type == 1) {
-            sanitizedCSS += await sanitizeCSSRule(r);
+            const css = await sanitizeCSSRule(r);
+            cssMap.set(index, css);
             // CSSimportRule
         } else if (r.type == 3) {
             // TODO handle import loops
-            sanitizedCSS += await sanitizeCSS(r.href);
+            const sanitizedCSS = await sanitizeCSS(r.href);
+            cssMap.set(index, sanitizedCSS);
             // r.href = '' need this here ?;
             // CSSMediaRule
         } else if (r.type == 4) {
-            sanitizedCSS += "@media " + r.media.mediaText + '{';
+            let sanitizedCSS = "@media " + r.media.mediaText + '{';
             for (let k2 in r.cssRules) {
                 let r2 = r.cssRules[k2];
                 sanitizedCSS += await sanitizeCSSRule(r2);
             }
             sanitizedCSS += '}';
+            cssMap.set(index, sanitizedCSS);
             // CSSFontFaceRule
         } else if (r.type == 5) {
             let fontRule = await sanitizeCSSFontFace(r);
             if (fontRule) {
-                sanitizedCSS += fontRule;
+                cssMap.set(index, fontRule);
             } else {
-                sanitizedCSS += r.cssText;
+                cssMap.set(index, r.cssText);
             }
         } else {
             console.log("MEEEH, unknown css rule type: ", r);
+            return Promise.reject("MEEEH, unknown css rule type: ", r);
         }
-    }
-    return sanitizedCSS
+    }));
+    const sanitizedCSS = new Map([...cssMap.entries()].sort());
+    const result = [...sanitizedCSS.values()].join('');
+    return result;
 }
 
 async function sanitizeCSSRule(r) {
@@ -408,7 +385,6 @@ async function sanitizeCSSRule(r) {
     if (!r || !r.style) {
         return '';
     }
-    console.log(r);
     // TODO handle ::xy { content: }
     await sanitizeCSSBgImage(r);
     await sanitizeCSSListStyleImage(r);
