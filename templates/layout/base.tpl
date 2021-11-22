@@ -14,7 +14,7 @@
 <nav class="navbar border-bottom {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
   <div class="container">
     <div class="navbar-brand is-size-4">
-      <a class="navbar-item{{ if eq .Page "index" }} is-active{{ end }}" href="/"><strong>Omnom</strong> </a>
+      <a class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}" href="/"><strong>Omnom</strong> </a>
       <label for="nav-toggle-state" role="button" class="navbar-burger burger has-text-black" aria-label="menu" aria-expanded="false">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
