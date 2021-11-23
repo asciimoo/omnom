@@ -67,6 +67,7 @@ type Bookmark struct {
 	URL       string
 	Title     string
 	Notes     string
+	Domain    string
 	Favicon   string
 	Tags      []Tag `gorm:"foreignKey:ID"`
 	Snapshots []Snapshot
@@ -78,6 +79,7 @@ type Bookmark struct {
 type Snapshot struct {
 	gorm.Model
 	ID         uint `gorm:"primaryKey"`
+	Title      string
 	Site       string
 	BookmarkID uint
 	CreatedAt  time.Time

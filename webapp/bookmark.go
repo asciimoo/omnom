@@ -2,6 +2,7 @@ package webapp
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/asciimoo/omnom/model"
 
@@ -48,12 +49,26 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
+	url, err := url.Parse(c.PostForm("url"))
+	if err != nil || url.Hostname() == "" || url.Scheme == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "invalid url",
+		})
+		return
+	}
 	b := &model.Bookmark{
 		Title:   c.PostForm("title"),
-		URL:     c.PostForm("url"),
+		URL:     url.String(),
+		Domain:  url.Hostname(),
 		Notes:   c.PostForm("notes"),
 		Favicon: c.PostForm("favicon"),
 		UserID:  u.ID,
+	}
+	if b.Title == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "missing title",
+		})
+		return
 	}
 	if c.PostForm("public") != "" {
 		b.Public = true
@@ -62,7 +77,8 @@ func addBookmark(c *gin.Context) {
 	if snapshot != "" {
 		b.Snapshots = []model.Snapshot{
 			model.Snapshot{
-				Site: snapshot,
+				Site:  snapshot,
+				Title: c.PostForm("snapshot_title"),
 			},
 		}
 	}
