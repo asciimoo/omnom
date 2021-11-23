@@ -100,7 +100,7 @@ type Tag struct {
 
 func GetUser(name string) *User {
 	var u User
-	err := DB.Where(&User{Username: name}).First(&u).Error
+	err := DB.Where("LOWER(username) == LOWER(?)", name).First(&u).Error
 	if err != nil {
 		return nil
 	}

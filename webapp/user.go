@@ -3,6 +3,8 @@ package webapp
 import (
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/asciimoo/omnom/model"
 
@@ -11,14 +13,27 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 )
 
+var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
+
 func signup(c *gin.Context) {
 	if c.Request.Method == "POST" {
 		username := c.PostForm("username")
-		// TODO username format check
 		email := c.PostForm("email")
 		if username == "" || email == "" {
 			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
 				"Error": "Missing data",
+			})
+			return
+		}
+		if strings.ToLower(username) == "admin" {
+			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
+				"Error": "Reserved username",
+			})
+			return
+		}
+		if match := userRe.MatchString(username); !match {
+			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
+				"Error": "Invalid username. Use only letters, numbers and underscore",
 			})
 			return
 		}
