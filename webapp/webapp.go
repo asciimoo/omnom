@@ -32,6 +32,13 @@ var tplFuncMap = template.FuncMap{
 	"ToDate":    func(t time.Time) string { return t.Format("2006-01-02") },
 	"inc":       func(i int64) int64 { return i + 1 },
 	"dec":       func(i int64) int64 { return i - 1 },
+	"Truncate": func(s string, maxLen int) string {
+		if len(s) > maxLen {
+			return s[:maxLen] + "[..]"
+		} else {
+			return s
+		}
+	},
 }
 
 var bookmarksPerPage int64 = 20
