@@ -2,7 +2,6 @@ package webapp
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/asciimoo/omnom/model"
 
@@ -11,12 +10,7 @@ import (
 
 func bookmarks(c *gin.Context) {
 	var bs []*model.Bookmark
-	var pageno int64 = 1
-	if pagenoStr, ok := c.GetQuery("pageno"); ok {
-		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
-			pageno = int64(userPageno)
-		}
-	}
+	pageno := getPageno(c)
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1").Count(&bookmarkCount)
@@ -32,12 +26,7 @@ func bookmarks(c *gin.Context) {
 func myBookmarks(c *gin.Context) {
 	u, _ := c.Get("user")
 	var bs []*model.Bookmark
-	var pageno int64 = 1
-	if pagenoStr, ok := c.GetQuery("pageno"); ok {
-		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
-			pageno = int64(userPageno)
-		}
-	}
+	pageno := getPageno(c)
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Count(&bookmarkCount)

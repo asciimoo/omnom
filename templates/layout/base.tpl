@@ -29,14 +29,9 @@
           <a href="/my_bookmarks" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
         <a href="/bookmarks" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
+        <a href="/search" class="navbar-item{{ if eq .Page "search" }} is-active{{ end }}">Search</a>
       </div>
       <div class="navbar-end">
-        <div class="navbar-item">
-          <p class="control has-icons-left">
-              <input class="input is-rounded" type="text" placeholder="search">
-              <span class="icon is-small is-left"><i class="fas fa-search"></i></span>
-          </p>
-        </div>
         {{ if .User }}
             <a href="/profile" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
             <div class="navbar-item"><a href="/logout" class="button is-outlined is-info">Logout</a></div>
