@@ -61,5 +61,6 @@ func search(c *gin.Context) {
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"SearchParams":  sp,
+		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 	})
 }
