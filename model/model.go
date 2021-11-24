@@ -69,7 +69,7 @@ type Bookmark struct {
 	Notes     string
 	Domain    string
 	Favicon   string
-	Tags      []Tag `gorm:"foreignKey:ID"`
+	Tags      []Tag
 	Snapshots []Snapshot
 	Public    bool
 	UserID    uint
@@ -94,8 +94,9 @@ type Token struct {
 
 type Tag struct {
 	gorm.Model
-	ID   uint `gorm:"primaryKey"`
-	Text string
+	ID         uint `gorm:"primaryKey"`
+	BookmarkID uint
+	Text       string
 }
 
 func GetUser(name string) *User {

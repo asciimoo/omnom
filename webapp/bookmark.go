@@ -3,6 +3,7 @@ package webapp
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/asciimoo/omnom/model"
 
@@ -15,7 +16,7 @@ func bookmarks(c *gin.Context) {
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1").Count(&bookmarkCount)
-	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Order("created_at desc").Find(&bs)
+	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Order("created_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
@@ -31,7 +32,7 @@ func myBookmarks(c *gin.Context) {
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Count(&bookmarkCount)
-	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Order("created_at desc").Association("Bookmarks").Find(&bs)
+	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Preload("Tags").Order("created_at desc").Association("Bookmarks").Find(&bs)
 	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
@@ -80,6 +81,16 @@ func addBookmark(c *gin.Context) {
 				Site:  snapshot,
 				Title: c.PostForm("snapshot_title"),
 			},
+		}
+	}
+	tags := c.PostForm("tags")
+	if tags != "" {
+		b.Tags = make([]model.Tag, 0, 8)
+		for _, t := range strings.Split(tags, ",") {
+			t = strings.TrimSpace(t)
+			b.Tags = append(b.Tags, model.Tag{
+				Text: t,
+			})
 		}
 	}
 	model.DB.Save(b)

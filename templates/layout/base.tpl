@@ -107,7 +107,12 @@
 <div class="box media">
     <div class="media-content">
         <h4 class="title"><span class="icon-text">{{ if .Favicon }}<span class="icon"><img src="{{ .Favicon | ToURL }}" alt="favicon" /> </span> {{ end }}<span><a href="{{ .URL }}" target="_blank">{{ .Title }}</a></span></span><p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .URL 100 }}</p></h4>
-    <p>{{ .Notes }}</p>
+        <p>{{ .Notes }}</p>
+        {{ if .Tags }}
+          {{ range .Tags }}
+            <span class="tag is-info">{{ .Text }}</span>
+          {{ end }}
+        {{ end }}
     </div>
     <div class="media-right">
         {{ range $i,$s := .Snapshots }}

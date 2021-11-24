@@ -32,7 +32,7 @@ func search(c *gin.Context) {
 	var bookmarkCount int64
 	pageno := getPageno(c)
 	offset := (pageno - 1) * bookmarksPerPage
-	q := model.DB.Model(&model.Bookmark{}).Limit(int(bookmarksPerPage)).Offset(int(offset)).Preload("Snapshots")
+	q := model.DB.Model(&model.Bookmark{}).Limit(int(bookmarksPerPage)).Offset(int(offset)).Preload("Snapshots").Preload("Tags")
 	cq := model.DB.Model(&model.Bookmark{})
 	if sp.Q != "" {
 		q = q.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", sp.Q))
