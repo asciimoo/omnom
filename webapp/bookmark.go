@@ -71,6 +71,9 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
+	if !strings.HasPrefix(b.Favicon, "data:image") {
+		b.Favicon = ""
+	}
 	if c.PostForm("public") != "" {
 		b.Public = true
 	}
