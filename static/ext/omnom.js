@@ -16,7 +16,7 @@ const cssSanitizeFunctions = new Map([
     ['CSSMediaRule', sanitizeMediaRule],
     ['CSSFontFaceRule', sanitizeFontFaceRule],
     ['CSSPageRule', unknownRule],
-    ['CSSKeyframesRule ', unknownRule],
+    ['CSSKeyframesRule', unknownRule],
     ['CSSKeyframeRule', unknownRule],
     ['CSSNamespaceRule', unknownRule],
     ['CSSCounterStyleRule', unknownRule],
@@ -31,6 +31,8 @@ const downloadStatus = {
     FAILED: 'failed'
 }
 
+const styleNodes = new Map();
+
 let downloadedCount = 0;
 let downloadCount = 0;
 let failedCount = 0;
@@ -38,11 +40,11 @@ let debug = false;
 let site_url = '';
 let omnom_token = '';
 let omnom_url = '';
-let tabId = '';
+let styleIndex = 0;
 
 function debugPopup(content) {
     if (is_chrome) {
-        const win = window.open("", "omnomDebug", "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes");
+        const win = window.open('', 'omnomDebug', 'menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes');
         win.document.write(content);
     } else {
         document.getElementsByTagName('html')[0].innerHTML = content;
@@ -55,8 +57,8 @@ function debugPopup(content) {
  * ---------------------------------*/
 
 function displayPopup() {
-    document.querySelector("form").addEventListener("submit", saveBookmark);
-    document.getElementById("omnom_options").addEventListener("click", function () {
+    document.querySelector('form').addEventListener('submit', saveBookmark);
+    document.getElementById('omnom_options').addEventListener('click', function () {
         br.runtime.openOptionsPage(function () {
             window.close();
         });
@@ -87,16 +89,15 @@ function getOmnomDataFromLocal() {
 }
 
 async function fillFormFields() {
-    document.getElementById("omnom_url").innerHTML = `Server URL: ${omnom_url}`;
-    document.querySelector("form").action = `${omnom_url}add_bookmark`;
-    document.getElementById("token").value = omnom_token;
+    document.getElementById('omnom_url').innerHTML = `Server URL: ${omnom_url}`;
+    document.querySelector('form').action = `${omnom_url}add_bookmark`;
+    document.getElementById('token').value = omnom_token;
 
     // fill url input field
     const tab = await queryTabsToPromise();
     if (tab) {
         document.getElementById('url').value = tab.url;
         site_url = tab.url;
-        tabId = tab.tabId;
     }
 
     // fill title input field
@@ -108,7 +109,7 @@ async function fillFormFields() {
     // fill notes input field
     const selection = await executeScriptToPromise(() => window.getSelection().toString());
     if (selection && selection[0]) {
-        document.getElementById("notes").value = selection[0];
+        document.getElementById('notes').value = selection[0];
     }
 }
 
@@ -126,7 +127,7 @@ async function saveBookmark(e) {
         return;
     }
     const form = new FormData(document.forms['add']);
-    form.append("snapshot", snapshot);
+    form.append('snapshot', snapshot);
     await fetch(`${omnom_url}add_bookmark`, {
         method: 'POST',
         body: form,
@@ -147,21 +148,29 @@ async function createSnapshot() {
     const dom = document.createElement('html');
     dom.innerHTML = doc.html;
     for (const k in doc.attributes) {
-        console.log('attribute to set: ', k);
         dom.setAttribute(k, doc.attributes[k]);
     }
     await walkDOM(dom, transformNode);
-    if (!document.getElementById("favicon").value) {
+    setStyleNodes(dom);
+    if (!document.getElementById('favicon').value) {
         const favicon = await inlineFile(fullURL('/favicon.ico'));
         if (favicon) {
             document.getElementById('favicon').value = favicon;
-            const faviconElement = document.createElement("style");
-            faviconElement.setAttribute("rel", "icon");
-            faviconElement.setAttribute("href", favicon);
-            document.getElementsByTagName("head")[0].appendChild(faviconElement);
+            const faviconElement = document.createElement('style');
+            faviconElement.setAttribute('rel', 'icon');
+            faviconElement.setAttribute('href', favicon);
+            document.getElementsByTagName('head')[0].appendChild(faviconElement);
         }
     }
     return `${doc.doctype}${dom.outerHTML}`;
+}
+
+function setStyleNodes(dom) {
+    const sortedStyles = new Map([...styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
+    sortedStyles.forEach(style => {
+        const head = dom.childNodes[0];
+        head.appendChild(style);
+    });
 }
 
 async function getDOM() {
@@ -206,18 +215,19 @@ async function transformNode(node) {
 }
 
 async function transformLink(node) {
-    if (node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
+    if (node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == 'stylesheet') {
         if (!node.attributes.href) {
             return;
         }
+        const index = styleIndex++;
         const cssHref = node.attributes.href.nodeValue;
         const style = document.createElement('style');
         const cssText = await inlineFile(cssHref);
         style.innerHTML = await sanitizeCSS(cssText);
-        node.parentNode.appendChild(style);
+        styleNodes.set(index, style);
         node.remove();
     }
-    if ((node.getAttribute("rel") || '').trim().toLowerCase() == "icon" || (node.getAttribute("rel") || '').trim().toLowerCase() == "shortcut icon") {
+    if ((node.getAttribute('rel') || '').trim().toLowerCase() == 'icon' || (node.getAttribute('rel') || '').trim().toLowerCase() == 'shortcut icon') {
         const favicon = await inlineFile(node.href);
         document.getElementById('favicon').value = favicon;
         node.href = favicon;
@@ -230,20 +240,20 @@ async function transformStyle(node) {
 }
 
 async function transfromImg(node) {
-    const src = await inlineFile(node.getAttribute("src"));
+    const src = await inlineFile(node.getAttribute('src'));
     node.src = src;
 }
 
 async function rewriteAttributes(node) {
     const nodeAttributeArray = [...node.attributes];
     return Promise.allSettled(nodeAttributeArray.map(async (attr) => {
-        if (attr.nodeName.startsWith("on") || attr.nodeValue.startsWith("javascript:")) {
+        if (attr.nodeName.startsWith('on') || attr.nodeValue.startsWith('javascript:')) {
             attr.nodeValue = '';
         }
-        if (attr.nodeName == "href") {
+        if (attr.nodeName == 'href') {
             attr.nodeValue = fullURL(attr.nodeValue);
         }
-        if (attr.nodeName == "style") {
+        if (attr.nodeName == 'style') {
             const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`);
             attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
         }
@@ -255,7 +265,7 @@ async function inlineFile(url) {
         return url;
     }
     url = fullURL(url);
-    console.log("fetching ", url);
+    console.log('fetching ', url);
     const options = {
         method: 'GET',
         cache: debug ? 'no-cache' : 'default',
@@ -265,11 +275,11 @@ async function inlineFile(url) {
     const responseObj = await fetch(request, options)
         .then(checkStatus).catch((error) => {
             updateStatus(downloadStatus.FAILED);
-            console.log("MEH, network error", error);
+            console.log('MEH, network error', error);
         });
-    const contentType = responseObj.headers.get("Content-Type");
+    const contentType = responseObj.headers.get('Content-Type');
     updateStatus(downloadStatus.DOWNLOADED);
-    if (contentType.toLowerCase().search("text") != -1) {
+    if (contentType.toLowerCase().search('text') != -1) {
         // TODO use charset of the response        
         return await responseObj.text();
     }
@@ -287,44 +297,20 @@ async function sanitizeCSS(rules) {
     await Promise.allSettled(rulesArray.map(async (r, index) => {
         // TODO handle other rule types
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
-
         const sanitizeFunction = cssSanitizeFunctions.get(r.constructor.name);
         if (sanitizeFunction) {
-            const css = await sanitizeFunction(r);
+            const css = await sanitizeFunction(r).catch(err => console.log(err));
             cssMap.set(index, css);
         }
-        // // CSSStyleRule
-        // if (r.type == 1) {
-        //     const css = await sanitizeCSSRule(r);
-        //     cssMap.set(index, css);
-        //     // CSSimportRule
-        // } else if (r.type == 3) {
-        //     // TODO handle import loops
-        //     const sanitizedCSS = await sanitizeCSS(r.href);
-        //     cssMap.set(index, sanitizedCSS);
-        //     // r.href = '' need this here ?;
-        //     // CSSMediaRule
-        // } else if (r.type == 4) {
-        //     const sanitizedCSS = `@media ${r.media.mediaText}{`;
-        //     for (const k2 in r.cssRules) {
-        //         const r2 = r.cssRules[k2];
-        //         sanitizedCSS += await sanitizeCSSRule(r2);
-        //     }
-        //     sanitizedCSS += '}';
-        //     cssMap.set(index, sanitizedCSS);
-        //     // CSSFontFaceRule
-        // } else if (r.type == 5) {
-        //     const fontRule = await sanitizeCSSFontFace(r);
-        //     fontRule ? cssMap.set(index, fontRule) : cssMap.set(index, r.cssText);
-        // } else {
-        //     console.log("MEEEH, unknown css rule type: ", r);
-        //     return Promise.reject("MEEEH, unknown css rule type: ", r);            
-        // }
     }));
-    const sanitizedCSS = new Map([...cssMap.entries()].sort());
-    const result = [...sanitizedCSS.values()].join('');
+    const sortedCss = new Map([...cssMap.entries()].sort((e1, e2) => e1[0] - e2[0]));
+    const result = [...sortedCss.values()].join('');
     return result;
 }
+
+/* ---------------------------------*
+ * Sanitize css                     *
+ * ---------------------------------*/
 
 async function sanitizeStyleRule(rule) {
     return await sanitizeCSSRule(rule);
@@ -336,26 +322,24 @@ async function sanitizeImportRule(rule) {
 }
 
 async function sanitizeMediaRule(rule) {
-    const sanitizedRules = await Promise.all(rule.cssRules.map(async (r) => {
-        await sanitizeCSSRule(r);
+    const cssRuleArray = [...rule.cssRules];
+    let cssResult = '';
+    await Promise.allSettled(cssRuleArray.map(async (r, index) => {
+        const css = await sanitizeCSSRule(r);
+        cssResult += css;
     }));
-    return `@media ${rule.media.mediaText}{${sanitizedRules.join('')}}`;
+    return `@media ${rule.media.mediaText}{${cssResult}}`;
 }
 
 async function sanitizeFontFaceRule(rule) {
     const fontRule = await sanitizeCSSFontFace(rule);
-    return fontRule || rule.cssText;
+    return fontRule ? fontRule : rule.cssText;
 }
 
 async function unknownRule(rule) {
-    console.log("MEEEH, unknown css rule type: ", rule);
-    return Promise.reject("MEEEH, unknown css rule type: ", rule);
+    console.log('MEEEH, unknown css rule type: ', rule);
+    return Promise.reject('MEEEH, unknown css rule type: ', rule);
 }
-
-
-/* ---------------------------------*
- * Sanitize css                     *
- * ---------------------------------*/
 
 async function sanitizeCSSRule(r) {
     // huh? how can r be undefined?....
@@ -372,13 +356,13 @@ async function sanitizeCSSBgImage(r) {
     const bgi = r.style.backgroundImage;
     if (bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
         const bgURL = fullURL(bgi.substring(5, bgi.length - 2));
-        if (!bgURL.startsWith("data:")) {
+        if (!bgURL.startsWith('data:')) {
             const inlineImg = await inlineFile(bgURL);
             if (inlineImg) {
                 try {
                     r.style.backgroundImage = `url('${inlineImg}')`;
                 } catch (error) {
-                    console.log("failed to set background image: ", error);
+                    console.log('failed to set background image: ', error);
                     r.style.backgroundImage = '';
                 }
             } else {
@@ -392,13 +376,13 @@ async function sanitizeCSSListStyleImage(r) {
     const lsi = r.style.listStyleImage;
     if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
         const iURL = fullURL(lsi.substring(5, lsi.length - 2));
-        if (!iURL.startsWith("data:")) {
+        if (!iURL.startsWith('data:')) {
             const inlineImg = await inlineFile(iURL);
             if (inlineImg) {
                 try {
                     r.style.listStyleImage = `url('${inlineImg}')`;
                 } catch (error) {
-                    console.log("failed to set list-style-image:", error);
+                    console.log('failed to set list-style-image:', error);
                     r.style.listStyleImage = '';
                 }
             } else {
@@ -409,14 +393,14 @@ async function sanitizeCSSListStyleImage(r) {
 }
 
 async function sanitizeCSSFontFace(r) {
-    const src = r.style.getPropertyValue("src");
+    const src = r.style.getPropertyValue('src');
     const srcParts = src.split(/\s+/);
     const changed = false;
     for (const i in srcParts) {
         const part = srcParts[i];
         if (part && part.startsWith('url("') && part.endsWith('")')) {
             const iURL = fullURL(part.substring(5, part.length - 2));
-            if (!iURL.startsWith("data:")) {
+            if (!iURL.startsWith('data:')) {
                 const inlineImg = await inlineFile(iURL);
                 srcParts[i] = `url('${inlineImg}')`;
                 changed = true;
@@ -425,9 +409,9 @@ async function sanitizeCSSFontFace(r) {
     }
     if (changed) {
         try {
-            return `@font-face {${r.style.cssText.replace(src, srcParts.join(" "))}}`;
+            return `@font-face {${r.style.cssText.replace(src, srcParts.join(' '))}}`;
         } catch (error) {
-            console.log("failed to set font-src:", error);
+            console.log('failed to set font-src:', error);
             r.style.src = '';
         }
     }
@@ -468,8 +452,8 @@ function fullURL(url) {
 }
 
 function parseCSS(styleContent) {
-    const doc = document.implementation.createHTMLDocument("");
-    const styleElement = document.createElement("style");
+    const doc = document.implementation.createHTMLDocument('');
+    const styleElement = document.createElement('style');
 
     styleElement.textContent = styleContent;
     // the style will only be parsed once it is added to a document
@@ -485,7 +469,7 @@ function queryTabsToPromise() {
 
 function renderError(errorMessage) {
     console.log(errorMessage);
-    document.getElementById("omnom_content").innerHTML = `<h1>${errorMessage}</h1>`;
+    document.getElementById('omnom_content').innerHTML = `<h1>${errorMessage}</h1>`;
 }
 
 function updateStatus(status) {
@@ -503,7 +487,7 @@ function updateStatus(status) {
             break;
         }
     }
-    document.getElementById("omnom_status").innerHTML =
+    document.getElementById('omnom_status').innerHTML =
         `<h3>Downloading resources (${downloadCount}/${downloadedCount})</h3>
         <h3>Failed requests: ${failedCount}</h3>`;
 }
@@ -511,7 +495,7 @@ function updateStatus(status) {
 async function walkDOM(node, func) {
     await func(node);
     const children = [...node.childNodes];
-    return Promise.allSettled(children.map(async (node, index) => {
+    return Promise.allSettled(children.map(async (node) => {
         await walkDOM(node, func)
     }));
 }
