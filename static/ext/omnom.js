@@ -1,16 +1,50 @@
-var br = chrome;
-var omnom_url = '';
-var omnom_token = '';
-var site_url = '';
-var is_ff = typeof InstallTrigger !== 'undefined';
-var is_chrome = !is_ff;
-var debug = false;
-var downloadCount = 0;
-var downloadedCount = 0;
+'use strict';
+
+const br = chrome;
+const is_ff = typeof InstallTrigger !== 'undefined';
+const is_chrome = !is_ff;
+const nodeTransformFunctons = new Map([
+    ['SCRIPT', (node) => node.remove()],
+    ['LINK', transformLink],
+    ['STYLE', transformStyle],
+    ['IMG', transfromImg]
+]);
+
+const cssSanitizeFunctions = new Map([
+    ['CSSStyleRule', sanitizeStyleRule],
+    ['CSSImportRule', sanitizeImportRule],
+    ['CSSMediaRule', sanitizeMediaRule],
+    ['CSSFontFaceRule', sanitizeFontFaceRule],
+    ['CSSPageRule', unknownRule],
+    ['CSSKeyframesRule', unknownRule],
+    ['CSSKeyframeRule', unknownRule],
+    ['CSSNamespaceRule', unknownRule],
+    ['CSSCounterStyleRule', unknownRule],
+    ['CSSSupportsRule', unknownRule],
+    ['CSSDocumentRule', unknownRule],
+    ['CSSFontFeatureValuesRule', unknownRule],
+    ['CSSViewportRule', unknownRule],
+])
+const downloadStatus = {
+    DOWNLOADING: 'downloading',
+    DOWNLOADED: 'downloaded',
+    FAILED: 'failed'
+}
+
+const styleNodes = new Map();
+
+let downloadedCount = 0;
+let downloadCount = 0;
+let failedCount = 0;
+let debug = false;
+let site_url = '';
+let omnom_token = '';
+let omnom_url = '';
+let styleIndex = 0;
 
 function debugPopup(content) {
-    if(is_chrome) {
-        var win = window.open("", "omnomDebug", "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes");
+    if (is_chrome) {
+        const win = window.open('', 'omnomDebug', 'menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes');
         win.document.write(content);
     } else {
         document.getElementsByTagName('html')[0].innerHTML = content;
@@ -18,368 +52,298 @@ function debugPopup(content) {
     console.log(content);
 }
 
-function saveBookmark(e) {
-	e.preventDefault();
-    createSnapshot().then(async (result) => {
-        if(debug) {
-            debugPopup(result);
-            return;
-        }
-        var form = new FormData(document.forms['add']);
-        form.append("snapshot", result);
-        fetch(omnom_url+'add_bookmark', {
-            method: 'POST',
-            body: form,
-            //headers: {
-            //    'Content-type': 'application/json; charset=UTF-8'
-            //}
-        })
-        .then(resp => {
-            if(resp.status !== 200) {
-                throw Error(resp.statusText);
-            }
-            document.body.innerHTML = '<h1>Bookmark saved</h1>';
-            setTimeout(window.close, 2000);
-        })
-        .catch(err => {
-            document.body.innerHTML = '<h1>Failed to save bookmark: '+err+'</h1>';
-        });
-    });
-}
+/* ---------------------------------*
+ * Diplay extension popup           *
+ * ---------------------------------*/
 
 function displayPopup() {
-    document.querySelector("form").addEventListener("submit", saveBookmark);
-    br.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug'], function(data) {
-        omnom_url = data.omnom_url || '';
-        omnom_token = data.omnom_token || '';
-        debug = data.omnom_debug || false;
-        document.getElementById("omnom_options").addEventListener("click", function() {
-            br.runtime.openOptionsPage(function() {
-                window.close();
-            });
+    document.querySelector('form').addEventListener('submit', saveBookmark);
+    document.getElementById('omnom_options').addEventListener('click', function () {
+        br.runtime.openOptionsPage(function () {
+            window.close();
         });
-        if(omnom_url == '') {
-            document.getElementById("omnom_content").innerHTML = '<h1>Server URL not found. Specify it in the extension\'s options</h1>';
-            return;
-        }
-        if(omnom_token == '') {
-            document.getElementById("omnom_content").innerHTML = '<h1>Token not found. Specify it in the extension\'s options</h1>';
-            return;
-        }
-        document.getElementById("omnom_url").innerHTML = "Server URL: "+omnom_url;
-        document.querySelector("form").action = omnom_url+'add_bookmark';
-        document.getElementById("token").value = omnom_token;
-        // fill url input field
-        var url;
-        br.tabs.query({active: true, lastFocusedWindow: true}, (tabs) => {
-            document.getElementById('url').value = tabs[0].url;
-            site_url = tabs[0].url;
-        });
-        // fill title input field
-        br.tabs.executeScript({
-            code: 'document.title;'
-        }, (title) => {
-            if(title && title[0]) {
-                document.getElementById('title').value = title[0];
-            }
-        });
-        // fill notes input field
-        br.tabs.executeScript( {
-            code: "window.getSelection().toString();"
-        }, function(selection) {
-            if(selection && selection[0]) {
-                document.getElementById("notes").value = selection[0];
-            }
+    });
+    setOmnomSettings().then(fillFormFields, renderError);
+}
+
+async function setOmnomSettings() {
+    const omnomData = await getOmnomDataFromLocal().catch(renderError);
+    omnom_url = omnomData.omnom_url || '';
+    omnom_token = omnomData.omnom_token || '';
+    debug = omnomData.omnom_debug || false;
+    if (omnom_token == '') {
+        return Promise.reject('Token not found. Specify it in the extension\'s options');
+    }
+    if (omnom_url == '') {
+        return Promise.reject('Server URL not found. Specify it in the extension\'s option');
+    }
+    return Promise.resolve();
+}
+
+function getOmnomDataFromLocal() {
+    return new Promise((resolve, reject) => {
+        br.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug'], (data) => {
+            data ? resolve(data) : reject('Could not get Data');
         });
     });
 }
 
-function rewriteAttributes(node) {
-    for(var i=0; i <  node.attributes.length; i++) {
-        var attr = node.attributes[i];
-        if(attr.nodeName === undefined) {
-            continue;
+async function fillFormFields() {
+    document.getElementById('omnom_url').innerHTML = `Server URL: ${omnom_url}`;
+    document.querySelector('form').action = `${omnom_url}add_bookmark`;
+    document.getElementById('token').value = omnom_token;
+
+    // fill url input field
+    const tab = await queryTabsToPromise();
+    if (tab) {
+        document.getElementById('url').value = tab.url;
+        site_url = tab.url;
+    }
+
+    // fill title input field
+    const title = await executeScriptToPromise(() => document.title);
+    if (title && title[0]) {
+        document.getElementById('title').value = title[0];
+    }
+
+    // fill notes input field
+    const selection = await executeScriptToPromise(() => window.getSelection().toString());
+    if (selection && selection[0]) {
+        document.getElementById('notes').value = selection[0];
+    }
+}
+
+/* ---------------------------------*
+ * Save bookmarks                   *
+ * ---------------------------------*/
+
+async function saveBookmark(e) {
+    e.preventDefault();
+    console.time('createSnapshot');
+    const snapshot = await createSnapshot();
+    console.timeEnd('createSnapshot');
+    if (debug) {
+        debugPopup(snapshot);
+        return;
+    }
+    const form = new FormData(document.forms['add']);
+    form.append('snapshot', snapshot);
+    await fetch(`${omnom_url}add_bookmark`, {
+        method: 'POST',
+        body: form,
+        //headers: {
+        //    'Content-type': 'application/json; charset=UTF-8'
+        //}
+    }).then(checkStatus).catch(err => renderError(`Failed to save bookmark:${err}`));
+    document.body.innerHTML = '<h1>Bookmark saved</h1>';
+    setTimeout(window.close, 2000);
+}
+
+/* ---------------------------------*
+ * Create Snapshot                  *
+ * ---------------------------------*/
+
+async function createSnapshot() {
+    const doc = await getDOM();
+    const dom = document.createElement('html');
+    dom.innerHTML = doc.html;
+    for (const k in doc.attributes) {
+        dom.setAttribute(k, doc.attributes[k]);
+    }
+    await walkDOM(dom, transformNode);
+    setStyleNodes(dom);
+    if (!document.getElementById('favicon').value) {
+        const favicon = await inlineFile(fullURL('/favicon.ico'));
+        if (favicon) {
+            document.getElementById('favicon').value = favicon;
+            const faviconElement = document.createElement('style');
+            faviconElement.setAttribute('rel', 'icon');
+            faviconElement.setAttribute('href', favicon);
+            document.getElementsByTagName('head')[0].appendChild(faviconElement);
         }
-        if(attr.nodeName.startsWith("on")) {
-            attr.nodeValue = '';
-        //} else if(attr.nodeName.startsWith("data-")) {
-        //    attr.nodeValue = '';
-        } else if(attr.nodeValue.trim().toLowerCase().startsWith("javascript:")) {
-            attr.nodeValue = '';
-        }
-        if(attr.nodeName == "href") {
-            attr.nodeValue = fullURL(attr.nodeValue);
-        }
+    }
+    return `${doc.doctype}${dom.outerHTML}`;
+}
+
+function setStyleNodes(dom) {
+    const sortedStyles = new Map([...styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
+    sortedStyles.forEach(style => {
+        const head = dom.childNodes[0];
+        head.appendChild(style);
+    });
+}
+
+async function getDOM() {
+    const data = await executeScriptToPromise(getDOMData);
+    if (data && data[0]) {
+        return Promise.resolve(data[0]);
+    } else {
+        return Promise.reject('meh')
     }
 }
 
 function getDOMData() {
-    function fullURL(url) {
-        return new URL(url, window.location.origin).href
-    }
-    function getCSSText(obj) {
-        if(obj.cssText) {
-            return obj.cssText;
-        }
-        var text = '';
-        for(var i=0; i < obj.length; i++) {
-            var key = obj.item(i);
-            text += key + ':' + obj[key] + ';';
-        }
-        return text;
-    }
-    function walkDOM(node, func) {
-        func(node);
-        var children = node.childNodes;
-        for (var i = 0; i < children.length; i++) {
-            walkDOM(children[i], func);
-        }
-    }
-    var html = document.getElementsByTagName('html')[0];
-    var ret = {
+    const html = document.getElementsByTagName('html')[0];
+    const ret = {
         'html': html.cloneNode(true),
         'attributes': {},
         'title': '',
         'doctype': '',
     };
-    for(var k in html.attributes) {
-        var a = html.attributes[k];
-        ret.attributes[a.nodeName] = a.nodeValue;
-    }
-    if(document.doctype) {
+    if (document.doctype) {
         ret.doctype = new XMLSerializer().serializeToString(document.doctype);
     }
-    if(document.getElementsByTagName('title').length > 0) {
+    if (document.getElementsByTagName('title').length > 0) {
         ret.title = document.getElementsByTagName('title')[0].innerText;
     }
-    var nodesToRemove = [];
-    walkDOM(html, async function(n) {
-        if(n.nodeName == 'SCRIPT') {
-            nodesToRemove.push(n);
-            return;
-        }
-    });
-    for(i in nodesToRemove) {
-        nodesToRemove[i].remove();
-    }
+    [...html.attributes].forEach(attr => ret.attributes[attr.nodeName] = attr.nodeValue);
     ret.html = ret.html.outerHTML;
     return ret;
 }
 
-async function createSnapshot() {
-    var doc;
-    function getDOM() {
-        return new Promise((resolve, error) => {
-            br.tabs.executeScript({
-                code: '('+getDOMData+')()'
-            }, (data) => {
-                if(data && data[0]) {
-                    doc = data[0];
-                    resolve('');
-                } else {
-                    error('meh');
-                }
-            });
-        });
+async function transformNode(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+        return;
     }
-    await getDOM();
-    var dom = document.createElement('html');
-    dom.innerHTML = doc.html;
-    for(var k in doc.attributes) {
-        dom.setAttribute(k, doc.attributes[k]);
+    const transformFunction = nodeTransformFunctons.get(node.nodeName);
+    await rewriteAttributes(node);
+    if (transformFunction) {
+        await transformFunction(node);
+        return;
     }
-    var nodesToAppend = [];
-    var nodesToRemove = [];
-    await walkDOM(dom, async function(node) {
-        if(node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-        }
-        if(node.nodeName == 'SCRIPT') {
-            node.remove();
-            return;
-        }
-        await rewriteAttributes(node);
-        if(node.nodeName == 'LINK') {
-            if(node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == "stylesheet") {
-                if(!node.attributes.href) {
-                    console.log("no css href found", node);
-                    return;
-                }
-                var cssHref = node.attributes.href.nodeValue;
-                var style = document.createElement('style');
-                var cssText = await inlineFile(cssHref);
-                style.innerHTML = await sanitizeCSS(cssText);
-                nodesToAppend.push([style, node.parentNode]);
-                nodesToRemove.push(node);
-                return;
-            }
-            if((node.getAttribute("rel") || '').trim().toLowerCase() == "icon" || (node.getAttribute("rel") || '').trim().toLowerCase() == "shortcut icon") {
-                var favicon = await inlineFile(node.href);
-                document.getElementById('favicon').value = favicon;
-                node.href = favicon;
-                return;
-            }
-        }
-        if(node.nodeName == 'STYLE') {
-            node.innerText = await sanitizeCSS(node.innerText);
-            return;
-        }
-        if(node.nodeName == 'IMG') {
-            node.src = await inlineFile(node.getAttribute("src"));
-            return;
-        }
-    });
-    for(var i in nodesToAppend) {
-        var elem = nodesToAppend[i][0]
-        var parent = nodesToAppend[i][1];
-        parent.appendChild(elem);
-    }
-    for(var i in nodesToRemove) {
-        nodesToRemove[i].remove();
-    }
-    if(!document.getElementById("favicon").value) {
-        var favicon = await inlineFile(fullURL('/favicon.ico'));
-        if(favicon) {
-            document.getElementById('favicon').value = favicon;
-            var faviconElement = document.createElement("style");
-            faviconElement.setAttribute("rel", "icon");
-            faviconElement.setAttribute("href", favicon);
-            document.getElementsByTagName("head")[0].appendChild(faviconElement);
-        }
-    }
-    return doc.doctype+dom.outerHTML;
+    return;
 }
 
-async function walkDOM(node, func) {
-    await func(node);
-    var children = node.childNodes;
-    for (var i = 0; i < children.length; i++) {
-        await walkDOM(children[i], func);
+async function transformLink(node) {
+    if (node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == 'stylesheet') {
+        if (!node.attributes.href) {
+            return;
+        }
+        const index = styleIndex++;
+        const cssHref = node.attributes.href.nodeValue;
+        const style = document.createElement('style');
+        const cssText = await inlineFile(cssHref);
+        style.innerHTML = await sanitizeCSS(cssText);
+        styleNodes.set(index, style);
+        node.remove();
     }
+    if ((node.getAttribute('rel') || '').trim().toLowerCase() == 'icon' || (node.getAttribute('rel') || '').trim().toLowerCase() == 'shortcut icon') {
+        const favicon = await inlineFile(node.href);
+        document.getElementById('favicon').value = favicon;
+        node.href = favicon;
+    }
+}
+
+async function transformStyle(node) {
+    const innerText = await sanitizeCSS(node.innerText);
+    node.innerText = innerText;
+}
+
+async function transfromImg(node) {
+    const src = await inlineFile(node.getAttribute('src'));
+    node.src = src;
 }
 
 async function rewriteAttributes(node) {
-    for(var i=0; i <  node.attributes.length; i++) {
-        var attr = node.attributes[i];
-        if(attr.nodeName === undefined) {
-            continue;
-        }
-        if(attr.nodeName.startsWith("on")) {
+    const nodeAttributeArray = [...node.attributes];
+    return Promise.allSettled(nodeAttributeArray.map(async (attr) => {
+        if (attr.nodeName.startsWith('on') || attr.nodeValue.startsWith('javascript:')) {
             attr.nodeValue = '';
         }
-        if(attr.nodeValue.startsWith("javascript:")) {
-            attr.nodeValue = '';
-        }
-        if(attr.nodeName == "href") {
+        if (attr.nodeName == 'href') {
             attr.nodeValue = fullURL(attr.nodeValue);
         }
-        if(attr.nodeName == "style") {
-            var sanitizedValue = await sanitizeCSS('a{'+attr.nodeValue+'}');
-            attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length-6);
+        if (attr.nodeName == 'style') {
+            const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`);
+            attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
         }
-    }
+    }));
 }
 
 async function inlineFile(url) {
-    if(!url || (url || '').startsWith('data:')) {
+    if (!url || (url || '').startsWith('data:')) {
         return url;
     }
     url = fullURL(url);
-    console.log("fetching "+url);
-	var options = {
-	  method: 'GET',
-	  cache: 'default',
-	};
-    if(debug) {
-        options.cache = 'no-cache';
+    console.log('fetching ', url);
+    const options = {
+        method: 'GET',
+        cache: debug ? 'no-cache' : 'default',
+    };
+    const request = new Request(url, options);
+    updateStatus(downloadStatus.DOWNLOADING);
+    const responseObj = await fetch(request, options)
+        .then(checkStatus).catch((error) => {
+            updateStatus(downloadStatus.FAILED);
+            console.log('MEH, network error', error);
+        });
+    const contentType = responseObj.headers.get('Content-Type');
+    updateStatus(downloadStatus.DOWNLOADED);
+    if (contentType.toLowerCase().search('text') != -1) {
+        // TODO use charset of the response        
+        return await responseObj.text();
     }
-	var request = new Request(url, options);
-    downloadCount++;
-    updateStatus();
-	var obj = await fetch(request, options).then(async function(response) {
-        var contentType = response.headers.get("Content-Type");
-        if(contentType.toLowerCase().search("text") != -1) {
-            // TODO use charset of the response
-            var body = await response.text();
-            return body;
-        }
-	    var buff = await response.arrayBuffer()
-        var base64Flag = 'data:'+contentType+';base64,';
-        return base64Flag + arrayBufferToBase64(buff);
-	}).catch(function(error) {
-        console.log("MEH, network error", error)
-    });
-    downloadedCount++;
-    updateStatus();
-    return obj;
-}
-
-function arrayBufferToBase64(buffer) {
-  var binary = '';
-  var bytes = [].slice.call(new Uint8Array(buffer));
-  bytes.forEach((b) => binary += String.fromCharCode(b));
-
-  return btoa(binary);
-}
-
-function fullURL(url) {
-    return new URL(url, site_url).href
-}
-
-function parseCSS(styleContent) {
-    var doc = document.implementation.createHTMLDocument("");
-    var styleElement = document.createElement("style");
-
-    styleElement.textContent = styleContent;
-    // the style will only be parsed once it is added to a document
-    doc.body.appendChild(styleElement);
-    return styleElement.sheet.cssRules;
+    const buff = await responseObj.arrayBuffer()
+    const base64Flag = `data:${contentType};base64,`;
+    return `${base64Flag}${arrayBufferToBase64(buff)}`
 }
 
 async function sanitizeCSS(rules) {
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
     }
-    var sanitizedCSS = '';
-    for(var k in rules) {
-        var r = rules[k];
+    const cssMap = new Map();
+    const rulesArray = [...rules];
+    await Promise.allSettled(rulesArray.map(async (r, index) => {
         // TODO handle other rule types
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
-
-        // CSSStyleRule
-        if(r.type == 1) {
-            sanitizedCSS += await sanitizeCSSRule(r);
-        // CSSimportRule
-        } else if(r.type == 3) {
-            // TODO handle import loops
-            sanitizedCSS += await sanitizeCSS(r.href);
-            r.href = '';
-        // CSSMediaRule
-        } else if(r.type == 4) {
-            sanitizedCSS += "@media " + r.media.mediaText + '{';
-            for(var k2 in r.cssRules) {
-                var r2 = r.cssRules[k2];
-                sanitizedCSS += await sanitizeCSSRule(r2);
-            }
-            sanitizedCSS += '}';
-        // CSSFontFaceRule
-        } else if(r.type == 5) {
-            var fontRule = await sanitizeCSSFontFace(r);
-            if(fontRule) {
-                sanitizedCSS += fontRule;
-            } else {
-                sanitizedCSS += r.cssText;
-            }
-        } else {
-            console.log("MEEEH, unknown css rule type: ", r);
+        const sanitizeFunction = cssSanitizeFunctions.get(r.constructor.name);
+        if (sanitizeFunction) {
+            const css = await sanitizeFunction(r).catch(err => console.log(err));
+            cssMap.set(index, css);
         }
-    }
-    return sanitizedCSS
+    }));
+    const sortedCss = new Map([...cssMap.entries()].sort((e1, e2) => e1[0] - e2[0]));
+    const result = [...sortedCss.values()].join('');
+    return result;
+}
+
+/* ---------------------------------*
+ * Sanitize css                     *
+ * ---------------------------------*/
+
+async function sanitizeStyleRule(rule) {
+    return await sanitizeCSSRule(rule);
+}
+
+async function sanitizeImportRule(rule) {
+    // TODO handle import loops
+    return await sanitizeCSS(rule.href);
+}
+
+async function sanitizeMediaRule(rule) {
+    const cssRuleArray = [...rule.cssRules];
+    let cssResult = '';
+    await Promise.allSettled(cssRuleArray.map(async (r, index) => {
+        const css = await sanitizeCSSRule(r);
+        cssResult += css;
+    }));
+    return `@media ${rule.media.mediaText}{${cssResult}}`;
+}
+
+async function sanitizeFontFaceRule(rule) {
+    const fontRule = await sanitizeCSSFontFace(rule);
+    return fontRule ? fontRule : rule.cssText;
+}
+
+async function unknownRule(rule) {
+    console.log('MEEEH, unknown css rule type: ', rule);
+    return Promise.reject('MEEEH, unknown css rule type: ', rule);
 }
 
 async function sanitizeCSSRule(r) {
     // huh? how can r be undefined?....
-    if(!r || !r.style) {
+    if (!r || !r.style) {
         return '';
     }
     // TODO handle ::xy { content: }
@@ -389,16 +353,16 @@ async function sanitizeCSSRule(r) {
 }
 
 async function sanitizeCSSBgImage(r) {
-    var bgi = r.style.backgroundImage;
-    if(bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
-        var bgURL = fullURL(bgi.substring(5, bgi.length-2));
-        if(!bgURL.startsWith("data:")) {
-            var inlineImg = await inlineFile(bgURL);
-            if(inlineImg) {
+    const bgi = r.style.backgroundImage;
+    if (bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
+        const bgURL = fullURL(bgi.substring(5, bgi.length - 2));
+        if (!bgURL.startsWith('data:')) {
+            const inlineImg = await inlineFile(bgURL);
+            if (inlineImg) {
                 try {
-                    r.style.backgroundImage = 'url("'+inlineImg+'")';
-                } catch(error) {
-                    console.log("failed to set background image: ", error);
+                    r.style.backgroundImage = `url('${inlineImg}')`;
+                } catch (error) {
+                    console.log('failed to set background image: ', error);
                     r.style.backgroundImage = '';
                 }
             } else {
@@ -409,16 +373,16 @@ async function sanitizeCSSBgImage(r) {
 }
 
 async function sanitizeCSSListStyleImage(r) {
-    var lsi = r.style.listStyleImage;
-    if(lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
-        var iURL = fullURL(lsi.substring(5, lsi.length-2));
-        if(!iURL.startsWith("data:")) {
-            var inlineImg = await inlineFile(iURL);
-            if(inlineImg) {
+    const lsi = r.style.listStyleImage;
+    if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
+        const iURL = fullURL(lsi.substring(5, lsi.length - 2));
+        if (!iURL.startsWith('data:')) {
+            const inlineImg = await inlineFile(iURL);
+            if (inlineImg) {
                 try {
-                    r.style.listStyleImage = 'url("'+inlineImg+'")';
-                } catch(error) {
-                    console.log("failed to set list-style-image:", error);
+                    r.style.listStyleImage = `url('${inlineImg}')`;
+                } catch (error) {
+                    console.log('failed to set list-style-image:', error);
                     r.style.listStyleImage = '';
                 }
             } else {
@@ -429,33 +393,111 @@ async function sanitizeCSSListStyleImage(r) {
 }
 
 async function sanitizeCSSFontFace(r) {
-    var src = r.style.getPropertyValue("src");
-    var srcParts = src.split(/\s+/);
-    var inlineImg;
-    var changed = false;
-    for(var i in srcParts) {
-        var part = srcParts[i];
-        if(part && part.startsWith('url("') && part.endsWith('")')) {
-            var iURL = fullURL(part.substring(5, part.length-2));
-            if(!iURL.startsWith("data:")) {
-                var inlineImg = await inlineFile(iURL);
-                srcParts[i] = 'url("'+inlineImg+'")';
-                var changed = true;
+    const src = r.style.getPropertyValue('src');
+    const srcParts = src.split(/\s+/);
+    const changed = false;
+    for (const i in srcParts) {
+        const part = srcParts[i];
+        if (part && part.startsWith('url("') && part.endsWith('")')) {
+            const iURL = fullURL(part.substring(5, part.length - 2));
+            if (!iURL.startsWith('data:')) {
+                const inlineImg = await inlineFile(iURL);
+                srcParts[i] = `url('${inlineImg}')`;
+                changed = true;
             }
         }
     }
-    if(changed) {
+    if (changed) {
         try {
-            return '@font-face {'+r.style.cssText.replace(src, srcParts.join(" "))+'}';
-        } catch(error) {
-            console.log("failed to set font-src:", error);
+            return `@font-face {${r.style.cssText.replace(src, srcParts.join(' '))}}`;
+        } catch (error) {
+            console.log('failed to set font-src:', error);
             r.style.src = '';
         }
     }
 }
 
-function updateStatus() {
-    document.getElementById("omnom_status").innerHTML = '<h3>Downloading resources ('+downloadCount+'/'+downloadedCount+')</h3>';
+/* ---------------------------------*
+ * Utility functions                *
+ * ---------------------------------*/
+
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = [].slice.call(new Uint8Array(buffer));
+    bytes.forEach((b) => binary += String.fromCharCode(b));
+
+    return btoa(binary);
+}
+
+function checkStatus(res) {
+    if (!res.ok) {
+        throw Error(res.statusText);
+    }
+    return res;
+}
+
+function executeScriptToPromise(functionToExecute) {
+    return new Promise(resolve => {
+        br.tabs.executeScript({
+            code: `(${functionToExecute})()`
+        },
+            (data) => {
+                resolve(data);
+            });
+    });
+}
+
+function fullURL(url) {
+    return new URL(url, site_url).href
+}
+
+function parseCSS(styleContent) {
+    const doc = document.implementation.createHTMLDocument('');
+    const styleElement = document.createElement('style');
+
+    styleElement.textContent = styleContent;
+    // the style will only be parsed once it is added to a document
+    doc.body.appendChild(styleElement);
+    return styleElement.sheet.cssRules;
+}
+
+function queryTabsToPromise() {
+    return new Promise(resolve => {
+        br.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => resolve(tab));
+    });
+}
+
+function renderError(errorMessage) {
+    console.log(errorMessage);
+    document.getElementById('omnom_content').innerHTML = `<h1>${errorMessage}</h1>`;
+}
+
+function updateStatus(status) {
+    switch (status) {
+        case downloadStatus.DOWNLOADING: {
+            downloadCount++
+            break;
+        }
+        case downloadStatus.DOWNLOADED: {
+            downloadedCount++
+            break;
+        }
+        case downloadStatus.FAILED: {
+            failedCount++;
+            break;
+        }
+    }
+    document.getElementById('omnom_status').innerHTML =
+        `<h3>Downloading resources (${downloadCount}/${downloadedCount})</h3>
+        <h3>Failed requests: ${failedCount}</h3>`;
+}
+
+async function walkDOM(node, func) {
+    await func(node);
+    const children = [...node.childNodes];
+    return Promise.allSettled(children.map(async (node) => {
+        await walkDOM(node, func)
+    }));
 }
 
 document.addEventListener('DOMContentLoaded', displayPopup);
