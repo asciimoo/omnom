@@ -40,18 +40,20 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
 
 func filterOwner(o string, q, cq *gorm.DB) error {
 	u := model.GetUser(o)
-	if u != nil {
-		q = q.Where("user_id == ? or public == true", u.ID)
-		cq = cq.Where("user_id == ? or public == true", u.ID)
+	if u == nil {
+		return nil
 	}
+	q = q.Where("user_id == ? or public == true", u.ID)
+	cq = cq.Where("user_id == ? or public == true", u.ID)
 	return nil
 }
 
 func filterDomain(d string, q, cq *gorm.DB) error {
-	if d != "" {
-		q = q.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
-		cq = cq.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
+	if d == "" {
+		return nil
 	}
+	q = q.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
+	cq = cq.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
 	return nil
 }
 
