@@ -54,7 +54,6 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/bookmarks.tpl")
 	r.AddFromFilesFuncs("my-bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/my_bookmarks.tpl")
 	r.AddFromFilesFuncs("profile", tplFuncMap, "templates/layout/base.tpl", "templates/profile.tpl")
-	r.AddFromFilesFuncs("search", tplFuncMap, "templates/layout/base.tpl", "templates/search.tpl")
 	return r
 }
 
@@ -114,7 +113,6 @@ func Run(cfg *config.Config) {
 	e.GET("/logout", logout)
 	e.GET("/bookmarks", bookmarks)
 	e.GET("/snapshot", snapshot)
-	e.GET("/search", search)
 	e.POST("/add_bookmark", addBookmark)
 
 	authorized.GET("/profile", profile)

@@ -15,13 +15,27 @@ func bookmarks(c *gin.Context) {
 	pageno := getPageno(c)
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
-	model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1").Count(&bookmarkCount)
-	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Order("created_at desc").Find(&bs)
+	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
+	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags")
+	sp := &searchParams{}
+	if err := c.ShouldBind(sp); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	} else {
+		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
+		filterOwner(sp.Owner, q, cq)
+		filterFromDate(sp.FromDate, q, cq)
+		filterToDate(sp.ToDate, q, cq)
+		filterDomain(sp.Domain, q, cq)
+	}
+	cq.Count(&bookmarkCount)
+	q.Order("created_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
 		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
+		"SearchParams":  sp,
 	})
 }
 
@@ -31,13 +45,32 @@ func myBookmarks(c *gin.Context) {
 	pageno := getPageno(c)
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
-	model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Count(&bookmarkCount)
-	model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Preload("Tags").Order("created_at desc").Association("Bookmarks").Find(&bs)
+	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID)
+	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Preload("Tags")
+	sp := &searchParams{}
+	if err := c.ShouldBind(sp); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	} else {
+		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
+		filterFromDate(sp.FromDate, q, cq)
+		filterToDate(sp.ToDate, q, cq)
+		filterDomain(sp.Domain, q, cq)
+		if sp.IsPublic {
+			filterPublic(q, cq)
+		}
+		if sp.IsPrivate {
+			filterPublic(q, cq)
+		}
+	}
+	cq.Count(&bookmarkCount)
+	q.Order("created_at desc").Association("Bookmarks").Find(&bs)
 	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
 		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
+		"SearchParams":  sp,
 	})
 }
 

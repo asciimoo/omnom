@@ -2,11 +2,10 @@ package webapp
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/asciimoo/omnom/model"
 
-	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type searchParams struct {
@@ -17,50 +16,65 @@ type searchParams struct {
 	Tag              string `form:"tag"`
 	Domain           string `form:"domain"`
 	IsPublic         bool   `form:"public"`
+	IsPrivate        bool   `form:"private"`
 	SearchInSnapshot bool   `form:"search_in_snapshot"`
 	SearchInNote     bool   `form:"search_in_note"`
 }
 
-func search(c *gin.Context) {
-	sp := &searchParams{}
-	if err := c.ShouldBind(sp); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
+func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
+	if qs == "" {
+		return nil
 	}
-	u, _ := c.Get("user")
-	var bs []*model.Bookmark
-	var bookmarkCount int64
-	pageno := getPageno(c)
-	offset := (pageno - 1) * bookmarksPerPage
-	q := model.DB.Model(&model.Bookmark{}).Limit(int(bookmarksPerPage)).Offset(int(offset)).Preload("Snapshots").Preload("Tags")
-	cq := model.DB.Model(&model.Bookmark{})
-	if sp.Q != "" {
-		q = q.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", sp.Q))
-		cq = cq.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", sp.Q))
-		if sp.SearchInNote {
-			q = q.Or("LOWER(notes) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", sp.Q))
-			cq = cq.Or("LOWER(notes) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", sp.Q))
-		}
+	q = q.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
+	cq = cq.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
+	if inNote {
+		q = q.Or("LOWER(notes) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
+		cq = cq.Or("LOWER(notes) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
 	}
-	if sp.IsPublic || u == nil {
-		q = q.Where("public == true")
-		cq = cq.Where("public == true")
+	if inSnapshot {
+		// TODO
+		fmt.Println(inSnapshot)
 	}
+	return nil
+}
+
+func filterOwner(o string, q, cq *gorm.DB) error {
+	u := model.GetUser(o)
 	if u != nil {
-		q = q.Where("user_id == ? or public == true", u.(*model.User).ID)
-		cq = cq.Where("user_id == ? or public == true", u.(*model.User).ID)
+		q = q.Where("user_id == ? or public == true", u.ID)
+		cq = cq.Where("user_id == ? or public == true", u.ID)
 	}
-	if sp.Domain != "" {
-		q = q.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", sp.Domain))
-		cq = cq.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", sp.Domain))
+	return nil
+}
+
+func filterDomain(d string, q, cq *gorm.DB) error {
+	if d != "" {
+		q = q.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
+		cq = cq.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
 	}
-	cq.Count(&bookmarkCount)
-	q.Order("created_at desc").Find(&bs)
-	renderHTML(c, http.StatusOK, "search", map[string]interface{}{
-		"BookmarkCount": bookmarkCount,
-		"Bookmarks":     bs,
-		"Pageno":        pageno,
-		"SearchParams":  sp,
-		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
-	})
+	return nil
+}
+
+func filterFromDate(d string, q, cq *gorm.DB) error {
+	// TODO
+	fmt.Println(d, q, cq)
+	return nil
+}
+
+func filterToDate(d string, q, cq *gorm.DB) error {
+	// TODO
+	fmt.Println(d, q, cq)
+	return nil
+}
+
+func filterPublic(q, cq *gorm.DB) error {
+	q.Where("public == true")
+	cq.Where("public == true")
+	return nil
+}
+
+func filterPrivate(q, cq *gorm.DB) error {
+	q.Where("public == false")
+	cq.Where("public == false")
+	return nil
 }
