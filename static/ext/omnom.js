@@ -18,12 +18,12 @@ const cssSanitizeFunctions = new Map([
     ['CSSPageRule', sanitizePageRule],
     ['CSSKeyframesRule', sanitizeKeyframesRule],
     ['CSSKeyframeRule', sanitizeKeyframeRule],
-    ['CSSNamespaceRule', unknownRule],
-    ['CSSCounterStyleRule', unknownRule],
+    ['CSSNamespaceRule', unknownRule], // XML only
+    ['CSSCounterStyleRule', sanitizeCounterStyleRule],
     ['CSSSupportsRule', sanitizeSupportsRule],
-    ['CSSDocumentRule', unknownRule],
-    ['CSSFontFeatureValuesRule', unknownRule],
-    ['CSSViewportRule', unknownRule],
+    ['CSSDocumentRule', unknownRule], // FF only
+    ['CSSFontFeatureValuesRule', unknownRule], // FF only
+    ['CSSViewportRule', unknownRule], // IE only
 ])
 const downloadStatus = {
     DOWNLOADING: 'downloading',
@@ -368,6 +368,10 @@ async function sanitizeKeyframeRule(rule, baseURL) {
 async function sanitizeSupportsRule(rule, baseURL) {
     let cssResult = await sanitizeCSS(rule.cssRules, baseURL);
     return `@supports ${rule.conditionText}{${cssResult}}`;
+}
+
+async function sanitizeCounterStyleRule(rule, baseURL) {
+    return rule.cssText;
 }
 
 async function unknownRule(rule) {
