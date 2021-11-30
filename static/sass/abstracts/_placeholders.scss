@@ -1,0 +1,43 @@
+%clearfix {
+    &::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}
+
+%absCenter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+%verticalCenter {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+%verticalAndHorizontalCenter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+%backgroundShadow {
+    box-shadow: 0rem .3rem .5rem 0rem rgba(0, 0, 0, 0.14);
+}
+
+%backgroundDropShadow {
+    filter: drop-shadow(0rem .3rem .5rem rgba(0, 0, 0, 0.14));
+}
+
+%insideFlexBox {
+    @include respond(tab-port) {
+        position: relative;
+        top: auto;
+        left: auto;
+    }
+}
