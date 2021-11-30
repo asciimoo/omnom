@@ -1,3 +1,9 @@
+html, body {
+    height: 100%!important;
+    display: flex;
+    flex-flow: column;
+    overflow: auto;
+}
 summary {
     outline: 0;
     cursor: pointer;
@@ -38,4 +44,17 @@ summary {
 }
 .ml-3 {
     margin-left: 0.75rem;
+}
+.iframe-box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    border-top: 4px solid pink;
+    overflow: hide;
+}
+.iframe-container {
+    flex: 1 1 auto;
+}
+iframe {
+    height: 100%;
 }

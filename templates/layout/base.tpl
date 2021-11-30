@@ -59,6 +59,7 @@
     </div>
 </div>
 {{ block "extra_content" . }}{{ end }}
+{{ if (not .hideFooter) }}
 <footer class="footer">
   <div class="container">
     <div class="content has-text-centered">
@@ -68,6 +69,7 @@
     </div>
   </div>
 </footer>
+{{ end }}
 </body>
 </html>
 

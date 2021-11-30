@@ -12,7 +12,6 @@
             </summary>
             {{ block "textFilter" .}}{{ end }}
             {{ block "domainFilter" .}}{{ end }}
-            {{ block "ownerFilter" .}}{{ end }}
             {{ block "tagFilter" .}}{{ end }}
             {{ block "dateFilter" .}}{{ end }}
             {{ block "submit" . }}{{ end }}
