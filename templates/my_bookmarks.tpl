@@ -6,7 +6,7 @@
     <h3 class="title">My Bookmarks ({{ .BookmarkCount }})</h3>
     {{ end }}
     <div class="content"><form action="" method="get">
-        <details>
+        <details{{ if .HasSearch }} open{{ end }}>
             <summary>
                 Search
             </summary>

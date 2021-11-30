@@ -3,6 +3,7 @@ package webapp
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/asciimoo/omnom/model"
@@ -18,15 +19,19 @@ func bookmarks(c *gin.Context) {
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
 	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags")
 	sp := &searchParams{}
+	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	} else {
-		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
-		filterOwner(sp.Owner, q, cq)
-		filterFromDate(sp.FromDate, q, cq)
-		filterToDate(sp.ToDate, q, cq)
-		filterDomain(sp.Domain, q, cq)
+		if !reflect.DeepEqual(*sp, searchParams{}) {
+			hasSearch = true
+			filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
+			filterOwner(sp.Owner, q, cq)
+			filterFromDate(sp.FromDate, q, cq)
+			filterToDate(sp.ToDate, q, cq)
+			filterDomain(sp.Domain, q, cq)
+		}
 	}
 	cq.Count(&bookmarkCount)
 	q.Order("created_at desc").Find(&bs)
@@ -36,6 +41,7 @@ func bookmarks(c *gin.Context) {
 		"BookmarkCount": bookmarkCount,
 		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 		"SearchParams":  sp,
+		"HasSearch":     hasSearch,
 	})
 }
 
@@ -48,19 +54,23 @@ func myBookmarks(c *gin.Context) {
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID)
 	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Preload("Tags")
 	sp := &searchParams{}
+	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	} else {
-		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
-		filterFromDate(sp.FromDate, q, cq)
-		filterToDate(sp.ToDate, q, cq)
-		filterDomain(sp.Domain, q, cq)
-		if sp.IsPublic {
-			filterPublic(q, cq)
-		}
-		if sp.IsPrivate {
-			filterPublic(q, cq)
+		if !reflect.DeepEqual(*sp, searchParams{}) {
+			hasSearch = true
+			filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
+			filterFromDate(sp.FromDate, q, cq)
+			filterToDate(sp.ToDate, q, cq)
+			filterDomain(sp.Domain, q, cq)
+			if sp.IsPublic {
+				filterPublic(q, cq)
+			}
+			if sp.IsPrivate {
+				filterPublic(q, cq)
+			}
 		}
 	}
 	cq.Count(&bookmarkCount)
@@ -71,6 +81,7 @@ func myBookmarks(c *gin.Context) {
 		"BookmarkCount": bookmarkCount,
 		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 		"SearchParams":  sp,
+		"HasSearch":     hasSearch,
 	})
 }
 
