@@ -202,6 +202,22 @@ function getDOMData() {
         ret.title = document.getElementsByTagName('title')[0].innerText;
     }
     [...html.attributes].forEach(attr => ret.attributes[attr.nodeName] = attr.nodeValue);
+    let canvases = document.getElementsByTagName('canvas');
+    if(canvases) {
+        let canvasImages = [];
+        for(let canvas of canvases) {
+            console.log(canvas);
+            let el = document.createElement("img");
+            el.src = canvas.toDataURL();
+            canvasImages.push(el);
+        }
+        let snapshotCanvases = ret.html.getElementsByTagName('canvas');
+        for(let i in canvasImages) {
+            let canvas = snapshotCanvases[i];
+            canvas.parentNode.replaceChild(canvasImages[i], canvas);
+
+        }
+    }
     ret.html = ret.html.outerHTML;
     return ret;
 }
