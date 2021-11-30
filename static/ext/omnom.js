@@ -15,7 +15,7 @@ const cssSanitizeFunctions = new Map([
     ['CSSImportRule', sanitizeImportRule],
     ['CSSMediaRule', sanitizeMediaRule],
     ['CSSFontFaceRule', sanitizeFontFaceRule],
-    ['CSSPageRule', unknownRule],
+    ['CSSPageRule', sanitizePageRule],
     ['CSSKeyframesRule', unknownRule],
     ['CSSKeyframeRule', unknownRule],
     ['CSSNamespaceRule', unknownRule],
@@ -310,12 +310,12 @@ async function sanitizeCSS(rules, baseURL) {
     const cssMap = new Map();
     const rulesArray = [...rules];
     await Promise.allSettled(rulesArray.map(async (r, index) => {
-        // TODO handle other rule types
-        // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
         const sanitizeFunction = cssSanitizeFunctions.get(r.constructor.name);
         if (sanitizeFunction) {
             const css = await sanitizeFunction(r, baseURL).catch(err => console.log(err));
             cssMap.set(index, css);
+        } else {
+            unknownRule(r, baseURL);
         }
     }));
     const sortedCss = new Map([...cssMap.entries()].sort((e1, e2) => e1[0] - e2[0]));
@@ -350,6 +350,10 @@ async function sanitizeMediaRule(rule, baseURL) {
 async function sanitizeFontFaceRule(rule, baseURL) {
     const fontRule = await sanitizeCSSFontFace(rule, baseURL);
     return fontRule ? fontRule : rule.cssText;
+}
+
+async function sanitizePageRule(rule, baseURL) {
+    return rule.cssText;
 }
 
 async function unknownRule(rule) {
