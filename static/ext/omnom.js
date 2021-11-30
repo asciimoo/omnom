@@ -15,15 +15,15 @@ const cssSanitizeFunctions = new Map([
     ['CSSImportRule', sanitizeImportRule],
     ['CSSMediaRule', sanitizeMediaRule],
     ['CSSFontFaceRule', sanitizeFontFaceRule],
-    ['CSSPageRule', unknownRule],
-    ['CSSKeyframesRule', unknownRule],
-    ['CSSKeyframeRule', unknownRule],
-    ['CSSNamespaceRule', unknownRule],
-    ['CSSCounterStyleRule', unknownRule],
-    ['CSSSupportsRule', unknownRule],
-    ['CSSDocumentRule', unknownRule],
-    ['CSSFontFeatureValuesRule', unknownRule],
-    ['CSSViewportRule', unknownRule],
+    ['CSSPageRule', sanitizePageRule],
+    ['CSSKeyframesRule', sanitizeKeyframesRule],
+    ['CSSKeyframeRule', sanitizeKeyframeRule],
+    ['CSSNamespaceRule', unknownRule], // XML only
+    ['CSSCounterStyleRule', sanitizeCounterStyleRule],
+    ['CSSSupportsRule', sanitizeSupportsRule],
+    ['CSSDocumentRule', unknownRule], // FF only
+    ['CSSFontFeatureValuesRule', unknownRule], // FF only
+    ['CSSViewportRule', unknownRule], // IE only
 ])
 const downloadStatus = {
     DOWNLOADING: 'downloading',
@@ -167,9 +167,14 @@ async function createSnapshot() {
 
 function setStyleNodes(dom) {
     const sortedStyles = new Map([...styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
+    let parent;
+    if(dom.getElementsByTagName("head")) {
+        parent = dom.getElementsByTagName("head")[0];
+    } else {
+        parent = dom.documentElement;
+    }
     sortedStyles.forEach(style => {
-        const head = dom.childNodes[0];
-        head.appendChild(style);
+        parent.appendChild(style);
     });
 }
 
@@ -197,6 +202,21 @@ function getDOMData() {
         ret.title = document.getElementsByTagName('title')[0].innerText;
     }
     [...html.attributes].forEach(attr => ret.attributes[attr.nodeName] = attr.nodeValue);
+    let canvases = document.getElementsByTagName('canvas');
+    if(canvases) {
+        let canvasImages = [];
+        for(let canvas of canvases) {
+            let el = document.createElement("img");
+            el.src = canvas.toDataURL();
+            canvasImages.push(el);
+        }
+        let snapshotCanvases = ret.html.getElementsByTagName('canvas');
+        for(let i in canvasImages) {
+            let canvas = snapshotCanvases[i];
+            canvas.parentNode.replaceChild(canvasImages[i], canvas);
+
+        }
+    }
     ret.html = ret.html.outerHTML;
     return ret;
 }
@@ -220,10 +240,10 @@ async function transformLink(node) {
             return;
         }
         const index = styleIndex++;
-        const cssHref = node.attributes.href.nodeValue;
+        const cssHref = fullURL(node.attributes.href.nodeValue);
         const style = document.createElement('style');
         const cssText = await inlineFile(cssHref);
-        style.innerHTML = await sanitizeCSS(cssText);
+        style.innerHTML = await sanitizeCSS(cssText, cssHref);
         styleNodes.set(index, style);
         node.remove();
     }
@@ -235,7 +255,7 @@ async function transformLink(node) {
 }
 
 async function transformStyle(node) {
-    const innerText = await sanitizeCSS(node.innerText);
+    const innerText = await sanitizeCSS(node.innerText, site_url);
     node.innerText = innerText;
 }
 
@@ -254,8 +274,17 @@ async function rewriteAttributes(node) {
             attr.nodeValue = fullURL(attr.nodeValue);
         }
         if (attr.nodeName == 'style') {
-            const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`);
+            const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, site_url);
             attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
+        }
+        if (attr.nodeName == 'srcset') {
+            let newParts = [];
+            for(let s of attr.nodeValue.split(',')) {
+                let srcParts = s.trim().split(' ');
+                srcParts[0] = await inlineFile(srcParts[0]);
+                newParts.push(srcParts.join(' '));
+            }
+            attr.nodeValue = newParts.join(', ');
         }
     }));
 }
@@ -272,11 +301,16 @@ async function inlineFile(url) {
     };
     const request = new Request(url, options);
     updateStatus(downloadStatus.DOWNLOADING);
+    let hasError = false;
     const responseObj = await fetch(request, options)
         .then(checkStatus).catch((error) => {
             updateStatus(downloadStatus.FAILED);
-            console.log('MEH, network error', error);
-        });
+            hasError = true;
+            return Promise.reject(error);
+    });
+    if(hasError) {
+        return '';
+    }
     const contentType = responseObj.headers.get('Content-Type');
     updateStatus(downloadStatus.DOWNLOADED);
     if (contentType.toLowerCase().search('text') != -1) {
@@ -288,19 +322,19 @@ async function inlineFile(url) {
     return `${base64Flag}${arrayBufferToBase64(buff)}`
 }
 
-async function sanitizeCSS(rules) {
+async function sanitizeCSS(rules, baseURL) {
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
     }
     const cssMap = new Map();
     const rulesArray = [...rules];
     await Promise.allSettled(rulesArray.map(async (r, index) => {
-        // TODO handle other rule types
-        // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
         const sanitizeFunction = cssSanitizeFunctions.get(r.constructor.name);
         if (sanitizeFunction) {
-            const css = await sanitizeFunction(r).catch(err => console.log(err));
+            const css = await sanitizeFunction(r, baseURL).catch(err => console.log(err));
             cssMap.set(index, css);
+        } else {
+            unknownRule(r, baseURL);
         }
     }));
     const sortedCss = new Map([...cssMap.entries()].sort((e1, e2) => e1[0] - e2[0]));
@@ -312,28 +346,51 @@ async function sanitizeCSS(rules) {
  * Sanitize css                     *
  * ---------------------------------*/
 
-async function sanitizeStyleRule(rule) {
-    return await sanitizeCSSRule(rule);
+async function sanitizeStyleRule(rule, baseURL) {
+    return await sanitizeCSSRule(rule, baseURL);
 }
 
-async function sanitizeImportRule(rule) {
+async function sanitizeImportRule(rule, baseURL) {
     // TODO handle import loops
-    return await sanitizeCSS(rule.href);
+    let href = absoluteURL(baseURL, rule.href);
+    return await sanitizeCSS(await inlineFile(href), href);
 }
 
-async function sanitizeMediaRule(rule) {
+async function sanitizeMediaRule(rule, baseURL) {
     const cssRuleArray = [...rule.cssRules];
     let cssResult = '';
     await Promise.allSettled(cssRuleArray.map(async (r, index) => {
-        const css = await sanitizeCSSRule(r);
+        const css = await sanitizeCSSRule(r, baseURL);
         cssResult += css;
     }));
     return `@media ${rule.media.mediaText}{${cssResult}}`;
 }
 
-async function sanitizeFontFaceRule(rule) {
-    const fontRule = await sanitizeCSSFontFace(rule);
+async function sanitizeFontFaceRule(rule, baseURL) {
+    const fontRule = await sanitizeCSSFontFace(rule, baseURL);
     return fontRule ? fontRule : rule.cssText;
+}
+
+async function sanitizePageRule(rule, baseURL) {
+    return rule.cssText;
+}
+
+async function sanitizeKeyframesRule(rule, baseURL) {
+    let cssResult = await sanitizeCSS(rule.cssRules, baseURL);
+    return `@keyframes ${rule.name}{${cssResult}}`;
+}
+
+async function sanitizeKeyframeRule(rule, baseURL) {
+    return await sanitizeStyleRule(rule);
+}
+
+async function sanitizeSupportsRule(rule, baseURL) {
+    let cssResult = await sanitizeCSS(rule.cssRules, baseURL);
+    return `@supports ${rule.conditionText}{${cssResult}}`;
+}
+
+async function sanitizeCounterStyleRule(rule, baseURL) {
+    return rule.cssText;
 }
 
 async function unknownRule(rule) {
@@ -341,21 +398,21 @@ async function unknownRule(rule) {
     return Promise.reject('MEEEH, unknown css rule type: ', rule);
 }
 
-async function sanitizeCSSRule(r) {
+async function sanitizeCSSRule(r, baseURL) {
     // huh? how can r be undefined?....
     if (!r || !r.style) {
         return '';
     }
     // TODO handle ::xy { content: }
-    await sanitizeCSSBgImage(r);
-    await sanitizeCSSListStyleImage(r);
+    await sanitizeCSSBgImage(r, baseURL);
+    await sanitizeCSSListStyleImage(r, baseURL);
     return r.cssText;
 }
 
-async function sanitizeCSSBgImage(r) {
+async function sanitizeCSSBgImage(r, baseURL) {
     const bgi = r.style.backgroundImage;
     if (bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
-        const bgURL = fullURL(bgi.substring(5, bgi.length - 2));
+        const bgURL = absoluteURL(baseURL, bgi.substring(5, bgi.length - 2));
         if (!bgURL.startsWith('data:')) {
             const inlineImg = await inlineFile(bgURL);
             if (inlineImg) {
@@ -372,10 +429,10 @@ async function sanitizeCSSBgImage(r) {
     }
 }
 
-async function sanitizeCSSListStyleImage(r) {
+async function sanitizeCSSListStyleImage(r, baseURL) {
     const lsi = r.style.listStyleImage;
     if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
-        const iURL = fullURL(lsi.substring(5, lsi.length - 2));
+        const iURL = absoluteURL(baseURL, lsi.substring(5, lsi.length - 2));
         if (!iURL.startsWith('data:')) {
             const inlineImg = await inlineFile(iURL);
             if (inlineImg) {
@@ -392,16 +449,16 @@ async function sanitizeCSSListStyleImage(r) {
     }
 }
 
-async function sanitizeCSSFontFace(r) {
+async function sanitizeCSSFontFace(r, baseURL) {
     const src = r.style.getPropertyValue('src');
     const srcParts = src.split(/\s+/);
-    const changed = false;
+    let changed = false;
     for (const i in srcParts) {
         const part = srcParts[i];
         if (part && part.startsWith('url("') && part.endsWith('")')) {
-            const iURL = fullURL(part.substring(5, part.length - 2));
+            const iURL = absoluteURL(baseURL, part.substring(5, part.length - 2));
             if (!iURL.startsWith('data:')) {
-                const inlineImg = await inlineFile(iURL);
+                const inlineImg = await inlineFile(absoluteURL(baseURL, iURL));
                 srcParts[i] = `url('${inlineImg}')`;
                 changed = true;
             }
@@ -449,6 +506,10 @@ function executeScriptToPromise(functionToExecute) {
 
 function fullURL(url) {
     return new URL(url, site_url).href
+}
+
+function absoluteURL(base, url) {
+    return new URL(url, base).href
 }
 
 function parseCSS(styleContent) {
