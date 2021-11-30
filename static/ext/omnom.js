@@ -16,8 +16,8 @@ const cssSanitizeFunctions = new Map([
     ['CSSMediaRule', sanitizeMediaRule],
     ['CSSFontFaceRule', sanitizeFontFaceRule],
     ['CSSPageRule', sanitizePageRule],
-    ['CSSKeyframesRule', unknownRule],
-    ['CSSKeyframeRule', unknownRule],
+    ['CSSKeyframesRule', sanitizeKeyframesRule],
+    ['CSSKeyframeRule', sanitizeKeyframeRule],
     ['CSSNamespaceRule', unknownRule],
     ['CSSCounterStyleRule', unknownRule],
     ['CSSSupportsRule', unknownRule],
@@ -354,6 +354,15 @@ async function sanitizeFontFaceRule(rule, baseURL) {
 
 async function sanitizePageRule(rule, baseURL) {
     return rule.cssText;
+}
+
+async function sanitizeKeyframesRule(rule, baseURL) {
+    let cssResult = await sanitizeCSS(rule.cssRules, baseURL);
+    return `@keyframes ${rule.name}{${cssResult}}`;
+}
+
+async function sanitizeKeyframeRule(rule, baseURL) {
+    return await sanitizeStyleRule(rule);
 }
 
 async function unknownRule(rule) {
