@@ -449,7 +449,7 @@ async function sanitizeCSSListStyleImage(r, baseURL) {
 async function sanitizeCSSFontFace(r, baseURL) {
     const src = r.style.getPropertyValue('src');
     const srcParts = src.split(/\s+/);
-    const changed = false;
+    let changed = false;
     for (const i in srcParts) {
         const part = srcParts[i];
         if (part && part.startsWith('url("') && part.endsWith('")')) {
