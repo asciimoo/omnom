@@ -167,13 +167,13 @@ async function createSnapshot() {
 
 function setStyleNodes(dom) {
     const sortedStyles = new Map([...styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
+    let parent;
+    if(dom.getElementsByTagName("head")) {
+        parent = dom.getElementsByTagName("head")[0];
+    } else {
+        parent = dom.documentElement;
+    }
     sortedStyles.forEach(style => {
-        let parent;
-        if(dom.getElementsByTagName("head")) {
-            parent = dom.getElementsByTagName("head")[0];
-        } else {
-            parent = dom.documentElement;
-        }
         parent.appendChild(style);
     });
 }
@@ -206,7 +206,6 @@ function getDOMData() {
     if(canvases) {
         let canvasImages = [];
         for(let canvas of canvases) {
-            console.log(canvas);
             let el = document.createElement("img");
             el.src = canvas.toDataURL();
             canvasImages.push(el);
@@ -307,8 +306,8 @@ async function inlineFile(url) {
         .then(checkStatus).catch((error) => {
             updateStatus(downloadStatus.FAILED);
             hasError = true;
-            console.log('MEH, network error', error, url);
-        });
+            return Promise.reject(error);
+    });
     if(hasError) {
         return '';
     }
@@ -326,11 +325,6 @@ async function inlineFile(url) {
 async function sanitizeCSS(rules, baseURL) {
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
-    }
-    if(baseURL) {
-        baseURL = absoluteURL(site_url, baseURL);
-    } else {
-        baseURL = site_url;
     }
     const cssMap = new Map();
     const rulesArray = [...rules];
