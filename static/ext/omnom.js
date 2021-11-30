@@ -278,6 +278,15 @@ async function rewriteAttributes(node) {
             const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, site_url);
             attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
         }
+        if (attr.nodeName == 'srcset') {
+            let newParts = [];
+            for(let s of attr.nodeValue.split(',')) {
+                let srcParts = s.trim().split(' ');
+                srcParts[0] = await inlineFile(srcParts[0]);
+                newParts.push(srcParts.join(' '));
+            }
+            attr.nodeValue = newParts.join(', ');
+        }
     }));
 }
 
