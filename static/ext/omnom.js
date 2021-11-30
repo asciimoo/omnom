@@ -505,8 +505,8 @@ function fullURL(url) {
     return new URL(url, site_url).href
 }
 
-function absoluteURL(url, base) {
-    return new URL(base, url).href
+function absoluteURL(base, url) {
+    return new URL(url, base).href
 }
 
 function parseCSS(styleContent) {
