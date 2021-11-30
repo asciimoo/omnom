@@ -220,10 +220,10 @@ async function transformLink(node) {
             return;
         }
         const index = styleIndex++;
-        const cssHref = node.attributes.href.nodeValue;
+        const cssHref = fullURL(node.attributes.href.nodeValue);
         const style = document.createElement('style');
         const cssText = await inlineFile(cssHref);
-        style.innerHTML = await sanitizeCSS(cssText);
+        style.innerHTML = await sanitizeCSS(cssText, cssHref);
         styleNodes.set(index, style);
         node.remove();
     }
@@ -235,7 +235,7 @@ async function transformLink(node) {
 }
 
 async function transformStyle(node) {
-    const innerText = await sanitizeCSS(node.innerText);
+    const innerText = await sanitizeCSS(node.innerText, site_url);
     node.innerText = innerText;
 }
 
@@ -254,7 +254,7 @@ async function rewriteAttributes(node) {
             attr.nodeValue = fullURL(attr.nodeValue);
         }
         if (attr.nodeName == 'style') {
-            const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`);
+            const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, site_url);
             attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
         }
     }));
@@ -288,9 +288,14 @@ async function inlineFile(url) {
     return `${base64Flag}${arrayBufferToBase64(buff)}`
 }
 
-async function sanitizeCSS(rules) {
+async function sanitizeCSS(rules, baseURL) {
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
+    }
+    if(baseURL) {
+        baseURL = absoluteURL(site_url, baseURL);
+    } else {
+        baseURL = site_url;
     }
     const cssMap = new Map();
     const rulesArray = [...rules];
@@ -299,7 +304,7 @@ async function sanitizeCSS(rules) {
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/type
         const sanitizeFunction = cssSanitizeFunctions.get(r.constructor.name);
         if (sanitizeFunction) {
-            const css = await sanitizeFunction(r).catch(err => console.log(err));
+            const css = await sanitizeFunction(r, baseURL).catch(err => console.log(err));
             cssMap.set(index, css);
         }
     }));
@@ -312,27 +317,28 @@ async function sanitizeCSS(rules) {
  * Sanitize css                     *
  * ---------------------------------*/
 
-async function sanitizeStyleRule(rule) {
-    return await sanitizeCSSRule(rule);
+async function sanitizeStyleRule(rule, baseURL) {
+    return await sanitizeCSSRule(rule, baseURL);
 }
 
-async function sanitizeImportRule(rule) {
+async function sanitizeImportRule(rule, baseURL) {
     // TODO handle import loops
-    return await sanitizeCSS(rule.href);
+    let href = absoluteURL(baseURL, rule.href);
+    return await sanitizeCSS(await inlineFile(href), href);
 }
 
-async function sanitizeMediaRule(rule) {
+async function sanitizeMediaRule(rule, baseURL) {
     const cssRuleArray = [...rule.cssRules];
     let cssResult = '';
     await Promise.allSettled(cssRuleArray.map(async (r, index) => {
-        const css = await sanitizeCSSRule(r);
+        const css = await sanitizeCSSRule(r, baseURL);
         cssResult += css;
     }));
     return `@media ${rule.media.mediaText}{${cssResult}}`;
 }
 
-async function sanitizeFontFaceRule(rule) {
-    const fontRule = await sanitizeCSSFontFace(rule);
+async function sanitizeFontFaceRule(rule, baseURL) {
+    const fontRule = await sanitizeCSSFontFace(rule, baseURL);
     return fontRule ? fontRule : rule.cssText;
 }
 
@@ -341,21 +347,21 @@ async function unknownRule(rule) {
     return Promise.reject('MEEEH, unknown css rule type: ', rule);
 }
 
-async function sanitizeCSSRule(r) {
+async function sanitizeCSSRule(r, baseURL) {
     // huh? how can r be undefined?....
     if (!r || !r.style) {
         return '';
     }
     // TODO handle ::xy { content: }
-    await sanitizeCSSBgImage(r);
-    await sanitizeCSSListStyleImage(r);
+    await sanitizeCSSBgImage(r, baseURL);
+    await sanitizeCSSListStyleImage(r, baseURL);
     return r.cssText;
 }
 
-async function sanitizeCSSBgImage(r) {
+async function sanitizeCSSBgImage(r, baseURL) {
     const bgi = r.style.backgroundImage;
     if (bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
-        const bgURL = fullURL(bgi.substring(5, bgi.length - 2));
+        const bgURL = absoluteURL(baseURL, bgi.substring(5, bgi.length - 2));
         if (!bgURL.startsWith('data:')) {
             const inlineImg = await inlineFile(bgURL);
             if (inlineImg) {
@@ -372,10 +378,10 @@ async function sanitizeCSSBgImage(r) {
     }
 }
 
-async function sanitizeCSSListStyleImage(r) {
+async function sanitizeCSSListStyleImage(r, baseURL) {
     const lsi = r.style.listStyleImage;
     if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
-        const iURL = fullURL(lsi.substring(5, lsi.length - 2));
+        const iURL = absoluteURL(baseURL, lsi.substring(5, lsi.length - 2));
         if (!iURL.startsWith('data:')) {
             const inlineImg = await inlineFile(iURL);
             if (inlineImg) {
@@ -392,16 +398,16 @@ async function sanitizeCSSListStyleImage(r) {
     }
 }
 
-async function sanitizeCSSFontFace(r) {
+async function sanitizeCSSFontFace(r, baseURL) {
     const src = r.style.getPropertyValue('src');
     const srcParts = src.split(/\s+/);
     const changed = false;
     for (const i in srcParts) {
         const part = srcParts[i];
         if (part && part.startsWith('url("') && part.endsWith('")')) {
-            const iURL = fullURL(part.substring(5, part.length - 2));
+            const iURL = absoluteURL(baseURL, part.substring(5, part.length - 2));
             if (!iURL.startsWith('data:')) {
-                const inlineImg = await inlineFile(iURL);
+                const inlineImg = await inlineFile(absoluteURL(baseURL, iURL));
                 srcParts[i] = `url('${inlineImg}')`;
                 changed = true;
             }
@@ -449,6 +455,10 @@ function executeScriptToPromise(functionToExecute) {
 
 function fullURL(url) {
     return new URL(url, site_url).href
+}
+
+function absoluteURL(url, base) {
+    return new URL(base, url).href
 }
 
 function parseCSS(styleContent) {
