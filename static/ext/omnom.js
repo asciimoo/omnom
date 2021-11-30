@@ -277,11 +277,16 @@ async function inlineFile(url) {
     };
     const request = new Request(url, options);
     updateStatus(downloadStatus.DOWNLOADING);
+    let hasError = false;
     const responseObj = await fetch(request, options)
         .then(checkStatus).catch((error) => {
             updateStatus(downloadStatus.FAILED);
-            console.log('MEH, network error', error);
+            hasError = true;
+            console.log('MEH, network error', error, url);
         });
+    if(hasError) {
+        return '';
+    }
     const contentType = responseObj.headers.get('Content-Type');
     updateStatus(downloadStatus.DOWNLOADED);
     if (contentType.toLowerCase().search('text') != -1) {
