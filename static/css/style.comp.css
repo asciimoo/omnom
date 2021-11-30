@@ -45,3 +45,15 @@ body {
   @media only screen and (max-width: 56.25em) {
     body {
       padding: 0; } }
+
+.omnom-popup__container {
+  padding: 3rem; }
+  .omnom-popup__container h2 {
+    font-size: 3.5rem; }
+
+.omnom-popup__title span {
+  font-size: 3.5rem;
+  text-transform: uppercase; }
+
+.omnom-popup__title span:last-child {
+  color: #0093ab; }

@@ -1,0 +1,18 @@
+.omnom-popup{
+ &__container{
+     padding: 3rem;
+
+     h2{
+        font-size: $big-font;
+    }
+ }
+ &__title{
+     span{
+         font-size: $big-font;
+         text-transform: uppercase;
+     }
+     span:last-child{
+        color: $primary-color
+     }
+}
+}
