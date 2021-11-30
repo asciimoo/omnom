@@ -168,8 +168,13 @@ async function createSnapshot() {
 function setStyleNodes(dom) {
     const sortedStyles = new Map([...styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
     sortedStyles.forEach(style => {
-        const head = dom.childNodes[0];
-        head.appendChild(style);
+        let parent;
+        if(dom.getElementsByTagName("head")) {
+            parent = dom.getElementsByTagName("head")[0];
+        } else {
+            parent = dom.documentElement;
+        }
+        parent.appendChild(style);
     });
 }
 
