@@ -20,7 +20,7 @@ const cssSanitizeFunctions = new Map([
     ['CSSKeyframeRule', sanitizeKeyframeRule],
     ['CSSNamespaceRule', unknownRule],
     ['CSSCounterStyleRule', unknownRule],
-    ['CSSSupportsRule', unknownRule],
+    ['CSSSupportsRule', sanitizeSupportsRule],
     ['CSSDocumentRule', unknownRule],
     ['CSSFontFeatureValuesRule', unknownRule],
     ['CSSViewportRule', unknownRule],
@@ -363,6 +363,11 @@ async function sanitizeKeyframesRule(rule, baseURL) {
 
 async function sanitizeKeyframeRule(rule, baseURL) {
     return await sanitizeStyleRule(rule);
+}
+
+async function sanitizeSupportsRule(rule, baseURL) {
+    let cssResult = await sanitizeCSS(rule.cssRules, baseURL);
+    return `@supports ${rule.conditionText}{${cssResult}}`;
 }
 
 async function unknownRule(rule) {
