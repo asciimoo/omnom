@@ -28,7 +28,7 @@
         <div class="control">
             <div class="tags has-addons">
                 <span class="tag is-primary is-medium">{{ .Tag }}</span>
-                <span class="tag is-medium">{{ .Count }}</span>
+                <span class="tag is-dark is-medium">{{ .Count }}</span>
             </div>
         </div>
         {{ end }}
