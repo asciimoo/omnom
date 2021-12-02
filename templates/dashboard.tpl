@@ -26,10 +26,10 @@
     <div class="field is-grouped is-grouped-multiline">
         {{ range .Tags }}
         <div class="control">
-            <div class="tags has-addons">
+            <a class="tags has-addons" href="/my_bookmarks?tag={{ .Tag }}">
                 <span class="tag is-primary is-medium">{{ .Tag }}</span>
                 <span class="tag is-dark is-medium">{{ .Count }}</span>
-            </div>
+            </a>
         </div>
         {{ end }}
     </div>
@@ -39,7 +39,7 @@
     {{ if .Bookmarks }}
       <h4 class="title">My latest bookmarks</h4>
       {{ range .Bookmarks }}
-          {{ block "bookmark" .}}{{ end }}
+          {{ block "my-bookmark" .}}{{ end }}
       {{ end }}
     {{ else }}
       {{ block "warning" "No bookmarks added yet"}}{{ end }}

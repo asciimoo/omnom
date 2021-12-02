@@ -19,7 +19,7 @@
         </details>
     </form></div>
     {{ range .Bookmarks }}
-        {{ block "bookmark" .}}{{ end }}
+        {{ block "public-bookmark" .}}{{ end }}
     {{ end }}
 {{ block "paging" .}}{{ end }}
 </div>
