@@ -31,10 +31,11 @@ func bookmarks(c *gin.Context) {
 			filterFromDate(sp.FromDate, q, cq)
 			filterToDate(sp.ToDate, q, cq)
 			filterDomain(sp.Domain, q, cq)
+			filterTag(sp.Tag, q, cq)
 		}
 	}
 	cq.Count(&bookmarkCount)
-	q.Order("created_at desc").Find(&bs)
+	q.Order("bookmarks.created_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
@@ -52,7 +53,7 @@ func myBookmarks(c *gin.Context) {
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID)
-	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(u).Preload("Snapshots").Preload("Tags")
+	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Preload("Snapshots").Preload("Tags")
 	sp := &searchParams{}
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
@@ -65,6 +66,7 @@ func myBookmarks(c *gin.Context) {
 			filterFromDate(sp.FromDate, q, cq)
 			filterToDate(sp.ToDate, q, cq)
 			filterDomain(sp.Domain, q, cq)
+			filterTag(sp.Tag, q, cq)
 			if sp.IsPublic {
 				filterPublic(q, cq)
 			}
@@ -74,7 +76,7 @@ func myBookmarks(c *gin.Context) {
 		}
 	}
 	cq.Count(&bookmarkCount)
-	q.Order("created_at desc").Association("Bookmarks").Find(&bs)
+	q.Order("bookmarks.created_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,

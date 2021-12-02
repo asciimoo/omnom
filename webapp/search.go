@@ -57,6 +57,15 @@ func filterDomain(d string, q, cq *gorm.DB) error {
 	return nil
 }
 
+func filterTag(t string, q, cq *gorm.DB) error {
+	if t == "" {
+		return nil
+	}
+	q = q.Joins("join tags on tags.bookmark_id == bookmarks.id").Where("tags.text = ?", t)
+	cq = cq.Joins("join tags on tags.bookmark_id == bookmarks.id").Where("tags.text = ?", t)
+	return nil
+}
+
 func filterFromDate(d string, q, cq *gorm.DB) error {
 	// TODO
 	fmt.Println(d, q, cq)
