@@ -1,7 +1,9 @@
 package webapp
 
 import (
+	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/asciimoo/omnom/model"
@@ -28,16 +30,23 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
 	if qs == "" {
 		return nil
 	}
-	q = q.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
-	cq = cq.Where("LOWER(title) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
+	if strings.Contains(qs, "*") {
+		qs = strings.ReplaceAll(qs, "*", "%")
+	} else {
+		qs = fmt.Sprintf("%%%s%%", qs)
+	}
+	query := "LOWER(bookmarks.title) LIKE LOWER(@query)"
 	if inNote {
-		q = q.Or("LOWER(notes) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
-		cq = cq.Or("LOWER(notes) LIKE LOWER(?)", fmt.Sprintf("%%%s%%", qs))
+		query += " or LOWER(bookmarks.notes) LIKE LOWER(@query)"
 	}
 	if inSnapshot {
-		// TODO
-		fmt.Println(inSnapshot)
+		q = q.Joins("join snapshots on snapshots.bookmark_id = bookmarks.id")
+		cq = cq.Joins("join snapshots on snapshots.bookmark_id = bookmarks.id")
+		query += " or LOWER(snapshots.site) LIKE LOWER(@query)"
 	}
+	query = "(" + query + ")"
+	q = q.Where(query, sql.Named("query", qs))
+	cq = cq.Where(query, sql.Named("query", qs))
 	return nil
 }
 
