@@ -2,11 +2,14 @@ package webapp
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/asciimoo/omnom/model"
 
 	"gorm.io/gorm"
 )
+
+const dateFormat string = "2006.01.02"
 
 type searchParams struct {
 	Q                string `form:"query"`
@@ -39,12 +42,15 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
 }
 
 func filterOwner(o string, q, cq *gorm.DB) error {
+	if o == "" {
+		return nil
+	}
 	u := model.GetUser(o)
 	if u == nil {
 		return nil
 	}
-	q = q.Where("user_id == ? or public == true", u.ID)
-	cq = cq.Where("user_id == ? or public == true", u.ID)
+	q = q.Where("user_id == ? and public == true", u.ID)
+	cq = cq.Where("user_id == ? and public == true", u.ID)
 	return nil
 }
 
@@ -67,14 +73,28 @@ func filterTag(t string, q, cq *gorm.DB) error {
 }
 
 func filterFromDate(d string, q, cq *gorm.DB) error {
-	// TODO
-	fmt.Println(d, q, cq)
+	if d == "" {
+		return nil
+	}
+	t, err := time.Parse(dateFormat, d)
+	if err != nil {
+		return err
+	}
+	q = q.Where("bookmarks.created_at >= ?", t)
+	cq = cq.Where("bookmarks.created_at >= ?", t)
 	return nil
 }
 
 func filterToDate(d string, q, cq *gorm.DB) error {
-	// TODO
-	fmt.Println(d, q, cq)
+	if d == "" {
+		return nil
+	}
+	t, err := time.Parse(dateFormat, d)
+	if err != nil {
+		return err
+	}
+	q = q.Where("bookmarks.created_at <= ?", t)
+	cq = cq.Where("bookmarks.created_at <= ?", t)
 	return nil
 }
 
