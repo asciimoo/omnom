@@ -1,12 +1,14 @@
 package webapp
 
 import (
+	"bytes"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
 
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -88,6 +90,7 @@ func myBookmarks(c *gin.Context) {
 }
 
 func addBookmark(c *gin.Context) {
+	// TODO error handling
 	tok := c.PostForm("token")
 	u := model.GetUserBySubmissionToken(tok)
 	if u == nil {
@@ -123,11 +126,14 @@ func addBookmark(c *gin.Context) {
 	if c.PostForm("public") != "" {
 		b.Public = true
 	}
-	snapshot := c.PostForm("snapshot")
-	if snapshot != "" {
+	snapshot := []byte(c.PostForm("snapshot"))
+	if !bytes.Equal(snapshot, []byte("")) {
+		key := storage.Hash(snapshot)
+		_ = storage.SaveSnapshot(key, snapshot)
 		b.Snapshots = []model.Snapshot{
 			model.Snapshot{
-				Site:  snapshot,
+				Key:   key,
+				Text:  c.PostForm("snapshot_text"),
 				Title: c.PostForm("snapshot_title"),
 			},
 		}

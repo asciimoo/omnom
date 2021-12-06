@@ -6,3 +6,6 @@ server:
 db:
   type: "sqlite"
   connection: "db.sqlite3"
+storage:
+  type: "fs"
+  initParam: "./data"

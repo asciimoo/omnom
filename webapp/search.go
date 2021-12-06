@@ -42,7 +42,7 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
 	if inSnapshot {
 		q = q.Joins("join snapshots on snapshots.bookmark_id = bookmarks.id")
 		cq = cq.Joins("join snapshots on snapshots.bookmark_id = bookmarks.id")
-		query += " or LOWER(snapshots.site) LIKE LOWER(@query)"
+		query += " or LOWER(snapshots.text) LIKE LOWER(@query)"
 	}
 	query = "(" + query + ")"
 	q = q.Where(query, sql.Named("query", qs))

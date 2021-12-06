@@ -8,6 +8,7 @@ import (
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/webapp"
 
 	"github.com/spf13/cobra"
@@ -18,6 +19,13 @@ var cfg *config.Config
 
 func initDB(cmd *cobra.Command, args []string) {
 	err := model.Init(cfg)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initStorage() {
+	err := storage.Init(cfg.Storage.Type, cfg.Storage.InitParam)
 	if err != nil {
 		panic(err)
 	}
@@ -37,6 +45,7 @@ var listenCmd = &cobra.Command{
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
+		initStorage()
 		webapp.Run(cfg)
 	},
 }

@@ -80,7 +80,8 @@ type Snapshot struct {
 	gorm.Model
 	ID         uint `gorm:"primaryKey"`
 	Title      string
-	Site       string
+	Key        string
+	Text       string
 	BookmarkID uint
 	CreatedAt  time.Time
 }

@@ -18,6 +18,10 @@ type Config struct {
 		Connection string `yaml:"connection"`
 		Type       string `yaml:"type"`
 	} `yaml:"db"`
+	Storage struct {
+		Type      string `yaml:"type"`
+		InitParam string `yaml:"initParam"`
+	} `yaml:"storage"`
 }
 
 func Load(filename string) (*Config, error) {

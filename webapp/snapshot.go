@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
 )
@@ -49,5 +50,9 @@ func snapshot(c *gin.Context) {
 	if !b.Public && (u == nil || u.(*model.User).ID != b.UserID) {
 		return
 	}
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(s.Site))
+	sBody, err := storage.GetSnapshot(s.Key)
+	if err != nil {
+		return
+	}
+	c.Data(http.StatusOK, "text/html; charset=utf-8", sBody)
 }
