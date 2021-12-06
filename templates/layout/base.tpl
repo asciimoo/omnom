@@ -117,7 +117,7 @@
     </div>
     <div class="media-right">
         {{ range $i,$s := .Snapshots }}
-        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }}</a>
+        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
         {{ end }}
         {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>
@@ -137,7 +137,7 @@
     </div>
     <div class="media-right">
         {{ range $i,$s := .Snapshots }}
-        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }}</a>
+        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
         {{ end }}
         {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>

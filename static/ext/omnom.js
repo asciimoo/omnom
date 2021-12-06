@@ -120,14 +120,15 @@ async function fillFormFields() {
 async function saveBookmark(e) {
     e.preventDefault();
     console.time('createSnapshot');
-    const snapshot = await createSnapshot();
+    const snapshotData = await createSnapshot();
     console.timeEnd('createSnapshot');
     if (debug) {
         debugPopup(snapshot);
         return;
     }
     const form = new FormData(document.forms['add']);
-    form.append('snapshot', snapshot);
+    form.append('snapshot', snapshotData['dom']);
+    form.append('snapshot_text', snapshotData['text']);
     await fetch(`${omnom_url}add_bookmark`, {
         method: 'POST',
         body: form,
@@ -162,7 +163,10 @@ async function createSnapshot() {
             document.getElementsByTagName('head')[0].appendChild(faviconElement);
         }
     }
-    return `${doc.doctype}${dom.outerHTML}`;
+    return {
+        'dom': `${doc.doctype}${dom.outerHTML}`,
+        'text': dom.getElementsByTagName("body")[0].innerText,
+    };
 }
 
 function setStyleNodes(dom) {
