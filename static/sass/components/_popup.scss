@@ -1,18 +1,58 @@
 .omnom-popup{
- &__container{
-     padding: 3rem;
-
+&__container{
+    width: 22rem;
+     padding: 0.5rem 0.5rem;
      h2{
-        font-size: $big-font;
+        font-size: $small-font;
+        font-weight: 800;
+        margin-bottom: 1rem;
     }
  }
+ &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;    
+ }
+
  &__title{
      span{
-         font-size: $big-font;
+         font-size: $normal-font;
          text-transform: uppercase;
+         font-weight: 800;
      }
-     span:last-child{
-        color: $primary-color
+     .text--primary {
+            color: $primary-color;         
      }
+}
+&__form {
+    label{
+        font-size: 0.7rem;
+        font-weight: 400;
+    }
+    .tag:not(body).is-rounded{
+        border: 1px solid;
+    }
+
+    .tags-input {
+        margin-bottom: 0.5rem;
+    }
+}
+&__controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+&__submit {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    
+    .button.is-primary, .button.is-primary:hover {
+        background-color: $primary-color;        
+    }
 }
 }

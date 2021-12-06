@@ -1,0 +1,202 @@
+$switch-background: $grey-light !default
+$switch-border: .1rem solid transparent !default
+$switch-background-active: $primary !default
+$switch-radius: $radius !default
+$switch-paddle-background: $white !default
+$switch-paddle-background-active: $primary !default
+$switch-paddle-offset: 0.25rem !default
+$switch-paddle-transition: all 0.25s ease-out !default
+$switch-focus: 1px dotted $grey-light !default
+
+=switch-size($size)
+	$switch-height: $size * 1.5
+	$switch-width: $switch-height * 2
+	$paddle-height: $switch-height - ($switch-paddle-offset * 2)
+	$paddle-width: $switch-height - ($switch-paddle-offset * 2)
+	$paddle-active-offest: $switch-width - $paddle-width - ($switch-paddle-offset * 1.5)
+
+	+ label
+		position: relative
+		display: iniline-flex
+		align-items: center
+		justify-content: flex-start
+		font-size: $size
+		height: $control-height
+		line-height: $control-line-height
+		padding-left: $switch-width + .5
+		padding-top: .2rem
+		cursor: pointer
+
+		&::before,
+		&:before
+			position: absolute
+			display: block
+			top: 0
+			left: 0
+			width: $switch-width
+			height: $switch-height
+			border: $switch-border
+			border-radius: $switch-radius
+			background: $switch-background
+			content: ''
+
+		&::after,
+		&:after
+			display: block
+			position: absolute
+			top: ($switch-height / 2) - ($paddle-height / 2)
+			left: $switch-paddle-offset
+			width: $paddle-width
+			height: $paddle-height
+			transform: translate3d(0, 0, 0)
+			border-radius: $switch-radius
+			background: $switch-paddle-background
+			transition: $switch-paddle-transition
+			content: ''
+
+	&.is-rtl
+		+ label
+			padding-left: 0
+			padding-right: $switch-width + .5
+			&::before,
+			&:before
+				left: auto
+				right: 0
+			&::after,
+			&:after
+				left: auto
+				right: $paddle-active-offest
+
+	&:checked
+		+ label
+			&::before,
+			&:before
+				background: $switch-background-active
+			&::after
+				left: $paddle-active-offest
+		&.is-rtl
+			+ label
+				&::after,
+				&:after
+					left: auto
+					right: $switch-paddle-offset
+
+	&.is-outlined
+		+ label
+			&::before,
+			&:before
+				background-color: transparent
+				border-color: $switch-background
+			&::after,
+			&:after
+				background: $switch-background
+		&:checked
+			+ label
+				&::before,
+				&:before
+					background-color: transparent
+					border-color: $switch-background-active
+				&::after,
+				&:after
+					background: $switch-paddle-background-active
+
+	&.is-thin
+		+ label
+			&::before,
+			&:before
+				top: $switch-height / 2.75
+				height: $switch-height / 4
+			&::after,
+			&:after
+				box-shadow: 0px 0px 3px $grey
+
+	&.is-rounded
+		+ label
+			&::before,
+			&:before
+				border-radius: $radius-large * 4
+			&::after,
+			&:after
+				border-radius: 50%
+
+
+.switch[type="checkbox"]
+	outline: 0
+	user-select: none
+	display: inline-block
+	position: absolute
+	opacity: 0
+
+	&:focus
+		+ label
+			&::before,
+			&:before,
+			&::after,
+			&:after
+				outline: $switch-focus
+
+	&[disabled]
+		cursor: not-allowed
+		+ label
+			opacity: 0.5
+			&::before,
+			&:before
+				opacity: 0.5
+			&::after,
+			&:after
+				opacity: 0.5
+			&:hover
+				cursor: not-allowed
+
+	+switch-size($size-normal)
+	&.is-small
+		+switch-size($size-small)
+	&.is-medium
+		+switch-size($size-medium)
+	&.is-large
+		+switch-size($size-large)
+
+	@each $name, $pair in $colors
+		$color: nth($pair, 1)
+		$color-invert: nth($pair, 2)
+		&.is-#{$name}
+			&:checked
+				+ label
+					&::before,
+					&:before
+						background: $color
+			&.is-outlined
+				&:checked
+					+ label
+						&::before,
+						&:before
+							background-color: transparent
+							border-color: $color !important
+						&::after,
+						&:after
+							background: $color
+			&.is-thin
+				&.is-outlined
+					+ label
+						&::after,
+						&:after
+							box-shadow: none
+		&.is-unchecked-#{$name}
+			+ label
+				&::before,
+				&:before
+					background: $color
+			&.is-outlined
+				+ label
+					&::before,
+					&:before
+						background-color: transparent
+						border-color: $color !important
+					&::after,
+					&:after
+						background: $color
+
+.field-body
+	.switch[type="checkbox"]
+		+ label
+			margin-top: .375em

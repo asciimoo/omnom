@@ -9,42 +9,83 @@
 
 <body>
     <div id="omnom-content" class="omnom-popup__container">
-        <div class="omnom-popup__title"><span>om</span><span>nom</span></div>
-        <h2>Extension options</h2>
-        <form name="add" id="add" method="post">
-            <table>
-                <tr>
-                    <td><label for="url">URL</label></td>
-                    <td><input type="text" name="url" id="url" /></td>
-                </tr>
-                <tr>
-                    <td><label for="title">Title</label></td>
-                    <td><input type="text" name="title" id="title" /></td>
-                </tr>
-                <tr>
-                    <td><label for="notes">Notes</label></td>
-                    <td><textarea id="notes" rows="10" cols="40" name="notes"></textarea></td>
-                </tr>
-                <tr>
-                    <td><label for="tags">Tags</label></td>
-                    <td><input type="text" name="tags" id="tags" /></td>
-                </tr>
-                <tr>
-                    <td><label for="public">Public</label></td>
-                    <td><input type="checkbox" name="public" id="public" /></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td><input type="submit" value="save" /></td>
-                </tr>
+        <div class="omnom-popup__header">
+            <div class="omnom-popup__title">
+                <span>om</span><span class="text--primary">nom</span>
+            </div>
+            <div class="omnom-popup__controls">
+                <button class="button is-outlined"><span class="icon">
+                        <i class="fas fa-cog"></i>
+                    </span></button>
+                <button class="button is-outlined"><span class="icon">
+                        <i class="fas fa-times"></i>
+                    </span></button>
+            </div>
+        </div>
+        <h2>Create bookmark</h2>
+        <div class="omnom-popup__form">
+            <form name="add" id="add" method="post">
+                <div class="field">
+                    <label class="label">Url</label>
+                    <div class="control">
+                        <input class="input" type="text" name="url" id="url" placeholder="Url">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Bookmark title</label>
+                    <div class="control">
+                        <input class="input" type="text" id="title" placeholder="Add title">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Bookmark notes</label>
+                    <div class="control">
+                        <textarea class="textarea" id="notes" placeholder="Add your notes here"></textarea>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Tags</label>
+                    <div class="control tags-input">
+                        <input class="input" type="text" id="tags" placeholder="Add a new tag!">
+                    </div>
+                    <div class="field is-grouped is-grouped-multiline">
+                        <div class="control">
+                            <span class="tag is-rounded">
+                                Bar
+                                <button class="delete is-small"></button>
+                            </span>
+                        </div>
+                        <div class="control">
+                            <span class="tag is-rounded">
+                                Foo
+                                <button class="delete is-small"></button>
+                            </span>
+                        </div>
+
+                        <div class="control">
+                            <span class="tag is-rounded">
+                                BarFoo
+                                <button class="delete is-small"></button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <input id="switchRoundedDefault" type="checkbox" name="switchRoundedDefault"
+                            class="switch is-rounded" checked="checked">
+                        <label for="switchRoundedDefault">Public</label>
+                    </div>
+                </div>
+                <div class="omnom-popup__submit">
+                    <input type="submit" value="Save" class="button is-primary" />
+                </div>
                 <tr>
                     <td><label for="snapshot_title">Snapshot title</label></td>
                     <td><input type="text" name="snapshot_title" id="snapshot_title" /></td>
                 </tr>
-            </table>
-            <input type="hidden" id="token" name="token" value="" />
-            <input type="hidden" id="favicon" name="favicon" value="" />
-        </form>
+                <input type="hidden" id="token" name="token" value="" />
+                <input type="hidden" id="favicon" name="favicon" value="" />
+            </form>
+        </div>
         <p id="omnom_status">
         <h3> </h3>
         </p>
