@@ -31,10 +31,8 @@
 		"chrome_style": false
 	},
 	"permissions": [
-		"bookmarks",
-		"tabs",
+		"activeTab",
 		"<all_urls>",
-		"storage",
-		"webRequest"
+		"storage"
 	]
 }
