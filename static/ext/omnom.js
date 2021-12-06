@@ -310,7 +310,6 @@ async function inlineFile(url) {
         .then(checkStatus).catch((error) => {
             updateStatus(downloadStatus.FAILED);
             hasError = true;
-            return Promise.reject(error);
     });
     if(hasError) {
         return '';
