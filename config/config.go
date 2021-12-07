@@ -13,6 +13,7 @@ type Config struct {
 	} `yaml:"app"`
 	Server struct {
 		Address string `yaml:"address"`
+		BaseURL string `yaml:"base_url"`
 	} `yaml:"server"`
 	DB struct {
 		Connection string `yaml:"connection"`

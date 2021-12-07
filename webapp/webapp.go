@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -98,11 +99,24 @@ func Run(cfg *config.Config) {
 	if cfg.App.BookmarksPerPage > 0 {
 		bookmarksPerPage = cfg.App.BookmarksPerPage
 	}
-	e.HTMLRender = createRenderer()
 	e.Use(sessions.Sessions("SID", sessions.NewCookieStore([]byte("secret"))))
 	e.Use(SessionMiddleware())
+	e.Use(ConfigMiddleware(cfg))
 	authorized := e.Group("/")
 	authorized.Use(authRequired)
+
+	baseURL, err := url.Parse(cfg.Server.BaseURL)
+	if err != nil {
+		panic(err)
+	}
+	tplFuncMap["BaseURL"] = func(u string) string {
+		b, err := url.Parse(u)
+		if err != nil {
+			return ""
+		}
+		return baseURL.ResolveReference(b).String()
+	}
+	e.HTMLRender = createRenderer()
 
 	// ROUTES
 	e.Static("/static", "./static")
@@ -165,6 +179,13 @@ func SessionMiddleware() gin.HandlerFunc {
 		} else {
 			c.Set("user", nil)
 		}
+		c.Next()
+	}
+}
+
+func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("config", cfg)
 		c.Next()
 	}
 }

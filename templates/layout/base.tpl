@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <title>Omnom</title>
-    <link rel="stylesheet" href="/static/css/bulma.min.css" />
-    <link rel="stylesheet" href="/static/css/fa.min.css" />
-    <link rel="stylesheet" href="/static/css/style.css" />
-    <link rel="icon" type="image/png" href="/static/ext/icons/omnom128.png" sizes="128x128">
+    <link rel="stylesheet" href="{{ BaseURL "/static/css/bulma.min.css" }}" />
+    <link rel="stylesheet" href="{{ BaseURL "/static/css/fa.min.css" }}" />
+    <link rel="stylesheet" href="{{ BaseURL "/static/css/style.css" }}" />
+    <link rel="icon" type="image/png" href="{{ BaseURL "/static/ext/icons/omnom128.png" }}" sizes="128x128">
 
     {{ block "head" . }} {{ end }}
 </head>
@@ -14,7 +14,7 @@
 <nav class="navbar border-bottom {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
   <div class="container">
     <div class="navbar-brand is-size-4">
-      <a class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}" href="/"><strong>Omnom</strong> </a>
+      <a class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}" href="{{ BaseURL "/" }}"><strong>Omnom</strong> </a>
       <label for="nav-toggle-state" role="button" class="navbar-burger burger has-text-black" aria-label="menu" aria-expanded="false">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -26,17 +26,17 @@
     <div id="navbar-menu" class="navbar-menu is-size-5">
       <div class="navbar-start">
         {{ if .User }}
-          <a href="/my_bookmarks" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
+          <a href="{{ BaseURL "/my_bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
-        <a href="/bookmarks" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
+        <a href="{{ BaseURL "/bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
       </div>
       <div class="navbar-end">
         {{ if .User }}
-            <a href="/profile" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
-            <div class="navbar-item"><a href="/logout" class="button is-outlined is-info">Logout</a></div>
+            <a href="{{ BaseURL "/profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
+            <div class="navbar-item"><a href="{{ BaseURL "/logout" }}" class="button is-outlined is-info">Logout</a></div>
         {{ else }}
-            <div class="navbar-item"><a href="/login" class="button is-outlined is-info">Login</a></div>
-            <div class="navbar-item"><a href="/signup" class="button is-outlined is-info">Signup</a></div>
+            <div class="navbar-item"><a href="{{ BaseURL "/login" }}" class="button is-outlined is-info">Login</a></div>
+            <div class="navbar-item"><a href="{{ BaseURL "/signup" }}" class="button is-outlined is-info">Signup</a></div>
         {{ end }}
       </div>
     </div>
@@ -111,13 +111,13 @@
         <p>{{ .Notes }}</p>
         {{ if .Tags }}
           {{ range .Tags }}
-            <a href="/my_bookmarks?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+            <a href="{{ BaseURL "/my_bookmarks" }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
           {{ end }}
         {{ end }}
     </div>
     <div class="media-right">
         {{ range $i,$s := .Snapshots }}
-        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
+        <a href="{{ BaseURL "/snapshot" }}?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
         {{ end }}
         {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>
@@ -131,13 +131,13 @@
         <p>{{ .Notes }}</p>
         {{ if .Tags }}
           {{ range .Tags }}
-            <a href="/bookmarks?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+            <a href="{{ BaseURL "/bookmarks" }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
           {{ end }}
         {{ end }}
     </div>
     <div class="media-right">
         {{ range $i,$s := .Snapshots }}
-        <a href="/snapshot?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
+        <a href="{{ BaseURL "/snapshot" }}?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
         {{ end }}
         {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>

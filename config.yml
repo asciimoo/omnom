@@ -3,6 +3,9 @@ app:
   bookmarks_per_page: 20
 server:
   address: "127.0.0.1:7331"
+  # e.g. http://localhost:7331/
+  # leave blank if you don't have custom base URL
+  base_url: ""
 db:
   type: "sqlite"
   connection: "db.sqlite3"
