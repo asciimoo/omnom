@@ -49,5 +49,8 @@ func mkdir(dir string) error {
 }
 
 func getPrefix(s string) string {
+	if len(s) < 2 {
+		return ""
+	}
 	return s[:2]
 }
