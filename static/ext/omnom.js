@@ -41,6 +41,7 @@ let site_url = '';
 let omnom_token = '';
 let omnom_url = '';
 let styleIndex = 0;
+let tags = [];
 
 function debugPopup(content) {
     if (is_chrome) {
@@ -63,7 +64,45 @@ function displayPopup() {
             window.close();
         });
     });
+    setEventListeners();
     setOmnomSettings().then(fillFormFields, renderError);
+}
+
+function setEventListeners() {
+    const tagsInput = document.getElementById('tags');
+    tagsInput.addEventListener('change', (event) => { addTag(event); tagsInput.value = '' });
+
+    const closeButton = document.getElementById('close');
+    closeButton.addEventListener('click', () => window.close());
+}
+
+function addTag(event) {
+    const value = event.target.value;
+    const tagChipContainer = document.getElementById('tag-chips');
+
+    const newChip = document.createElement('div');
+    newChip.className = 'control chip-control';
+
+    const chipContainer = document.createElement('span');
+    chipContainer.className = 'tag is-rounded';
+    chipContainer.innerText = value;
+
+    const chipDelete = document.createElement('button');
+    chipDelete.className = 'delete is-small';
+    chipDelete.type = 'button';
+    chipDelete.addEventListener('click', deleteTag.bind({}, newChip));
+
+    chipContainer.appendChild(chipDelete);
+    newChip.appendChild(chipContainer);
+    tagChipContainer.appendChild(newChip);
+    tags.push(value);
+
+}
+
+function deleteTag(chipElement) {
+    const tagChipContainer = document.getElementById('tag-chips');
+    tagChipContainer.removeChild(chipElement);
+    tags = [...tagChipContainer.children].map(child => child.innerText);
 }
 
 async function setOmnomSettings() {
@@ -89,7 +128,6 @@ function getOmnomDataFromLocal() {
 }
 
 async function fillFormFields() {
-    document.getElementById('omnom_url').innerHTML = `Server URL: ${omnom_url}`;
     document.querySelector('form').action = `${omnom_url}add_bookmark`;
     document.getElementById('token').value = omnom_token;
 
@@ -122,19 +160,21 @@ async function saveBookmark(e) {
     console.time('createSnapshot');
     const snapshotData = await createSnapshot();
     console.timeEnd('createSnapshot');
+    console.log(tags);
     if (debug) {
-        debugPopup(snapshot);
+        debugPopup(snapshotData['dom']);
         return;
     }
     const form = new FormData(document.forms['add']);
     form.append('snapshot', snapshotData['dom']);
     form.append('snapshot_text', snapshotData['text']);
+    form.set('tags', tags.join(','));
     await fetch(`${omnom_url}add_bookmark`, {
         method: 'POST',
         body: form,
-        //headers: {
-        //    'Content-type': 'application/json; charset=UTF-8'
-        //}
+        // headers: {
+        //     'Content-type': 'application/json; charset=UTF-8'
+        // }
     }).then(checkStatus).catch(err => renderError(`Failed to save bookmark:${err}`));
     document.body.innerHTML = '<h1>Bookmark saved</h1>';
     setTimeout(window.close, 2000);
@@ -172,7 +212,7 @@ async function createSnapshot() {
 function setStyleNodes(dom) {
     const sortedStyles = new Map([...styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
     let parent;
-    if(dom.getElementsByTagName("head")) {
+    if (dom.getElementsByTagName("head")) {
         parent = dom.getElementsByTagName("head")[0];
     } else {
         parent = dom.documentElement;
@@ -207,15 +247,15 @@ function getDOMData() {
     }
     [...html.attributes].forEach(attr => ret.attributes[attr.nodeName] = attr.nodeValue);
     let canvases = document.getElementsByTagName('canvas');
-    if(canvases) {
+    if (canvases) {
         let canvasImages = [];
-        for(let canvas of canvases) {
+        for (let canvas of canvases) {
             let el = document.createElement("img");
             el.src = canvas.toDataURL();
             canvasImages.push(el);
         }
         let snapshotCanvases = ret.html.getElementsByTagName('canvas');
-        for(let i in canvasImages) {
+        for (let i in canvasImages) {
             let canvas = snapshotCanvases[i];
             canvas.parentNode.replaceChild(canvasImages[i], canvas);
 
@@ -283,7 +323,7 @@ async function rewriteAttributes(node) {
         }
         if (attr.nodeName == 'srcset') {
             let newParts = [];
-            for(let s of attr.nodeValue.split(',')) {
+            for (let s of attr.nodeValue.split(',')) {
                 let srcParts = s.trim().split(' ');
                 srcParts[0] = await inlineFile(srcParts[0]);
                 newParts.push(srcParts.join(' '));
@@ -310,8 +350,8 @@ async function inlineFile(url) {
         .then(checkStatus).catch((error) => {
             updateStatus(downloadStatus.FAILED);
             hasError = true;
-    });
-    if(hasError) {
+        });
+    if (hasError) {
         return '';
     }
     const contentType = responseObj.headers.get('Content-Type');
@@ -533,7 +573,7 @@ function queryTabsToPromise() {
 
 function renderError(errorMessage) {
     console.log(errorMessage);
-    document.getElementById('omnom_content').innerHTML = `<h1>${errorMessage}</h1>`;
+    document.getElementById('omnom-content').innerHTML = `<h1>${errorMessage}</h1>`;
 }
 
 function updateStatus(status) {

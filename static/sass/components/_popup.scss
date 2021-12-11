@@ -10,15 +10,16 @@
  }
  &__header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;    
+    align-items:center;
+    justify-content: space-between;
  }
 
  &__title{
      span{
-         font-size: $normal-font;
+         font-family: 'Dosis';
+         font-size: $big-font;
+         font-weight: 700;
          text-transform: uppercase;
-         font-weight: 800;
      }
      .text--primary {
             color: $primary-color;         
@@ -26,11 +27,15 @@
 }
 &__form {
     label{
-        font-size: 0.7rem;
+        font-size: 0.9rem;
         font-weight: 400;
     }
     .tag:not(body).is-rounded{
-        border: 1px solid;
+        border: 1px solid $primary-color;
+
+        .delete{
+            background-color: $primary-color;
+        }
     }
 
     .tags-input {
@@ -43,6 +48,9 @@
     align-items: center;
     justify-content: center;
     gap: 5px;
+    .button{
+        border-color: $secondary-color;
+    }
 }
 
 &__submit {

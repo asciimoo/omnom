@@ -14,17 +14,22 @@
                 <span>om</span><span class="text--primary">nom</span>
             </div>
             <div class="omnom-popup__controls">
-                <button class="button is-outlined"><span class="icon">
-                        <i class="fas fa-cog"></i>
-                    </span></button>
-                <button class="button is-outlined"><span class="icon">
+                <a href="#" id="omnom_options">
+                    <button type="button" class="button is-outlined">
+                        <span class="icon"><i class="fas fa-cog"></i>
+                        </span>
+                    </button>
+                </a>
+                <button id="close" class="button is-outlined" type="button">
+                    <span class="icon">
                         <i class="fas fa-times"></i>
-                    </span></button>
+                    </span>
+                </button>
             </div>
         </div>
         <h2>Create bookmark</h2>
         <div class="omnom-popup__form">
-            <form name="add" id="add" method="post">
+            <form onkeypress="return event.keyCode != 13;" name="add" id="add" method="post">
                 <div class="field">
                     <label class="label">Url</label>
                     <div class="control">
@@ -34,54 +39,37 @@
                 <div class="field">
                     <label class="label">Bookmark title</label>
                     <div class="control">
-                        <input class="input" type="text" id="title" placeholder="Add title">
+                        <input class="input" type="text" name="title" id="title" placeholder="Add title">
                     </div>
                 </div>
                 <div class="field">
                     <label class="label">Bookmark notes</label>
                     <div class="control">
-                        <textarea class="textarea" id="notes" placeholder="Add your notes here"></textarea>
+                        <textarea class="textarea" name="notes" id="notes" placeholder="Add your notes here"></textarea>
                     </div>
                 </div>
                 <div class="field">
                     <label class="label">Tags</label>
                     <div class="control tags-input">
-                        <input class="input" type="text" id="tags" placeholder="Add a new tag!">
+                        <input class="input" name="tags" type="text" id="tags" placeholder="Add a new tag!">
                     </div>
-                    <div class="field is-grouped is-grouped-multiline">
-                        <div class="control">
-                            <span class="tag is-rounded">
-                                Bar
-                                <button class="delete is-small"></button>
-                            </span>
-                        </div>
-                        <div class="control">
-                            <span class="tag is-rounded">
-                                Foo
-                                <button class="delete is-small"></button>
-                            </span>
-                        </div>
-
-                        <div class="control">
-                            <span class="tag is-rounded">
-                                BarFoo
-                                <button class="delete is-small"></button>
-                            </span>
-                        </div>
+                    <div id="tag-chips" class="field is-grouped is-grouped-multiline">
                     </div>
                     <div class="field">
-                        <input id="switchRoundedDefault" type="checkbox" name="switchRoundedDefault"
-                            class="switch is-rounded" checked="checked">
-                        <label for="switchRoundedDefault">Public</label>
+                        <label class="label">Public</label>
+                        <input id="public" type="checkbox" name="public" class="switch is-rounded" checked="checked">
+                        <label for="public"></label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Snapshot title</label>
+                    <div class="control">
+                        <input class="input" type="text" id="snapshot_title" placeholder="Add snapshot title">
                     </div>
                 </div>
                 <div class="omnom-popup__submit">
-                    <input type="submit" value="Save" class="button is-primary" />
+                    <input type="submit" value="Save Bookmark" class="button is-primary" />
                 </div>
-                <tr>
-                    <td><label for="snapshot_title">Snapshot title</label></td>
-                    <td><input type="text" name="snapshot_title" id="snapshot_title" /></td>
-                </tr>
                 <input type="hidden" id="token" name="token" value="" />
                 <input type="hidden" id="favicon" name="favicon" value="" />
             </form>
@@ -89,9 +77,7 @@
         <p id="omnom_status">
         <h3> </h3>
         </p>
-        <p id="omnom_url"></p>
     </div>
-    <a href="#" id="omnom_options">options</a>
 </body>
 <script src="omnom.js"></script>
 

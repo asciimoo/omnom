@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@100;300;500&display=swap');
 *,
 *::after,
 *::before {
@@ -32,6 +33,10 @@ html {
 
 html {
     scroll-behavior: smooth;
+}
+
+html {
+    font-family: 'Roboto', sans-serif;
 }
 
 body {
