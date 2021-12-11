@@ -15,7 +15,8 @@
     "compress:css": "node-sass ../css/style.prefix.css ../css/style.css --output-style compressed",
     "copy:css": "copyfiles --flat ../css/style.css ../ext",
     "build:css": "npm-run-all compile:sass concat:css prefix:css compress:css",
-    "build:css:extension": "npm-run-all compile:sass concat:css:extension prefix:css compress:css copy:css",
+    "clean": "rimraf ../css/style.concat.css ../css/style.comp.css ../css/style.prefix.css",
+    "build:css:extension": "npm-run-all compile:sass concat:css:extension prefix:css compress:css copy:css clean",
     "build:css-without-concat": "npm-run-all compile:sass prefix:css-without-concat compress:css"
   },
   "author": "",
