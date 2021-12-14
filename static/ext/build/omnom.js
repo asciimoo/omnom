@@ -22,21 +22,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-brands-400.eot */ "./src/css/webfonts/fa-brands-400.eot"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_1___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-brands-400.woff2 */ "./src/css/webfonts/fa-brands-400.woff2"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_2___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-brands-400.woff */ "./src/css/webfonts/fa-brands-400.woff"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_3___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-brands-400.ttf */ "./src/css/webfonts/fa-brands-400.ttf"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_4___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-brands-400.svg */ "./src/css/webfonts/fa-brands-400.svg"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_5___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-regular-400.eot */ "./src/css/webfonts/fa-regular-400.eot"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_6___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-regular-400.woff2 */ "./src/css/webfonts/fa-regular-400.woff2"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_7___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-regular-400.woff */ "./src/css/webfonts/fa-regular-400.woff"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_8___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-regular-400.ttf */ "./src/css/webfonts/fa-regular-400.ttf"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_9___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-regular-400.svg */ "./src/css/webfonts/fa-regular-400.svg"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_10___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-solid-900.eot */ "./src/css/webfonts/fa-solid-900.eot"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_11___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-solid-900.woff2 */ "./src/css/webfonts/fa-solid-900.woff2"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_12___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-solid-900.woff */ "./src/css/webfonts/fa-solid-900.woff"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_13___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-solid-900.ttf */ "./src/css/webfonts/fa-solid-900.ttf"), __webpack_require__.b);
-var ___CSS_LOADER_URL_IMPORT_14___ = new URL(/* asset import */ __webpack_require__(/*! ./webfonts/fa-solid-900.svg */ "./src/css/webfonts/fa-solid-900.svg"), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_0___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-brands-400.eot'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_1___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-brands-400.woff2'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_2___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-brands-400.woff'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_3___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-brands-400.ttf'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_4___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-brands-400.svg'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_5___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-regular-400.eot'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_6___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-regular-400.woff2'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_7___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-regular-400.woff'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_8___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-regular-400.ttf'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_9___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-regular-400.svg'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_10___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-solid-900.eot'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_11___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-solid-900.woff2'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_12___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-solid-900.woff'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_13___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-solid-900.ttf'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
+var ___CSS_LOADER_URL_IMPORT_14___ = new URL(/* asset import */ Object(function webpackMissingModule() { var e = new Error("Cannot find module './webfonts/fa-solid-900.svg'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()), __webpack_require__.b);
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 ___CSS_LOADER_EXPORT___.push([module.id, "@import url(https://fonts.googleapis.com/css2?family=Dosis:wght@600;700&family=Roboto:wght@100;300;500&display=swap);"]);
 var ___CSS_LOADER_URL_REPLACEMENT_0___ = _node_modules_css_loader_dist_runtime_getUrl_js__WEBPACK_IMPORTED_MODULE_2___default()(___CSS_LOADER_URL_IMPORT_0___);
@@ -1442,156 +1442,6 @@ function setOmnomToken(token) {
 
 
 
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-brands-400.eot":
-/*!********************************************!*\
-  !*** ./src/css/webfonts/fa-brands-400.eot ***!
-  \********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "bfcc3384b8a317dc5de3.eot";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-brands-400.svg":
-/*!********************************************!*\
-  !*** ./src/css/webfonts/fa-brands-400.svg ***!
-  \********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "ffbf6fd654d1dd568016.svg";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-brands-400.ttf":
-/*!********************************************!*\
-  !*** ./src/css/webfonts/fa-brands-400.ttf ***!
-  \********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "1776173e3b1af55eb455.ttf";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-brands-400.woff":
-/*!*********************************************!*\
-  !*** ./src/css/webfonts/fa-brands-400.woff ***!
-  \*********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "28d8b8fcc41c3b7134ff.woff";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-brands-400.woff2":
-/*!**********************************************!*\
-  !*** ./src/css/webfonts/fa-brands-400.woff2 ***!
-  \**********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "37913cdf7cb0571dfac0.woff2";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-regular-400.eot":
-/*!*********************************************!*\
-  !*** ./src/css/webfonts/fa-regular-400.eot ***!
-  \*********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "0c6f12b9eaa2ad444a6b.eot";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-regular-400.svg":
-/*!*********************************************!*\
-  !*** ./src/css/webfonts/fa-regular-400.svg ***!
-  \*********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "6e0ccd0d7f8ec202a853.svg";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-regular-400.ttf":
-/*!*********************************************!*\
-  !*** ./src/css/webfonts/fa-regular-400.ttf ***!
-  \*********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "c9c57c0f1f4eb34dbf57.ttf";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-regular-400.woff":
-/*!**********************************************!*\
-  !*** ./src/css/webfonts/fa-regular-400.woff ***!
-  \**********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "fcaa6c135683a3fa1b50.woff";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-regular-400.woff2":
-/*!***********************************************!*\
-  !*** ./src/css/webfonts/fa-regular-400.woff2 ***!
-  \***********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "c3c2ab4f63b8d9973c78.woff2";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-solid-900.eot":
-/*!*******************************************!*\
-  !*** ./src/css/webfonts/fa-solid-900.eot ***!
-  \*******************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "dfaa060a451d978c2565.eot";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-solid-900.svg":
-/*!*******************************************!*\
-  !*** ./src/css/webfonts/fa-solid-900.svg ***!
-  \*******************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "352ac9a01292df4193b6.svg";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-solid-900.ttf":
-/*!*******************************************!*\
-  !*** ./src/css/webfonts/fa-solid-900.ttf ***!
-  \*******************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "a480ec972cb6bce30533.ttf";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-solid-900.woff":
-/*!********************************************!*\
-  !*** ./src/css/webfonts/fa-solid-900.woff ***!
-  \********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "22aa6d4357cf74671bc4.woff";
-
-/***/ }),
-
-/***/ "./src/css/webfonts/fa-solid-900.woff2":
-/*!*********************************************!*\
-  !*** ./src/css/webfonts/fa-solid-900.woff2 ***!
-  \*********************************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-module.exports = __webpack_require__.p + "4055b0575d40bfb3c7e8.woff2";
-
 /***/ })
 
 /******/ 	});
@@ -1648,18 +1498,6 @@ module.exports = __webpack_require__.p + "4055b0575d40bfb3c7e8.woff2";
 /******/ 		};
 /******/ 	})();
 /******/ 	
-/******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
@@ -1674,26 +1512,6 @@ module.exports = __webpack_require__.p + "4055b0575d40bfb3c7e8.woff2";
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/publicPath */
-/******/ 	(() => {
-/******/ 		var scriptUrl;
-/******/ 		if (__webpack_require__.g.importScripts) scriptUrl = __webpack_require__.g.location + "";
-/******/ 		var document = __webpack_require__.g.document;
-/******/ 		if (!scriptUrl && document) {
-/******/ 			if (document.currentScript)
-/******/ 				scriptUrl = document.currentScript.src
-/******/ 			if (!scriptUrl) {
-/******/ 				var scripts = document.getElementsByTagName("script");
-/******/ 				if(scripts.length) scriptUrl = scripts[scripts.length - 1].src
-/******/ 			}
-/******/ 		}
-/******/ 		// When supporting browsers where an automatic publicPath is not supported you must specify an output.publicPath manually via configuration
-/******/ 		// or pass an empty string ("") and set the __webpack_public_path__ variable from your code to use your own logic.
-/******/ 		if (!scriptUrl) throw new Error("Automatic publicPath is not supported in this browser");
-/******/ 		scriptUrl = scriptUrl.replace(/#.*$/, "").replace(/\?.*$/, "").replace(/\/[^\/]+$/, "/");
-/******/ 		__webpack_require__.p = scriptUrl;
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/jsonp chunk loading */
