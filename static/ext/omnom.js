@@ -42,6 +42,8 @@ let omnom_token = '';
 let omnom_url = '';
 let styleIndex = 0;
 let tags = [];
+let templates = new Map();
+let boundVars = { onoptions: false };
 
 function debugPopup(content) {
     if (is_chrome) {
@@ -58,28 +60,110 @@ function debugPopup(content) {
  * ---------------------------------*/
 
 function displayPopup() {
-    document.querySelector('form').addEventListener('submit', saveBookmark);
-    document.getElementById('omnom_options').addEventListener('click', function () {
-        br.runtime.openOptionsPage(function () {
-            window.close();
-        });
-    });
+    setTemplates();
+    evaluateTemplates();
     setEventListeners();
     setOmnomSettings().then(fillFormFields, renderError);
 }
 
+function setTemplates() {
+    const templateElements = document.querySelectorAll('template');
+    [...templateElements].forEach(template => templates.set(template.id, template));
+}
+
+function evaluateTemplates() {
+    [...templates.values()].forEach(template => {
+        const templateData = Object.keys(template.dataset);
+        if (templateData.length) {
+            const shouldShow = templateData.some(attribute => {
+                const attributeValue = (template.dataset[attribute] === 'true');
+                return boundVars.hasOwnProperty(attribute) && boundVars[attribute] === attributeValue
+            });
+            if (!shouldShow) {
+                const nodeToRemove = [...template.parentNode.children].find(child => child.id === template.content.children[0].id);
+                if (nodeToRemove) {
+                    template.parentNode.removeChild(nodeToRemove);
+                }
+                return;
+            }
+        }
+        template.parentNode.appendChild(template.content.cloneNode(true));
+    })
+}
+
+function updateBoundVar(key, value) {
+    if (boundVars.hasOwnProperty(key)) {
+        boundVars[key] = value;
+    }
+    evaluateTemplates();
+    setEventListeners();
+}
+
 function setEventListeners() {
     const tagsInput = document.getElementById('tags');
-    tagsInput.addEventListener('change', (event) => { addTag(event); tagsInput.value = '' });
+    tagsInput?.addEventListener('change', (event) => { addTag(event); tagsInput.value = '' });
 
     const closeButton = document.getElementById('close');
-    closeButton.addEventListener('click', () => window.close());
+    closeButton?.addEventListener('click', closeHandler);
+
+    const backButton = document.getElementById('back');
+    backButton?.addEventListener('click', () => backHandler());
+
+    const optionsButton = document.getElementById('omnom_options');
+    optionsButton?.addEventListener('click', () => optionsHandler());
+
+    const bookmarkForm = document.querySelector('form');
+    bookmarkForm?.addEventListener('submit', saveBookmark);
+}
+
+function backHandler() {
+    clearContentContainer();
+    updateBoundVar('onoptions', false);
+    fillFormFields();
+}
+
+function clearContentContainer() {
+    const popupContent = document.getElementById('omnom-content');
+    const templates = popupContent.querySelectorAll('template');
+    [...popupContent.children].forEach(child => {
+        if (![...templates].includes(child)) {
+            popupContent.removeChild(child);
+        }
+    });
+    return popupContent;
+}
+
+async function optionsHandler() {
+    updateBoundVar('onoptions', true);
+
+    const popupContent = document.getElementById('omnom-content');
+    const optionsPageText = await fetch('./options.html').then(stream => stream.text());
+    const p = new DOMParser();
+    const optionsPageElement = p.parseFromString(optionsPageText, 'text/html');
+    const template = optionsPageElement.querySelector('template')?.content.cloneNode(true);
+    const script = optionsPageElement.querySelector('script');
+    popupContent.appendChild(template);
+    popupContent.appendChild(copyScript(script));
+}
+
+function closeHandler() {
+    window.close();
+}
+
+function copyScript(script) {
+    const newScript = document.createElement('script');
+    newScript.src = script.src;
+    return newScript;
 }
 
 function addTag(event) {
     const value = event.target.value;
     const tagChipContainer = document.getElementById('tag-chips');
+    renderTag(value, tagChipContainer);
+    tags.push(value);
+}
 
+function renderTag(value, parent) {
     const newChip = document.createElement('div');
     newChip.className = 'control chip-control';
 
@@ -94,9 +178,7 @@ function addTag(event) {
 
     chipContainer.appendChild(chipDelete);
     newChip.appendChild(chipContainer);
-    tagChipContainer.appendChild(newChip);
-    tags.push(value);
-
+    parent.appendChild(newChip);
 }
 
 function deleteTag(chipElement) {
@@ -149,6 +231,17 @@ async function fillFormFields() {
     if (selection && selection[0]) {
         document.getElementById('notes').value = selection[0];
     }
+
+    //fill tags
+    const fragment = document.createDocumentFragment();
+    const tagChips = document.getElementById('tag-chips');
+    const tagChipsContainer = document.getElementById('tag-chips-container');
+    fragment.appendChild(tagChips);
+    tags.forEach(tag => {
+        renderTag(tag, tagChips);
+    });
+    tagChipsContainer.appendChild(fragment);
+
 }
 
 /* ---------------------------------*
@@ -567,7 +660,7 @@ function parseCSS(styleContent) {
 
 function queryTabsToPromise() {
     return new Promise(resolve => {
-        br.tabs.query({ active: true, lastFocusedWindow: true }, ([tab]) => resolve(tab));
+        br.tabs.query({ active: true, currentWindow: true }, ([tab]) => resolve(tab));
     });
 }
 
