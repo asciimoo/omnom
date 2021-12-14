@@ -74,7 +74,7 @@ func login(c *gin.Context) {
 		err := model.DB.Save(u).Error
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err,
+				"Error": err.Error(),
 			})
 			return
 		}
@@ -84,7 +84,7 @@ func login(c *gin.Context) {
 		})
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err,
+				"Error": err.Error(),
 			})
 			return
 		}
