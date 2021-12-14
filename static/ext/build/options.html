@@ -1,12 +1,56 @@
 <head><script defer src="options.js"></script></head><script src="./options.js"></script>
 <template id="options-body">
   <h2>Extension Options</h2>
-  <form>
-    <label>Omnom server URL: </label><br />
-    <input type="text" id="url" /><br />
-    <label>Token (check the profile page on the server): </label><br />
-    <input type="text" id="token" /><br />
-    <label>Debug mode: </label><input type="checkbox" id="debug" /><br />
-    <input type="submit" value="Save">
-  </form>
+  <div class="omnom-popup__form">
+    <form>
+      <div class="field">
+        <label>Token: </label>
+        <div class="control">
+          <input class="input" type="text" name="token" id="token" placeholder="Add token!">
+        </div>
+      </div>
+      <article class="message">
+        <div class="message-body">
+          <span class="options-page__message-text">
+            Check the profile page on the server for more information
+          </span>
+        </div>
+      </article>
+      <div class="field">
+        <label class="label">Save as public by default</label>
+        <input id="public" type="checkbox" name="public" class="switch is-rounded">
+        <label for="public"></label>
+      </div>
+      <div class="field">
+        <label>Omnom server URL: </label>
+        <div class="control">
+          <input class="input" type="text" name="url" id="url" placeholder="Set server url">
+        </div>
+      </div>
+      <div class="accordion-tabs">
+        <div class="accordion-tab">
+          <input type="checkbox" id="chck1">
+          <label class="accordion-tab-label" for="chck1">Item 1</label>
+          <div class="accordion-tab-content">
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ipsum, reiciendis!
+          </div>
+        </div>
+        <div class="accordion-tab">
+          <input type="checkbox" id="chck2">
+          <label class="accordion-tab-label" for="chck2">Item 2</label>
+          <div class="accordion-tab-content">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. A, in!
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Debug mode:</label>
+        <input id="debug" type="checkbox" name="debug" class="switch is-rounded">
+        <label for="debug"></label>
+      </div>
+      <div class="omnom-popup__submit">
+        <input type="submit" value="Save changes" class="button is-primary" />
+      </div>
+    </form>
+  </div>
 </template>

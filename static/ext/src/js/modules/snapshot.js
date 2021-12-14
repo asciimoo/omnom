@@ -1,4 +1,11 @@
-import { executeScriptToPromise, browser as br, walkDOM, downloadStatus, fullURL, inlineFile, getSiteUrl } from './utils';
+import {
+    executeScriptToPromise,
+    browser as br,
+    walkDOM,
+    fullURL,
+    getSiteUrl
+} from './utils';
+import { downloadFile } from './file-download';
 import { sanitizeCSS } from './sanitize';
 
 const nodeTransformFunctons = new Map([
@@ -8,9 +15,9 @@ const nodeTransformFunctons = new Map([
     ['IMG', transfromImg]
 ]);
 
-let styleIndex = 0;
-
 const styleNodes = new Map();
+
+let styleIndex = 0;
 
 async function createSnapshot() {
     const doc = await getDOM();
@@ -22,7 +29,7 @@ async function createSnapshot() {
     await walkDOM(dom, transformNode);
     setStyleNodes(dom);
     if (!document.getElementById('favicon').value) {
-        const favicon = await inlineFile(fullURL('/favicon.ico'));
+        const favicon = await downloadFile(fullURL('/favicon.ico'));
         if (favicon) {
             document.getElementById('favicon').value = favicon;
             const faviconElement = document.createElement('style');
@@ -114,13 +121,13 @@ async function transformLink(node) {
         const index = styleIndex++;
         const cssHref = fullURL(node.attributes.href.nodeValue);
         const style = document.createElement('style');
-        const cssText = await inlineFile(cssHref);
+        const cssText = await downloadFile(cssHref);
         style.innerHTML = await sanitizeCSS(cssText, cssHref);
         styleNodes.set(index, style);
         node.remove();
     }
     if ((node.getAttribute('rel') || '').trim().toLowerCase() == 'icon' || (node.getAttribute('rel') || '').trim().toLowerCase() == 'shortcut icon') {
-        const favicon = await inlineFile(node.href);
+        const favicon = await downloadFile(node.href);
         document.getElementById('favicon').value = favicon;
         node.href = favicon;
     }
@@ -132,7 +139,7 @@ async function transformStyle(node) {
 }
 
 async function transfromImg(node) {
-    const src = await inlineFile(node.getAttribute('src'));
+    const src = await downloadFile(node.getAttribute('src'));
     node.src = src;
 }
 
@@ -153,7 +160,7 @@ async function rewriteAttributes(node) {
             let newParts = [];
             for (let s of attr.nodeValue.split(',')) {
                 let srcParts = s.trim().split(' ');
-                srcParts[0] = await inlineFile(srcParts[0]);
+                srcParts[0] = await downloadFile(srcParts[0]);
                 newParts.push(srcParts.join(' '));
             }
             attr.nodeValue = newParts.join(', ');
@@ -161,4 +168,4 @@ async function rewriteAttributes(node) {
     }));
 }
 
-export { createSnapshot, transformLink, transformStyle, transfromImg }
+export { createSnapshot }

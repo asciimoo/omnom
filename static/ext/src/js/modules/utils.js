@@ -1,14 +1,5 @@
 const browser = chrome;
 
-const downloadStatus = {
-    DOWNLOADING: 'downloading',
-    DOWNLOADED: 'downloaded',
-    FAILED: 'failed'
-}
-
-let downloadedCount = 0;
-let downloadCount = 0;
-let failedCount = 0;
 let siteUrl = '';
 let debug = false;
 let omnomUrl = '';
@@ -24,9 +15,9 @@ function arrayBufferToBase64(buffer) {
 
 function checkStatus(res) {
     if (!res.ok) {
-        throw Error(res.statusText);
+        return Promise.reject(res.statusText);
     }
-    return res;
+    return Promise.resolve(res);
 }
 
 function executeScriptToPromise(functionToExecute) {
@@ -48,16 +39,6 @@ function absoluteURL(base, url) {
     return new URL(url, base).href
 }
 
-function parseCSS(styleContent) {
-    const doc = document.implementation.createHTMLDocument('');
-    const styleElement = document.createElement('style');
-
-    styleElement.textContent = styleContent;
-    // the style will only be parsed once it is added to a document
-    doc.body.appendChild(styleElement);
-    return styleElement.sheet.cssRules;
-}
-
 function queryTabsToPromise() {
     return new Promise(resolve => {
         browser.tabs.query({ active: true, currentWindow: true }, ([tab]) => resolve(tab));
@@ -70,28 +51,8 @@ function renderError(errorMessage) {
 }
 
 function renderSuccess(successMessage) {
-    document.body.innerHTML = `<h1>${successMessage}</h1>`
-    setTimeout(window.close, 2000);
-}
-
-function updateStatus(status) {
-    switch (status) {
-        case downloadStatus.DOWNLOADING: {
-            downloadCount++
-            break;
-        }
-        case downloadStatus.DOWNLOADED: {
-            downloadedCount++
-            break;
-        }
-        case downloadStatus.FAILED: {
-            failedCount++;
-            break;
-        }
-    }
-    document.getElementById('omnom_status').innerHTML =
-        `<h3>Downloading resources (${downloadCount}/${downloadedCount})</h3>
-    <h3>Failed requests: ${failedCount}</h3>`;
+    document.getElementById('omnom-content').innerHTML = `<h1>${successMessage}</h1>`
+    // setTimeout(window.close, 2000);
 }
 
 async function setSiteUrl() {
@@ -113,37 +74,6 @@ async function walkDOM(node, func) {
     }));
 }
 
-async function inlineFile(url) {
-    if (!url || (url || '').startsWith('data:')) {
-        return url;
-    }
-    url = fullURL(url);
-    console.log('fetching ', url);
-    const options = {
-        method: 'GET',
-        cache: isDebug ? 'no-cache' : 'default',
-    };
-    const request = new Request(url, options);
-    updateStatus(downloadStatus.DOWNLOADING);
-    let hasError = false;
-    const responseObj = await fetch(request, options)
-        .then(checkStatus).catch((error) => {
-            updateStatus(downloadStatus.FAILED);
-            hasError = true;
-        });
-    if (hasError) {
-        return '';
-    }
-    const contentType = responseObj.headers.get('Content-Type');
-    updateStatus(downloadStatus.DOWNLOADED);
-    if (contentType.toLowerCase().search('text') != -1) {
-        // TODO use charset of the response        
-        return await responseObj.text();
-    }
-    const buff = await responseObj.arrayBuffer()
-    const base64Flag = `data:${contentType};base64,`;
-    return `${base64Flag}${arrayBufferToBase64(buff)}`
-}
 
 async function setOmnomSettings() {
     const omnomData = await getOmnomDataFromLocal().catch(renderError);
@@ -192,6 +122,11 @@ function setOmnomToken(token) {
     omnomToken = token;
 }
 
+function copyScript(script) {
+    const newScript = document.createElement('script');
+    newScript.src = script.src;
+    return newScript;
+}
 
 export {
     arrayBufferToBase64,
@@ -199,18 +134,15 @@ export {
     executeScriptToPromise,
     fullURL,
     absoluteURL,
-    parseCSS,
     queryTabsToPromise,
     renderError,
     renderSuccess,
-    updateStatus,
     walkDOM,
     getSiteUrl,
-    inlineFile,
     setOmnomSettings,
     isDebug,
     getOmnomUrl,
     getOmnomToken,
-    browser,
-    downloadStatus
+    copyScript,
+    browser
 }

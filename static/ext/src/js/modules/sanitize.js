@@ -1,4 +1,5 @@
-import { inlineFile, parseCSS, absoluteURL } from './utils';
+import { absoluteURL } from './utils';
+import { downloadFile } from './file-download';
 
 const cssSanitizeFunctions = new Map([
     ['CSSStyleRule', sanitizeStyleRule],
@@ -23,7 +24,7 @@ async function sanitizeStyleRule(rule, baseURL) {
 async function sanitizeImportRule(rule, baseURL) {
     // TODO handle import loops
     let href = absoluteURL(baseURL, rule.href);
-    return await sanitizeCSS(await inlineFile(href), href);
+    return await sanitizeCSS(await downloadFile(href), href);
 }
 
 async function sanitizeMediaRule(rule, baseURL) {
@@ -84,7 +85,7 @@ async function sanitizeCSSBgImage(r, baseURL) {
     if (bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
         const bgURL = absoluteURL(baseURL, bgi.substring(5, bgi.length - 2));
         if (!bgURL.startsWith('data:')) {
-            const inlineImg = await inlineFile(bgURL);
+            const inlineImg = await downloadFile(bgURL);
             if (inlineImg) {
                 try {
                     r.style.backgroundImage = `url('${inlineImg}')`;
@@ -104,7 +105,7 @@ async function sanitizeCSSListStyleImage(r, baseURL) {
     if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
         const iURL = absoluteURL(baseURL, lsi.substring(5, lsi.length - 2));
         if (!iURL.startsWith('data:')) {
-            const inlineImg = await inlineFile(iURL);
+            const inlineImg = await downloadFile(iURL);
             if (inlineImg) {
                 try {
                     r.style.listStyleImage = `url('${inlineImg}')`;
@@ -128,7 +129,7 @@ async function sanitizeCSSFontFace(r, baseURL) {
         if (part && part.startsWith('url("') && part.endsWith('")')) {
             const iURL = absoluteURL(baseURL, part.substring(5, part.length - 2));
             if (!iURL.startsWith('data:')) {
-                const inlineImg = await inlineFile(absoluteURL(baseURL, iURL));
+                const inlineImg = await downloadFile(absoluteURL(baseURL, iURL));
                 srcParts[i] = `url('${inlineImg}')`;
                 changed = true;
             }
@@ -144,7 +145,17 @@ async function sanitizeCSSFontFace(r, baseURL) {
     }
 }
 
-export async function sanitizeCSS(rules, baseURL) {
+function parseCSS(styleContent) {
+    const doc = document.implementation.createHTMLDocument('');
+    const styleElement = document.createElement('style');
+
+    styleElement.textContent = styleContent;
+    // the style will only be parsed once it is added to a document
+    doc.body.appendChild(styleElement);
+    return styleElement.sheet.cssRules;
+}
+
+async function sanitizeCSS(rules, baseURL) {
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
     }
@@ -163,3 +174,5 @@ export async function sanitizeCSS(rules, baseURL) {
     const result = [...sortedCss.values()].join('');
     return result;
 }
+
+export { sanitizeCSS };
