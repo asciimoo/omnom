@@ -15,6 +15,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/ugorji/go v1.2.6 // indirect
+	github.com/xhit/go-simple-mail/v2 v2.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
 	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 // indirect
 	golang.org/x/text v0.3.7 // indirect

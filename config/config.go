@@ -23,6 +23,17 @@ type Config struct {
 		Type      string `yaml:"type"`
 		InitParam string `yaml:"initParam"`
 	} `yaml:"storage"`
+	SMTP struct {
+		Host              string `yaml:"host"`
+		Port              int    `yaml:"port"`
+		Username          string `yaml:"username"`
+		Password          string `yaml:"password"`
+		Sender            string `yaml:"sender"`
+		TLS               bool   `yaml:"tls"`
+		TLSAllowInsecure  bool   `yaml:"tls_allow_insecure"`
+		SendTimeout       int    `yaml:"send_timeout"`
+		ConnectionTimeout int    `yaml:"connection_timeout"`
+	} `yaml:"smtp"`
 }
 
 func Load(filename string) (*Config, error) {

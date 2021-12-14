@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 
 	"github.com/gin-gonic/gin"
@@ -71,6 +72,16 @@ func login(c *gin.Context) {
 		}
 		u.LoginToken = model.GenerateToken()
 		err := model.DB.Save(u).Error
+		if err != nil {
+			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
+				"Error": err,
+			})
+			return
+		}
+		err = mail.Send(u.Email, "login", map[string]interface{}{
+			"Token":   u.LoginToken,
+			"BaseURL": tplFuncMap["BaseURL"].(func(string) string)("login"),
+		})
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
 				"Error": err,

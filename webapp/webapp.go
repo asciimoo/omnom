@@ -1,6 +1,7 @@
 package webapp
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -105,7 +106,11 @@ func Run(cfg *config.Config) {
 	authorized := e.Group("/")
 	authorized.Use(authRequired)
 
-	baseURL, err := url.Parse(cfg.Server.BaseURL)
+	bu := cfg.Server.BaseURL
+	if bu == "" {
+		bu = fmt.Sprintf("http://%s/", cfg.Server.Address)
+	}
+	baseURL, err := url.Parse(bu)
 	if err != nil {
 		panic(err)
 	}

@@ -8,7 +8,17 @@ server:
   base_url: ""
 db:
   type: "sqlite"
-  connection: "db.sqlite3"
+  connection: "./db.sqlite3"
 storage:
   type: "fs"
   initParam: "./data"
+smtp:
+  host: "127.0.0.1" # leave it blank to disable sending mails
+  port: 25
+  username: ""
+  password: ""
+  sender: "Omnom <omnom@127.0.0.1>"
+  tls: false
+  tls_allow_insecure: false
+  send_timeout: 10 # seconds
+  connection_timeout: 5 # seconds
