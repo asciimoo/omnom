@@ -135,6 +135,7 @@ func Run(cfg *config.Config) {
 	e.GET("/snapshot", snapshotWrapper)
 	e.GET("/viewSnapshot", snapshot)
 	e.POST("/add_bookmark", addBookmark)
+	e.GET("/check_bookmark", checkBookmark)
 
 	authorized.GET("/profile", profile)
 	authorized.GET("/generate_addon_token", generateAddonToken)

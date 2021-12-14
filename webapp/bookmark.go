@@ -151,3 +151,35 @@ func addBookmark(c *gin.Context) {
 	model.DB.Save(b)
 	c.Redirect(http.StatusFound, "/")
 }
+
+func checkBookmark(c *gin.Context) {
+	resp := make(map[string]interface{})
+	tok, ok := c.GetQuery("token")
+	if !ok {
+		resp["error"] = "missing token"
+		c.JSON(401, resp)
+		return
+	}
+	var URL string
+	URL, ok = c.GetQuery("url")
+	if !ok {
+		resp["error"] = "missing URL"
+		c.JSON(400, resp)
+		return
+	}
+	var bc int64
+	model.DB.
+		Model(&model.Bookmark{}).
+		Joins("join users on bookmarks.user_id = users.id").
+		Joins("join tokens on tokens.user_id = users.id").
+		Where("tokens.text = ? and bookmarks.url = ? and tokens.deleted_at IS NULL", tok, URL).
+		Limit(1).
+		Count(&bc)
+
+	if bc == 0 {
+		resp["found"] = false
+	} else {
+		resp["found"] = true
+	}
+	c.JSON(200, resp)
+}
