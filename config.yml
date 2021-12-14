@@ -13,7 +13,7 @@ storage:
   type: "fs"
   initParam: "./data"
 smtp:
-  host: "127.0.0.1" # leave it blank to disable sending mails
+  host: "" # leave it blank to disable sending mails
   port: 25
   username: ""
   password: ""

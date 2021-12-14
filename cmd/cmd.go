@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/webapp"
@@ -31,6 +32,13 @@ func initStorage() {
 	}
 }
 
+func initMail() {
+	err := mail.Init(cfg)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "omnom",
@@ -46,6 +54,7 @@ var listenCmd = &cobra.Command{
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
 		initStorage()
+		initMail()
 		webapp.Run(cfg)
 	},
 }

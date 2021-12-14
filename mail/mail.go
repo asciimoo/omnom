@@ -3,10 +3,11 @@ package mail
 import (
 	"bytes"
 	"errors"
-	html "html/template"
 	"io"
-	text "text/template"
 	"time"
+
+	html "html/template"
+	text "text/template"
 
 	"github.com/asciimoo/omnom/config"
 
@@ -19,8 +20,8 @@ type Templates struct {
 }
 
 var client *smtp.SMTPClient
-var sender string = "Omnom <omnom@127.0.0.1>"
-var disabled bool = false
+var sender = "Omnom <omnom@127.0.0.1>"
+var disabled = false
 var templates = &Templates{}
 
 func init() {
