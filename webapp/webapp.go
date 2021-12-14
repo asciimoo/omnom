@@ -1,11 +1,9 @@
 package webapp
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -107,19 +105,11 @@ func Run(cfg *config.Config) {
 	authorized.Use(authRequired)
 
 	bu := cfg.Server.BaseURL
-	if bu == "" {
-		bu = fmt.Sprintf("http://%s/", cfg.Server.Address)
-	}
-	baseURL, err := url.Parse(bu)
-	if err != nil {
-		panic(err)
-	}
 	tplFuncMap["BaseURL"] = func(u string) string {
-		b, err := url.Parse(u)
-		if err != nil {
-			return ""
+		if strings.HasPrefix(u, "/") && strings.HasSuffix(bu, "/") {
+			u = u[1:]
 		}
-		return baseURL.ResolveReference(b).String()
+		return bu + u
 	}
 	e.HTMLRender = createRenderer()
 

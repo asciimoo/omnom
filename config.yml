@@ -3,7 +3,7 @@ app:
   bookmarks_per_page: 20
 server:
   address: "127.0.0.1:7331"
-  # e.g. http://localhost:7331/
+  # e.g. https://mydomain.tld/xy/
   # leave blank if you don't have custom base URL
   base_url: ""
 db:
