@@ -254,12 +254,12 @@
     <div class="field-body">
         <div class="field">
             <p class="control is-expanded">
-                <input class="input" type="text" placeholder="YYYY.MM.DD" name="from" value="{{ .SearchParams.FromDate }}">
+                <input class="input" type="date" placeholder="YYYY.MM.DD" name="from" value="{{ .SearchParams.FromDate }}">
             </p>
         </div>
         <div class="field">
             <p class="control is-expanded">
-                <input class="input" type="email" placeholder="YYYY.MM.DD" name="to" value="{{ .SearchParams.ToDate }}">
+                <input class="input" type="date" placeholder="YYYY.MM.DD" name="to" value="{{ .SearchParams.ToDate }}">
             </p>
         </div>
     </div>
