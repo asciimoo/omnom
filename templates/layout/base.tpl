@@ -116,9 +116,7 @@
         {{ end }}
     </div>
     <div class="media-right">
-        {{ range $i,$s := .Snapshots }}
-        <a href="{{ BaseURL "/snapshot" }}?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
-        {{ end }}
+        {{ block "snapshots" .Snapshots }}{{ end }}
         {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>
 </div>
@@ -136,13 +134,17 @@
         {{ end }}
     </div>
     <div class="media-right">
-        {{ range $i,$s := .Snapshots }}
-        <a href="{{ BaseURL "/snapshot" }}?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
-        {{ end }}
+        {{ block "snapshots" .Snapshots }}{{ end }}
         {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>
 </div>
 {{ end}}
+
+{{ define "snapshots" }}
+    {{ range $i,$s := . }}
+    <a href="{{ BaseURL "/snapshot" }}?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
+    {{ end }}
+{{ end }}
 
 {{ define "paging" }}
 <div class="columns is-centered">
