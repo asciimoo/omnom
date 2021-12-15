@@ -142,7 +142,7 @@
 
 {{ define "snapshots" }}
     {{ range $i,$s := . }}
-    <a href="{{ BaseURL "/snapshot" }}?id={{ $s.ID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
+    <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
     {{ end }}
 {{ end }}
 
