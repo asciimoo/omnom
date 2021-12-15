@@ -20,8 +20,8 @@ type Config struct {
 		Type       string `yaml:"type"`
 	} `yaml:"db"`
 	Storage struct {
-		Type      string `yaml:"type"`
-		InitParam string `yaml:"initParam"`
+		Type string `yaml:"type"`
+		Root string `yaml:"root"`
 	} `yaml:"storage"`
 	SMTP struct {
 		Host              string `yaml:"host"`

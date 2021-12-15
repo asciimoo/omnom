@@ -26,7 +26,7 @@ func initDB(cmd *cobra.Command, args []string) {
 }
 
 func initStorage() {
-	err := storage.Init(cfg.Storage.Type, cfg.Storage.InitParam)
+	err := storage.Init(cfg.Storage.Type, cfg.Storage.Root)
 	if err != nil {
 		panic(err)
 	}

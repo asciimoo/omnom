@@ -11,7 +11,7 @@ db:
   connection: "./db.sqlite3"
 storage:
   type: "fs"
-  initParam: "./data"
+  root: "./data"
 smtp:
   host: "" # leave it blank to disable sending mails
   port: 25
