@@ -104,38 +104,37 @@
 </article>
 {{ end }}
 
-{{ define "my-bookmark" }}
+{{ define "bookmark" }}
 <div class="box media">
     <div class="media-content">
-        <h4 class="title"><span class="icon-text">{{ if .Favicon }}<span class="icon"><img src="{{ .Favicon | ToURL }}" alt="favicon" /> </span> {{ end }}<span><a href="{{ .URL }}" target="_blank">{{ .Title }}</a></span></span><p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .URL 100 }}</p></h4>
-        <p>{{ .Notes }}</p>
-        {{ if .Tags }}
-          {{ range .Tags }}
-            <a href="{{ BaseURL "/my_bookmarks" }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+        <h4 class="title">
+            <span class="icon-text">
+                {{ if .Bookmark.Favicon }}
+                <span class="icon">
+                    <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
+                </span>
+                {{ end }}
+                <span>
+                    <a href="{{ .Bookmark.URL }}" target="_blank">{{ .Bookmark.Title }}</a>
+                </span>
+            </span>
+            <p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 100 }}</p>
+        </h4>
+        <p>{{ .Bookmark.Notes }}</p>
+        {{ if .Bookmark.Tags }}
+          {{ range .Bookmark.Tags }}
+            <a href="{{ if eq $.Page "bookmarks" }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
           {{ end }}
         {{ end }}
     </div>
     <div class="media-right">
-        {{ block "snapshots" .Snapshots }}{{ end }}
-        {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
-    </div>
-</div>
-{{ end}}
-
-{{ define "public-bookmark" }}
-<div class="box media">
-    <div class="media-content">
-        <h4 class="title"><span class="icon-text">{{ if .Favicon }}<span class="icon"><img src="{{ .Favicon | ToURL }}" alt="favicon" /> </span> {{ end }}<span><a href="{{ .URL }}" target="_blank">{{ .Title }}</a></span></span><p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .URL 100 }}</p></h4>
-        <p>{{ .Notes }}</p>
-        {{ if .Tags }}
-          {{ range .Tags }}
-            <a href="{{ BaseURL "/bookmarks" }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
-          {{ end }}
+        {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
+        {{ .Bookmark.CreatedAt | ToDate }} {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}
+        {{ if eq .UID .Bookmark.UserID }}
+          <a href="{{ BaseURL "/edit-bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
+        {{ else }}
+          <a href="{{ BaseURL "/bookmark" }}?id={{ .Bookmark.ID }}">view</a>
         {{ end }}
-    </div>
-    <div class="media-right">
-        {{ block "snapshots" .Snapshots }}{{ end }}
-        {{ .CreatedAt | ToDate }} {{ if .Public }}Public{{ else }}Private{{ end }}
     </div>
 </div>
 {{ end}}

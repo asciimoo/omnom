@@ -18,8 +18,10 @@
             {{ block "submit" . }}{{ end }}
         </details>
     </form></div>
+    {{ $uid := .User.ID }}
+    {{ $page := .Page }}
     {{ range .Bookmarks }}
-        {{ block "public-bookmark" .}}{{ end }}
+        {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page }}{{ end }}
     {{ end }}
 {{ block "paging" .}}{{ end }}
 </div>
