@@ -138,7 +138,7 @@ func Run(cfg *config.Config) {
 	e.GET("/logout", logout)
 	e.GET("/bookmarks", bookmarks)
 	e.GET("/snapshot", snapshotWrapper)
-	e.GET("/viewSnapshot", snapshot)
+	e.GET("/view_snapshot", snapshot)
 	e.POST("/add_bookmark", addBookmark)
 	e.GET("/check_bookmark", checkBookmark)
 
