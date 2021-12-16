@@ -183,3 +183,46 @@ func checkBookmark(c *gin.Context) {
 	}
 	c.JSON(200, resp)
 }
+
+func viewBookmark(c *gin.Context) {
+	u, _ := c.Get("user")
+	bid, ok := c.GetQuery("id")
+	if !ok {
+		return
+	}
+	var b *model.Bookmark
+	model.DB.Model(b).Where("id = ?", bid).Preload("Snapshots").Preload("Tags").First(&b)
+	if b == nil {
+		return
+	}
+	if !b.Public && (u == nil || u.(*model.User).ID != b.UserID) {
+		return
+	}
+	renderHTML(c, http.StatusOK, "view-bookmark", map[string]interface{}{
+		"Bookmark": b,
+	})
+}
+
+func editBookmark(c *gin.Context) {
+	u, _ := c.Get("user")
+	bid, ok := c.GetQuery("id")
+	if !ok {
+		return
+	}
+	var b *model.Bookmark
+	model.DB.Model(b).Where("id = ?", bid).Preload("Snapshots").Preload("Tags").First(&b)
+	if b == nil {
+		return
+	}
+	if u.(*model.User).ID != b.UserID {
+		return
+	}
+	renderHTML(c, http.StatusOK, "edit-bookmark", map[string]interface{}{
+		"Bookmark": b,
+	})
+}
+
+func saveBookmark(c *gin.Context) {
+	// u, _ := c.Get("user")
+	return
+}

@@ -70,6 +70,8 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("my-bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/my_bookmarks.tpl")
 	r.AddFromFilesFuncs("profile", tplFuncMap, "templates/layout/base.tpl", "templates/profile.tpl")
 	r.AddFromFilesFuncs("snapshotWrapper", tplFuncMap, "templates/layout/base.tpl", "templates/snapshot_wrapper.tpl")
+	r.AddFromFilesFuncs("view-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/view_bookmark.tpl")
+	r.AddFromFilesFuncs("edit-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/edit_bookmark.tpl")
 	return r
 }
 
@@ -141,11 +143,14 @@ func Run(cfg *config.Config) {
 	e.GET("/view_snapshot", snapshot)
 	e.POST("/add_bookmark", addBookmark)
 	e.GET("/check_bookmark", checkBookmark)
+	e.GET("/bookmark", viewBookmark)
 
 	authorized.GET("/profile", profile)
 	authorized.GET("/generate_addon_token", generateAddonToken)
 	authorized.GET("/delete_addon_token", deleteAddonToken)
 	authorized.GET("/my_bookmarks", myBookmarks)
+	authorized.GET("/edit_bookmark", editBookmark)
+	authorized.POST("/save_bookmark", saveBookmark)
 
 	log.Println("Starting server")
 	e.Run(cfg.Server.Address)
