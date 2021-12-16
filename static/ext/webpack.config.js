@@ -3,6 +3,7 @@ const webpack = require("webpack"),
     fileSystem = require("fs"),
     env = require("./utils/env"),
     CleanWebpackPlugin = require("clean-webpack-plugin").CleanWebpackPlugin,
+    MiniCssExtractPlugin = require("mini-css-extract-plugin"),
     CopyWebpackPlugin = require("copy-webpack-plugin"),
     HtmlWebpackPlugin = require("html-webpack-plugin"),
     WriteFilePlugin = require("write-file-webpack-plugin");
@@ -12,8 +13,6 @@ let alias = {};
 
 const secretsPath = path.join(__dirname, ("secrets." + env.NODE_ENV + ".js"));
 
-let fileExtensions = ["jpg", "jpeg", "png", "gif", "eot", "otf", "svg", "ttf"];
-
 if (fileSystem.existsSync(secretsPath)) {
     alias["secrets"] = secretsPath;
 }
@@ -22,8 +21,8 @@ console.log({ process: process.env.NODE_ENV, env: env.NODE_ENV });
 module.exports = {
     mode: env.NODE_ENV,
     entry: {
-        omnom: path.join(__dirname, "src", "js", "omnom.js"),
-        options: path.join(__dirname, "src", "js", "options.js")
+        omnom: [path.join(__dirname, "src", "js", "omnom.js"), path.join(__dirname, "src", "css", "style.css")],
+        options: path.join(__dirname, "src", "js", "options.js"),
         // background: path.join(__dirname, "src", "js", "background.js")
     },
     output: {
@@ -35,7 +34,8 @@ module.exports = {
         rules: [
             {
                 test: /\.css$/,
-                use: ["style-loader", "css-loader"],
+                use: [MiniCssExtractPlugin.loader,
+                    'css-loader'],
                 exclude: /node_modules/
             },
             {
@@ -82,7 +82,10 @@ module.exports = {
     plugins: [
         // clean the build folder
         new CleanWebpackPlugin({
-            cleanStaleWebpackAssets: false
+            cleanStaleWebpackAssets: false,
+        }),
+        new MiniCssExtractPlugin({
+            filename: '[name].css',
         }),
         // expose and write the allowed env vars on the compiled bundle
         new webpack.EnvironmentPlugin(["NODE_ENV"]),
