@@ -18,7 +18,10 @@
             {{ block "submit" . }}{{ end }}
         </details>
     </form></div>
-    {{ $uid := .User.ID }}
+    {{ $uid := 0 }}
+    {{ if .User }}
+      {{ $uid = .User.ID }}
+    {{ end }}
     {{ $page := .Page }}
     {{ range .Bookmarks }}
         {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page }}{{ end }}
