@@ -123,7 +123,7 @@
         <p>{{ .Bookmark.Notes }}</p>
         {{ if .Bookmark.Tags }}
           {{ range .Bookmark.Tags }}
-            <a href="{{ if eq $.Page "bookmarks" }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+            <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
           {{ end }}
         {{ end }}
     </div>

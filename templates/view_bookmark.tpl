@@ -15,8 +15,10 @@
     </h4>
     <p>{{ .Bookmark.Notes }}</p>
     {{ if .Bookmark.Tags }}
+        {{ $uid := 0 }}
+        {{ if .User }}{{ $uid = .User.ID }}{{ end }}
         {{ range .Bookmark.Tags }}
-        <a href="{{ if eq $.Page "bookmarks" }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+        <a href="{{ if ne $uid $.Bookmark.UserID }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
         {{ end }}
     {{ end }}
     {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
