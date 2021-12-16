@@ -1,0 +1,14 @@
+.message {
+    .message-body {
+        span {
+            font-size: $extra-small-font;
+        }
+    }
+}
+.field-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top:1.75rem;
+    margin-bottom: 0;
+}

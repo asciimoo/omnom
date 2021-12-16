@@ -1,4 +1,4 @@
-import { renderProgressBar } from './file-download';
+import { renderProgressBar, destroyProgressBar } from './file-download';
 import {
     createSnapshot
 } from './snapshot';
@@ -22,7 +22,7 @@ export default function () {
 
     let tagInput = null;
     let templates = new Map();
-    let boundVars = { onoptions: false };
+    let boundVars = { onoptions: false, onafterdownload: false, onmain: true };
     let contentContainer = null;
 
     function debugPopup(content) {
@@ -43,6 +43,7 @@ export default function () {
         evaluateTemplates();
         setEventListeners();
         setOmnomSettings().then(fillFormFields, renderError);
+        console.log('Loaded!');
     }
 
     function setEventListeners() {
@@ -93,12 +94,12 @@ export default function () {
 
     function backHandler() {
         clearContentContainer();
-        updateBoundVar('onoptions', false);
+        updateBoundVar([{ 'onoptions': false }, { 'onafterdownload': false }, { 'onmain': true }]);
         fillFormFields();
     }
 
     async function optionsHandler() {
-        updateBoundVar('onoptions', true);
+        updateBoundVar([{ 'onoptions': true }, { 'onmain': false }]);
 
         const optionsPageText = await fetch('./options.html').then(stream => stream.text());
         const p = new DOMParser();
@@ -114,17 +115,16 @@ export default function () {
     }
 
     /* ---------------------------------*
-     * Tag component                    *
-     * ---------------------------------*/
-
-
-    /* ---------------------------------*
      * Save bookmarks                   *
      * ---------------------------------*/
 
     async function saveBookmark(e) {
         e.preventDefault();
+        const form = new FormData(document.forms['add']);
+        form.set('tags', tagInput.getTags().join(','));
+        updateBoundVar([{ 'onafterdownload': true }, { 'onmain': false }]);
         renderProgressBar(document.getElementById('omnom_status'));
+
         console.time('createSnapshot');
         const snapshotData = await createSnapshot();
         console.timeEnd('createSnapshot');
@@ -132,10 +132,8 @@ export default function () {
             debugPopup(snapshotData['dom']);
             return;
         }
-        const form = new FormData(document.forms['add']);
         form.append('snapshot', snapshotData['dom']);
         form.append('snapshot_text', snapshotData['text']);
-        form.set('tags', tagInput.getTags().join(','));
         const requestBody = {
             method: 'POST',
             body: form,
@@ -143,8 +141,14 @@ export default function () {
             //     'Content-type': 'application/json; charset=UTF-8'
             // }
         }
-        const response = await fetch(`${getOmnomUrl()}add_bookmark`, requestBody);
-        checkStatus(response).then(renderSuccess('Bookmark saved!'), (err) => renderError(`Failed to save bookmark! Error: ${err}`));
+        await fetch(`${getOmnomUrl()}add_bookmark`, requestBody)
+            .then((resp) => checkStatus(resp)).then(() => {
+                destroyProgressBar();
+                renderSuccess('Snapshot successfully saved!');
+            }, (err) => {
+                destroyProgressBar();
+                renderError(`Failed to save bookmark! Error: ${err}`);
+            });
     }
 
     /* ---------------------------------*
@@ -166,24 +170,28 @@ export default function () {
                     const attributeValue = (template.dataset[attribute] === 'true');
                     return boundVars.hasOwnProperty(attribute) && boundVars[attribute] === attributeValue
                 });
-                if (!shouldShow) {
-                    const nodeToRemove = parent ?
-                        [...parent.children]?.find(child => child.id === template.content.children[0].id) :
-                        null;
-                    if (nodeToRemove) {
-                        parent.removeChild(nodeToRemove);
+                const templateNode = parent ?
+                    [...parent.children]?.find(child => child.id === template.content.children[0].id) :
+                    null;
+                if (templateNode)
+                    if (!shouldShow && templateNode) {
+                        parent.removeChild(templateNode);
                     }
-                    return;
+                if (!templateNode && shouldShow) {
+                    parent.appendChild(template.content.cloneNode(true));
                 }
             }
-            parent.appendChild(template.content.cloneNode(true));
         })
     }
 
-    function updateBoundVar(key, value) {
-        if (boundVars.hasOwnProperty(key)) {
-            boundVars[key] = value;
-        }
+    function updateBoundVar(keys) {
+        let changed = null;
+        keys.forEach(key => {
+            changed = Object.keys(key)[0];
+            if (boundVars.hasOwnProperty(changed)) {
+                boundVars[changed] = key[changed];
+            }
+        });
         evaluateTemplates();
         setEventListeners();
     }

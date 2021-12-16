@@ -1,12 +1,5 @@
   /* Accordion styles */
-  $midnight: #2c3e50;
-$clouds: #ecf0f1;
-  .accordion-tabs {
-    input {
-        position: absolute;
-        opacity: 0;
-        z-index: -1;
-      }
+  .accordion-tabs {    
       // Layout
       .row {
         display:flex;
@@ -18,63 +11,51 @@ $clouds: #ecf0f1;
         }
       }
     border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 4px -2px rgba(0,0,0,0.5);
+    overflow: hidden;    
   }
   .accordion-tab {
-    width: 100%;
-    color: white;
+    width: 100%;    
     overflow: hidden;
     &-label {
       display: flex;
-      justify-content: space-between;
-      padding: 1em;
-      background: $midnight;
+      justify-content: space-between;      
       font-weight: bold;
       cursor: pointer;
       /* Icon */
-      &:hover {
-        background: darken($midnight, 10%);
-      }
-      &::after {
-        content: "\276F";
-        width: 1em;
-        height: 1em;
+      i {                
+        width: 1rem;
+        height: 1rem;
         text-align: center;
         transition: all .35s;
+        transform: translateY(6px);
       }
     }
     &-content {
-      max-height: 0;
-      padding: 0 1em;
-      color: $midnight;
-      background: white;
+      max-height: 0;      
       transition: all .35s;
     }
     &-close {
       display: flex;
-      justify-content: flex-end;
-      padding: 1em;
-      font-size: 0.75em;
-      background: $midnight;
+      justify-content: flex-end;      
+      font-size: 0.75em;      
       cursor: pointer;
-      &:hover {
-        background: darken($midnight, 10%);
-      }
+    }
+    &__control {
+      position: absolute;
+      opacity: 0;
+      z-index: -1;
     }
   }
   
   // :checked
   input:checked {
-    + .accordion-tab-label {
-      background: darken($midnight, 10%);
-      &::after {
-        transform: rotate(90deg);
+    + .accordion-tab-label {      
+      i {        
+        transform: rotate(180deg) translateY(-6px);
       }
     }
     ~ .accordion-tab-content {
-      max-height: 100vh;
-      padding: 1em;
+      max-height: 100vh;      
     }
   }
   

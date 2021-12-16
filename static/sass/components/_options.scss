@@ -2,4 +2,55 @@
     &__message-text {
         font-weight: 300;
     }
+
+    &__section-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+        font-size: 1.1rem;
+        color: $secondary-color;
+        border-bottom: 1px solid $tertiary-color;
+        padding-bottom: 0.4rem;
+        margin-bottom: 1rem;
+    }
+
+    &__hotkeys{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+
+        label {
+            display: inline-block;
+        }
+
+        button {
+            width: 4rem;
+        }
+
+        button,.input-small {
+            color: $secondary-color;
+            border-color: $secondary-color;
+        }
+    }
+
+    &__dropdown-input {
+        display: flex;
+        align-items: center;
+    }
+
+    &__reset {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .plus-icon {
+        margin: 0 0.5rem;
+        color: $tertiary-color;
+    }
+
+    .input-small {
+        width: 2.2rem;
+    }
 }

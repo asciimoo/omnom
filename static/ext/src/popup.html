@@ -15,13 +15,13 @@
             </div>
             <div class="omnom-popup__controls">
                 <div id="action-button">
-                    <template data-onoptions="false" id="options-button">
+                    <template data-onmain="true" id="options-button">
                         <button id="omnom_options" type="button" class="button is-outlined">
                             <span class="icon"><i class="fas fa-cog"></i>
                             </span>
                         </button>
                     </template>
-                    <template data-onoptions="true" id="back-button">
+                    <template data-onoptions="true" data-onafterdownload="true" id="back-button">
                         <button id="back" type="button" class="button is-outlined">
                             <span class="icon">
                                 <i class="fas fa-angle-left"></i>
@@ -37,7 +37,7 @@
             </div>
         </div>
         <div id="omnom-content">
-            <template data-onoptions="false" id="create-bookmark-template">
+            <template data-onmain="true" id="create-bookmark-template">
                 <div id="create-bookmark">
                     <h2>Create bookmark</h2>
                     <div class="omnom-popup__form">
@@ -71,31 +71,32 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="field field-row">
+                                <label class="label">Public</label>
+                                <input id="public" type="checkbox" name="public" class="switch is-rounded"
+                                    checked="checked">
+                                <label for="public"></label>
+                            </div>
+                            <div class="field">
+                                <label class="label">Snapshot title</label>
+                                <div class="control">
+                                    <input class="input" type="text" id="snapshot_title"
+                                        placeholder="Add snapshot title">
+                                </div>
+                            </div>
+                            <div class="omnom-popup__submit">
+                                <input type="submit" value="Save Bookmark" class="button is-primary" />
+                            </div>
+                            <input type="hidden" id="token" name="token" value="" />
+                            <input type="hidden" id="favicon" name="favicon" value="" />
+                        </form>
                     </div>
-                    <div class="field">
-                        <label class="label">Public</label>
-                        <input id="public" type="checkbox" name="public" class="switch is-rounded" checked="checked">
-                        <label for="public"></label>
-                    </div>
-                    <div class="field">
-                        <label class="label">Snapshot title</label>
-                        <div class="control">
-                            <input class="input" type="text" id="snapshot_title" placeholder="Add snapshot title">
-                        </div>
-                    </div>
-                    <div class="omnom-popup__submit">
-                        <input type="submit" value="Save Bookmark" class="button is-primary" />
-                    </div>
-                    <input type="hidden" id="token" name="token" value="" />
-                    <input type="hidden" id="favicon" name="favicon" value="" />
-                    </form>
                 </div>
+            </template>
         </div>
-        </template>
+        <p id="omnom_status">
+        </p>
     </div>
-    <p id="omnom_status">
-    <h3> </h3>
-    </p>
     </div>
 </body>
 <script src="omnom.js"></script>

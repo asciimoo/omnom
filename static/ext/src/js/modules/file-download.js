@@ -6,13 +6,17 @@ const downloadStatus = {
     DOWNLOADED: 'downloaded',
     FAILED: 'failed'
 };
-const initialBar = `<h3>Downloading resources <span id="progress-counter">(0/0)</span></h3>
-<h3>Failed requests: <span id="failed-counter">0</span></h3>`;
+const initialBar = `<div class="file-download">
+<h3>Snapshotting in progress...</h3>
+<progress class="progress is-small file-download__progress" value="15" max="100">0%</progress>
+<span id="progress-counter">0 of 0 resources snapshotted</span>
+<h3>Failed requests: <span id="failed-counter">0</span></h3>
+</div>`;
 
 let downloadedCount = 0;
 let downloadCount = 0;
 let failedCount = 0;
-let downloadState = new Subject();
+let downloadState = null;
 let componentTarget = null;
 let fragment = null;
 
@@ -67,15 +71,28 @@ function updateStatus(status) {
 }
 
 function renderProgressBar(target) {
+    downloadState = new Subject();
     componentTarget = target;
     fragment = createFragment(initialBar, componentTarget);
     componentTarget.appendChild(fragment);
     downloadState.subscribe(state => {
-        const progressCounter = componentTarget.querySelector('#progress-counter');
-        progressCounter.innerText = `(${state.downloadCount}/${state.downloadedCount})`;
         const failedCounter = componentTarget.querySelector('#failed-counter');
         failedCounter.innerText = ` ${state.failedCount}`;
+        const progressCounter = componentTarget.querySelector('#progress-counter');
+        progressCounter.innerText = `${state.downloadedCount} of ${state.downloadCount} resources snapshotted`;
+        const progressBar = componentTarget.querySelector('progress');
+        const percentage = ((state.downloadedCount + state.failedCount) / state.downloadCount) * 100;
+        progressBar.value = percentage;
     });
+}
+
+function destroyProgressBar() {
+    downloadState.unsubscribe();
+    const el = componentTarget.querySelector('.file-download');
+    componentTarget.removeChild(el);
+    downloadCount = 0;
+    downloadedCount = 0;
+    failedCount = 0;
 }
 
 function createFragment(componentString) {
@@ -87,4 +104,4 @@ function createFragment(componentString) {
     return
 }
 
-export { downloadState, downloadFile, renderProgressBar };
+export { downloadState, downloadFile, renderProgressBar, destroyProgressBar };

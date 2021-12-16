@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Omnom extension",
   "scripts": {
-    "build": "node utils/build.js",
-    "start": "node utils/webserver.js",
-    "start2": "cross-env NODE_ENV=development webpack --stats-error-details --watch"
+    "build": "cross-env NODE_ENV=production webpack --stats-error-details",
+    "start": "cross-env NODE_ENV=development webpack --stats-error-details --watch"
   },
   "devDependencies": {
     "clean-webpack-plugin": "^4.0.0",

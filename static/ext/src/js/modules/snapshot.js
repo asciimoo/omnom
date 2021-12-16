@@ -28,10 +28,9 @@ async function createSnapshot() {
     }
     await walkDOM(dom, transformNode);
     setStyleNodes(dom);
-    if (!document.getElementById('favicon').value) {
+    if (!document.getElementById('favicon')?.value) {
         const favicon = await downloadFile(fullURL('/favicon.ico'));
         if (favicon) {
-            document.getElementById('favicon').value = favicon;
             const faviconElement = document.createElement('style');
             faviconElement.setAttribute('rel', 'icon');
             faviconElement.setAttribute('href', favicon);
