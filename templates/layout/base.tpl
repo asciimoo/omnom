@@ -131,7 +131,7 @@
         {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
         {{ .Bookmark.CreatedAt | ToDate }} {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}
         {{ if eq .UID .Bookmark.UserID }}
-          <a href="{{ BaseURL "/edit-bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
+          <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
         {{ else }}
           <a href="{{ BaseURL "/bookmark" }}?id={{ .Bookmark.ID }}">view</a>
         {{ end }}
