@@ -54,3 +54,9 @@
         width: 2.2rem;
     }
 }
+.options-page__container {
+    .button.is-primary, .button.is-primary:hover {
+        color: $primary-color;
+        border-color: $primary-color;
+    }    
+}
