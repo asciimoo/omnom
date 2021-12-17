@@ -1,6 +1,7 @@
 omnom
 omnom.exe
 data/
-static/sass/node_modules/
-static/ext/node_modules/
-static/ext/build/
+sass/node_modules/
+ext/node_modules/
+ext/build/
+ext/node_modules/@nodelib/fs.scandir/out/providers/sync.js

@@ -29,6 +29,7 @@ export default function () {
                 document.querySelector('#token').value = data.omnom_token || '';
                 document.querySelector('#debug').checked = data.omnom_debug;
             });
+            document.querySelector('form').addEventListener('submit', saveOptions);
         } else {
             document.addEventListener('DOMContentLoaded', () => {
                 loadContent();
