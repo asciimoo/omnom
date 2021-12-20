@@ -9,6 +9,11 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    margin-top:1.75rem;
+    margin-top:0.75rem;
     margin-bottom: 0;
+    align-items: center;
+    
+    .label, .label:not(:last-child) {
+        margin-bottom: 0;
+    }
 }
