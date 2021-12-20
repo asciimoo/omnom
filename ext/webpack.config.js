@@ -44,30 +44,6 @@ module.exports = {
                 test: /\.(jpe?g|svg|png|gif|ico|eot|ttf|woff2?)(\?v=\d+\.\d+\.\d+)?$/i,
                 type: 'asset/resource',
             },
-            // {
-            //     test: new RegExp('.(' + fileExtensions.join('|') + ')$'),
-            //     use: [
-            //         {
-            //             loader: "file-loader",
-            //             options: {
-            //                 name: '[name].[ext]',
-            //                 outputPath: 'css/webfonts',
-            //                 publicPath: '../css/webfonts/'
-            //             }
-            //         }
-            //     ],
-            //     exclude: /node_modules/
-            // },
-            // {
-            //     test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-            //     loader: "url-loader",
-            //     options: {
-            //         limit: 10000,
-            //         outputPath: 'css/webfonts',
-            //         // publicPath: '../css/webfonts/',
-            //         minetype: 'application/font-woff'
-            //     }
-            // },
             {
                 test: /\.html$/,
                 loader: "html-loader",
@@ -108,10 +84,6 @@ module.exports = {
                     from: "src/icons",
                     to: "icons"
                 },
-                // {
-                //     from: "src/css",
-                //     to: "css"
-                // }
             ]
         }),
         new HtmlWebpackPlugin({
@@ -124,16 +96,7 @@ module.exports = {
             filename: "options.html",
             chunks: ["options"]
         }),
-        // new HtmlWebpackPlugin({
-        //     template: path.join(__dirname, "src", "background.html"),
-        //     filename: "background.html",
-        //     chunks: ["background"]
-        // }),
         new WriteFilePlugin()
     ],
     devtool: 'cheap-module-source-map'
 };
-
-// if (env.NODE_ENV === "development") {
-//     options.devtool = "eval-cheap-module-source-map";
-// }
