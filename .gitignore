@@ -4,4 +4,3 @@ data/
 sass/node_modules/
 ext/node_modules/
 ext/build/
-ext/node_modules/@nodelib/fs.scandir/out/providers/sync.js
