@@ -17,6 +17,8 @@ if (fileSystem.existsSync(secretsPath)) {
     alias["secrets"] = secretsPath;
 }
 
+
+
 console.log({ process: process.env.NODE_ENV, env: env.NODE_ENV });
 module.exports = {
     mode: env.NODE_ENV,
