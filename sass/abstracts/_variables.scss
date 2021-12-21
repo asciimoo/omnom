@@ -1,0 +1,37 @@
+// FONT
+$default-font-size: 1.6rem;
+
+// GRID
+$grid-width: 114rem;
+$gutter-vertical: 8rem;
+$gutter-vertical-small: 4rem;
+$gutter-vertical-mini: 1rem;
+$gutter-horizontal: 6rem;
+
+//COLORS
+$primary-color: #0093ab;
+$secondary-color: #3d3e3e;
+$tertiary-color: #b7b8b8;
+$color-white: #fff;
+$color-black: #000;
+
+//FONT SIZES
+$extra-small-font: 0.9rem;
+$small-font: 1.5rem;
+$normal-font: 2rem;
+$big-font: 2.5rem;
+$large-font: 6rem;
+$phone-large: 5rem;
+$phone-mini: 4.5rem;
+
+//BULMA
+$tag-background-color:transparent;
+$switch-background-active: $primary-color;
+$family-sans-serif: 'Roboto';
+$message-background-color: transparent;
+$message-body-border-color: $tertiary-color $tertiary-color $tertiary-color $primary-color;
+$message-body-border-width: 1px 1px 1px 7px;
+$message-body-padding: 0.5rem;
+$button-color: $primary-color;
+$button-border-color: $primary-color;
+$progress-value-background-color: $primary-color;

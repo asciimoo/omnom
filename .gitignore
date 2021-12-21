@@ -1,3 +1,6 @@
 omnom
 omnom.exe
 data/
+sass/node_modules/
+ext/node_modules/
+ext/build/

@@ -1,0 +1,61 @@
+  /* Accordion styles */
+  .accordion-tabs {    
+      // Layout
+      .row {
+        display:flex;
+        .col {
+          flex:1;
+          &:last-child {
+            margin-left: 1em;
+          }
+        }
+      }
+    border-radius: 8px;
+    overflow: hidden;    
+  }
+  .accordion-tab {
+    width: 100%;    
+    overflow: hidden;
+    &-label {
+      display: flex;
+      justify-content: space-between;      
+      font-weight: bold;
+      cursor: pointer;
+      /* Icon */
+      i {                
+        width: 1rem;
+        height: 1rem;
+        text-align: center;
+        transition: all .35s;
+        transform: translateY(6px);
+      }
+    }
+    &-content {
+      max-height: 0;      
+      transition: all .35s;
+    }
+    &-close {
+      display: flex;
+      justify-content: flex-end;      
+      font-size: 0.75em;      
+      cursor: pointer;
+    }
+    &__control {
+      position: absolute;
+      opacity: 0;
+      z-index: -1;
+    }
+  }
+  
+  // :checked
+  input:checked {
+    + .accordion-tab-label {      
+      i {        
+        transform: rotate(180deg) translateY(-6px);
+      }
+    }
+    ~ .accordion-tab-content {
+      max-height: 100vh;      
+    }
+  }
+  
