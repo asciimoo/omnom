@@ -21,7 +21,7 @@ func snapshotWrapper(c *gin.Context) {
 		return
 	}
 	var s *model.Snapshot
-	err := model.DB.Where("key = ?", sid).First(&s).Error
+	err := model.DB.Where("key = ? and bookmark_id = ?", sid, bid).First(&s).Error
 	if err != nil {
 		return
 	}
