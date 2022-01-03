@@ -23,7 +23,7 @@
 
     <div id="navbar-menu" class="navbar-menu is-size-5">
       <div class="navbar-start">
-        <a href="{{ BaseURL "/" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}"  >Our mission</a>
+        <a href="{{ BaseURL "/" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">Home</a>
         {{ if .User }}
           <a href="{{ BaseURL "/my_bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
