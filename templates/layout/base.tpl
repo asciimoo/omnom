@@ -65,6 +65,11 @@
       <p>
           <strong>Omnom</strong> © 2021
       </p>
+      <p>
+          <a href="https://github.com/asciimoo/omnom">GitHub</a>
+          | <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
+          | <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
+      </p>
     </div>
   </div>
 </footer>
