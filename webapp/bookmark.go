@@ -11,6 +11,8 @@ import (
 	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/gin-gonic/contrib/sessions"
 )
 
 func bookmarks(c *gin.Context) {
@@ -223,6 +225,37 @@ func editBookmark(c *gin.Context) {
 }
 
 func saveBookmark(c *gin.Context) {
-	// u, _ := c.Get("user")
-	return
+	u, _ := c.Get("user")
+	session := sessions.Default(c)
+	defer session.Save()
+	bid := c.PostForm("id")
+	if bid == "" {
+		session.Set("Error", "Missing bookmark ID")
+		c.Redirect(http.StatusFound, baseURL("/"))
+		return
+	}
+	var b *model.Bookmark
+	model.DB.Model(b).Where("id = ?", bid).First(&b)
+	if b == nil {
+		session.Set("Error", "Missing bookmark")
+		c.Redirect(http.StatusFound, baseURL("/"))
+		return
+	}
+	if u.(*model.User).ID != b.UserID {
+		session.Set("Error", "Insufficient permission")
+		c.Redirect(http.StatusFound, baseURL("/"))
+		return
+	}
+	t := c.PostForm("title")
+	if t != "" {
+		b.Title = t
+	}
+	b.Public = c.PostForm("public") != ""
+	err := model.DB.Save(b).Error
+	if err != nil {
+		session.Set("Error", "Failed to save bookmark: "+err.Error())
+	} else {
+		session.Set("Info", "Bookmark saved")
+	}
+	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }

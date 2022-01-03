@@ -153,6 +153,7 @@ func Run(cfg *config.Config) {
 	authorized.GET("/my_bookmarks", myBookmarks)
 	authorized.GET("/edit_bookmark", editBookmark)
 	authorized.POST("/save_bookmark", saveBookmark)
+	authorized.POST("/delete_snapshot", deleteSnapshot)
 
 	log.Println("Starting server")
 	e.Run(cfg.Server.Address)

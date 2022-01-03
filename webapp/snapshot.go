@@ -7,6 +7,8 @@ import (
 	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/gin-gonic/contrib/sessions"
 )
 
 func snapshotWrapper(c *gin.Context) {
@@ -48,4 +50,29 @@ func snapshot(c *gin.Context) {
 		return
 	}
 	c.Data(http.StatusOK, "text/html; charset=utf-8", sBody)
+}
+
+func deleteSnapshot(c *gin.Context) {
+	u, _ := c.Get("user")
+	session := sessions.Default(c)
+	defer session.Save()
+	bid := c.PostForm("bid")
+	sid := c.PostForm("sid")
+	if bid == "" || sid == "" {
+		return
+	}
+	var s *model.Snapshot
+	err := model.DB.
+		Model(&model.Snapshot{}).
+		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
+		Where("snapshots.id = ? and snapshots.bookmark_id = ? and bookmarks.user_id", sid, bid, u.(*model.User).ID).First(&s).Error
+	if err != nil {
+		session.Set("Error", "Failed to delete snapshot: "+err.Error())
+	} else {
+		session.Set("Info", "Snapshot deleted")
+	}
+	if s != nil {
+		model.DB.Delete(&model.Snapshot{}, "id = ? and bookmark_id = ?", sid, bid)
+	}
+	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
