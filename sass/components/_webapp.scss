@@ -3,9 +3,10 @@
     display: flex;
     flex-flow: column;
     overflow: auto;
+    background-color: #fafafa;
     .navbar-item, .navbar-link{
-        padding: 0rem 0.75rem;
-        margin: 0 1rem;
+        padding: 0rem 1rem;
+        margin: 0 0.5rem;
         line-height: 1rem;
     }
     a{
@@ -14,8 +15,7 @@
     }
 
     .bd-main-container{
-        min-height: 66vh;
-        background-color:#fafafa;
+        height: 66vh;        
     }
 }
 summary {
@@ -81,7 +81,7 @@ iframe {
 .navbar {
     &__logo{
         @extend %omnomTitle;
-        margin-right: 8rem;
+        margin-right: 3rem;
         margin-left: 2rem;
     }
     &__container {
@@ -90,5 +90,61 @@ iframe {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+    }
+}
+
+.my-bookmarks {
+    &__section-header{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+        font-size: 0.7rem;
+        color: $secondary-color;
+        border-bottom: 1px solid $tertiary-color;        
+        margin-bottom: 1rem;
+        i{
+            font-size: 1rem;
+        }
+    }
+
+    &__search-params{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        flex:1;
+
+        .field-row, .field:not(:last-child){
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+    }
+
+    &__query {
+        flex: 3;
+        margin-left: 6rem;
+    }
+
+    &__advanced-search {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        font-size: 1rem;
+        
+        .label {
+            font-weight: 400;
+        }
+    }
+    &__h3 {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    &__advanced-content{
+        border-bottom: 1px solid #b7b8b8;
+        padding-bottom: 2rem;
+        padding-left: 1rem;
     }
 }

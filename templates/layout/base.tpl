@@ -23,6 +23,7 @@
 
     <div id="navbar-menu" class="navbar-menu is-size-5">
       <div class="navbar-start">
+        <a href="{{ BaseURL "/" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}"  >Our mission</a>
         {{ if .User }}
           <a href="{{ BaseURL "/my_bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
@@ -54,9 +55,9 @@
         {{ end }}
 
         {{ block "content" . }}{{ end }}
+        {{ block "extra_content" . }}{{ end }}
     </div>
 </div>
-{{ block "extra_content" . }}{{ end }}
 {{ if (not .hideFooter) }}
 <footer class="footer">
   <div class="container">
@@ -158,124 +159,90 @@
 
 {{ define "textFilter" }}
 <div class="field is-horizontal">
-    <div class="field-label is-normal">
-        <label class="label">Query</label>
-    </div>
     <div class="field-body">
         <div class="field">
-            <div class="control">
-                <input class="input" type="text" placeholder="search text.." name="query" value="{{ .SearchParams.Q }}">
+            <div class="control has-icons-left has-icons-right">
+                <input class="input" type="text" placeholder="Search" name="query" value="{{ .SearchParams.Q }}">
+                 <span class="icon is-small is-left">
+                <i class="fas fa-search"></i>
+                </span>
+                <span class="icon is-small is-right">
+                <i class="fas fa-times-circle"></i>
+                </span>
             </div>
         </div>
     </div>
 </div>
-
-<div class="field is-horizontal">
-    <div class="field-label is-normal">
-    </div>
-    <div class="field-body">
-        <div class="field is-grouped">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" value="true" name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
-                    Search in snapshots
-                </label>
-            </div>
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" value="true" name="search_in_note"{{ if .SearchParams.SearchInNote }} checked="checked"{{ end }}>
-                    Search in notes
-                </label>
-            </div>
-            {{ if eq .Page "my-bookmarks" }}
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" value="true" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>
-                    Only public bookmarks
-                </label>
-            </div>
-            {{ end }}
+{{end}}
+{{define "searchParameters"}}        
+        <div class="field field-row">
+            <label class="label">Search in snapshots</label>
+            <input class="switch is-rounded" value="true" type="checkbox" id="search_in_snapshot"  name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
+            <label for="search_in_snapshot"></label>    
         </div>
-    </div>
-</div>
+        <div class="field field-row">
+            <label class="label">Search in notes</label>
+            <input class="switch is-rounded" value="true" type="checkbox" id="search_in_note" name="search_in_note"{{ if .SearchParams.SearchInNote }} checked="checked"{{ end }}>
+            <label for="search_in_note"></label>    
+        </div>
+        {{ if eq .Page "my-bookmarks" }}
+        <div class="field field-row">
+            <label class="label">Only public bookmarks</label>
+            <input class="switch is-rounded" value="true" type="checkbox" id="public" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>            
+            <label for="public"></label>    
+        </div>
+        {{ end }}    
 {{ end }}
 
 {{ define "domainFilter" }}
-<div class="field is-horizontal">
-    <div class="field-label is-normal">
-        <label class="label">Domain</label>
-    </div>
-    <div class="field-body">
-        <div class="field">
-            <div class="control">
-                <input class="input" type="text" placeholder="domain name.." name="domain" value="{{ .SearchParams.Domain }}">
-            </div>
-        </div>
+<div class="field">    
+    <label class="label">Domain</label>
+    <div class="control">
+        <input class="input" type="text" placeholder="Insert Url" name="domain" value="{{ .SearchParams.Domain }}">
     </div>
 </div>
 {{ end }}
 
 {{ define "ownerFilter" }}
-<div class="field is-horizontal">
-    <div class="field-label is-normal">
-        <label class="label">Owner</label>
-    </div>
-    <div class="field-body">
-        <div class="field">
-            <div class="control">
-                <input class="input" type="text" placeholder="username.." name="owner" value="{{ .SearchParams.Owner }}">
-            </div>
-        </div>
+<div class="field">
+<label class="label">Owner</label>
+    <div class="control">
+        <input class="input" type="text" placeholder="username.." name="owner" value="{{ .SearchParams.Owner }}">
     </div>
 </div>
 {{ end }}
 
 {{ define "tagFilter" }}
-<div class="field is-horizontal">
-    <div class="field-label is-normal">
-        <label class="label">Tag</label>
-    </div>
-    <div class="field-body">
-        <div class="field">
-            <div class="control">
-                <input class="input" type="text" placeholder="tag.." name="tag" value="{{ .SearchParams.Tag }}">
-            </div>
-        </div>
+<div class="field">
+<label class="label">Tags</label>
+    <div class="control">
+        <input class="input" type="text" placeholder="Add tag" name="tag" value="{{ .SearchParams.Tag }}">
     </div>
 </div>
 {{ end }}
 
 {{ define "dateFilter" }}
 <div class="field is-horizontal">
-    <div class="field-label is-normal">
-        <label class="label">Date from/to</label>
-    </div>
     <div class="field-body">
-        <div class="field">
+    <div class="field">
+        <label class="label">Date from</label>
             <p class="control is-expanded">
                 <input class="input" type="date" placeholder="YYYY.MM.DD" name="from" value="{{ .SearchParams.FromDate }}">
             </p>
         </div>
         <div class="field">
+        <label class="label">Date to</label>
             <p class="control is-expanded">
                 <input class="input" type="date" placeholder="YYYY.MM.DD" name="to" value="{{ .SearchParams.ToDate }}">
             </p>
         </div>
-    </div>
+    </div>    
 </div>
 {{ end }}
 
 {{ define "submit" }}
-<div class="field is-horizontal">
-    <div class="field-label">
-        <!-- Left empty for spacing -->
-    </div>
-    <div class="field-body">
-        <div class="field">
-            <div class="control">
-                <input type="submit" name="submit" value="Search" class="button is-primary" />
-            </div>
-        </div>
-    </div>
+<div class="omnom-popup__submit">
+    <input type="submit" name="submit" value="Search" class="button is-primary" />
 </div>
+
 {{ end }}
