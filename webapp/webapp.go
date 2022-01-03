@@ -149,7 +149,7 @@ func Run(cfg *config.Config) {
 
 	authorized.GET("/profile", profile)
 	authorized.GET("/generate_addon_token", generateAddonToken)
-	authorized.GET("/delete_addon_token", deleteAddonToken)
+	authorized.POST("/delete_addon_token", deleteAddonToken)
 	authorized.GET("/my_bookmarks", myBookmarks)
 	authorized.GET("/edit_bookmark", editBookmark)
 	authorized.POST("/save_bookmark", saveBookmark)

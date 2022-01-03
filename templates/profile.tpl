@@ -8,7 +8,16 @@
     <div class="columns is-mobile"><div class="column is-narrow">
         <div class="list"><dl>
             {{ range .AddonTokens }}
-            <div class="list-item"><li class="pure-list"><code class="has-text-dark">{{ .Text }}</code> <a href="{{ BaseURL "/delete_addon_token" }}?id={{ .ID }}" class="ml-3" title="delete token"><span class="icon has-text-danger"><i class="fas fa-trash-alt"></i></span></a></li></div>
+            <div class="list-item">
+                <li class="pure-list">
+                    <form method="post" action="{{ BaseURL "/delete_addon_token" }}">
+                            <code class="has-text-dark">{{ .Text }}</code>
+                            <input type="hidden" name="bid" value="{{ $.Bookmark.ID }}" />
+                            <input type="hidden" name="id" value="{{ .ID }}" />
+                            <input type="submit" class="button is-danger is-small" value="Delete" />
+                    </form>
+                </li>
+            </div>
             {{ end}}
         </dl></div>
     </div></div>
