@@ -24,6 +24,7 @@ const (
 )
 
 var e *gin.Engine
+var baseURL func(string) string
 
 var tplFuncMap = template.FuncMap{
 	"HasPrefix": strings.HasPrefix,
@@ -122,12 +123,13 @@ func Run(cfg *config.Config) {
 	authorized.Use(authRequired)
 
 	bu := cfg.Server.BaseURL
-	tplFuncMap["BaseURL"] = func(u string) string {
+	baseURL = func(u string) string {
 		if strings.HasPrefix(u, "/") && strings.HasSuffix(bu, "/") {
 			u = u[1:]
 		}
 		return bu + u
 	}
+	tplFuncMap["BaseURL"] = baseURL
 	e.HTMLRender = createRenderer()
 
 	// ROUTES
