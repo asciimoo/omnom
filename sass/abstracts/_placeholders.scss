@@ -6,6 +6,18 @@
     }
 }
 
+%omnomTitle {
+    span{
+        font-family: 'Dosis';
+        font-size: $big-font;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .text--primary {
+           color: $primary-color;         
+    }
+}
+
 %absCenter {
     position: absolute;
     top: 50%;
