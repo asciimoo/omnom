@@ -44,7 +44,7 @@
                     <div class="list-item">
                         <li class="pure-list">
                             <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
-                                <h4 class="has-text-dark"><a href="{{ BaseURL "/snapshot" }}?sid={{ .Key }}">{{ .Title }} {{ .CreatedAt | ToDate }}</a>
+                                <h4 class="has-text-dark"><a href="{{ BaseURL "/snapshot" }}?sid={{ .Key }}&bid={{ $.Bookmark.ID }}">{{ .Title }} {{ .CreatedAt | ToDate }}</a>
                                     <input type="hidden" name="bid" value="{{ $.Bookmark.ID }}" />
                                     <input type="hidden" name="sid" value="{{ .ID }}" />
                                     <input type="submit" class="button is-danger is-small" value="Delete" />
