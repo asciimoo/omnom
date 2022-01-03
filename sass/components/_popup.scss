@@ -15,15 +15,7 @@
  }
 
  &__title{
-     span{
-         font-family: 'Dosis';
-         font-size: $big-font;
-         font-weight: 700;
-         text-transform: uppercase;
-     }
-     .text--primary {
-            color: $primary-color;         
-     }
+    @extend %omnomTitle;
 }
 &__form {
     label{

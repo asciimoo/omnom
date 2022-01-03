@@ -2,19 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Omnom</title>
-    <link rel="stylesheet" href="{{ BaseURL "/static/css/bulma.min.css" }}" />
-    <link rel="stylesheet" href="{{ BaseURL "/static/css/fa.min.css" }}" />
+    <title>Omnom</title>    
     <link rel="stylesheet" href="{{ BaseURL "/static/css/style.css" }}" />
     <link rel="icon" type="image/png" href="{{ BaseURL "/static/ext/icons/omnom128.png" }}" sizes="128x128">
 
     {{ block "head" . }} {{ end }}
 </head>
-<body>
-<nav class="navbar border-bottom {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
-  <div class="container">
+<body id="omnom-webapp">
+<nav class="navbar shadow-bottom {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
+  <div class="navbar__container">
     <div class="navbar-brand is-size-4">
-      <a class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}" href="{{ BaseURL "/" }}"><strong>Omnom</strong> </a>
+      <a class="navbar__logo" href="{{ BaseURL "/" }}"><span>om</span><span class="text--primary">nom</span> </a>
       <label for="nav-toggle-state" role="button" class="navbar-burger burger has-text-black" aria-label="menu" aria-expanded="false">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
