@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Omnom</title>    
     <link rel="stylesheet" href="{{ BaseURL "/static/css/style.css" }}" />
-    <link rel="icon" type="image/png" href="{{ BaseURL "/static/ext/icons/omnom128.png" }}" sizes="128x128">
+    <link rel="icon" type="image/png" href="{{ BaseURL "/static/icons/omnom.png" }}" sizes="128x128">
 
     {{ block "head" . }} {{ end }}
 </head>
