@@ -105,7 +105,7 @@ var createUserCmd = &cobra.Command{
 
 var createTokenCmd = &cobra.Command{
 	Use:    "create-token [username] [token type (login/addon)]",
-	Short:  "create new user token",
+	Short:  "create new login token for a user",
 	Long:   `create-token [username] [token type (login/addon)]`,
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
