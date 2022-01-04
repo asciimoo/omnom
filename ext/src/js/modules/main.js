@@ -134,6 +134,7 @@ export default function () {
         }
         form.append('snapshot', snapshotData['dom']);
         form.append('snapshot_text', snapshotData['text']);
+        form.set('favicon', snapshotData['favicon']);
         const requestBody = {
             method: 'POST',
             body: form,

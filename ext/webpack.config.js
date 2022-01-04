@@ -6,7 +6,8 @@ const webpack = require("webpack"),
     MiniCssExtractPlugin = require("mini-css-extract-plugin"),
     CopyWebpackPlugin = require("copy-webpack-plugin"),
     HtmlWebpackPlugin = require("html-webpack-plugin"),
-    WriteFilePlugin = require("write-file-webpack-plugin");
+    TerserPlugin = require("terser-webpack-plugin")
+WriteFilePlugin = require("write-file-webpack-plugin");
 
 // load the secrets
 let alias = {};
@@ -31,6 +32,19 @@ module.exports = {
         path: path.join(__dirname, "build"),
         publicPath: '',
         filename: "[name].js"
+    },
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    format: {
+                        comments: false
+                    }
+                },
+                extractComments: false
+            })
+        ]
     },
     module: {
         rules: [

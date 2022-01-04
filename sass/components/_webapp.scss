@@ -3,7 +3,7 @@
     display: flex;
     flex-flow: column;
     overflow: auto;
-    background-color: #fafafa;
+    background-color: #f1f2ee;
     .navbar-item, .navbar-link{
         padding: 0rem 1rem;
         margin: 0 0.5rem;
@@ -12,10 +12,6 @@
     a{
         color: $secondary-color;
         font-weight: 500;
-    }
-
-    .bd-main-container{
-        height: 66vh;        
     }
 }
 summary {
@@ -146,5 +142,17 @@ iframe {
         border-bottom: 1px solid #b7b8b8;
         padding-bottom: 2rem;
         padding-left: 1rem;
+    }
+}
+
+.bookmark {
+    &__container {
+        border-left: 0.75rem #b8ddee solid;
+    }
+}
+
+.snapshot {
+    &__container {
+        height: 75vh;
     }
 }
