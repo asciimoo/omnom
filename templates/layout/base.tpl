@@ -55,7 +55,6 @@
         {{ end }}
 
         {{ block "content" . }}{{ end }}
-        {{ block "extra_content" . }}{{ end }}
     </div>
 </div>
 {{ if (not .hideFooter) }}
