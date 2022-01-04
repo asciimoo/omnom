@@ -28,8 +28,9 @@ async function createSnapshot() {
     }
     await walkDOM(dom, transformNode);
     setStyleNodes(dom);
-    if (!document.getElementById('favicon')?.value) {
-        const favicon = await downloadFile(fullURL('/favicon.ico'));
+    let favicon = document.getElementById('favicon')?.value;
+    if (!favicon) {
+        favicon = await downloadFile(fullURL('/favicon.ico'));
         if (favicon) {
             const faviconElement = document.createElement('style');
             faviconElement.setAttribute('rel', 'icon');
@@ -40,6 +41,7 @@ async function createSnapshot() {
     return {
         'dom': `${doc.doctype}${dom.outerHTML}`,
         'text': dom.getElementsByTagName("body")[0].innerText,
+        'favicon': favicon
     };
 }
 

@@ -109,7 +109,7 @@
 {{ end }}
 
 {{ define "bookmark" }}
-<div class="box media">
+<div class="box media bookmark__container">
     <div class="media-content">
         <h4 class="title">
             <span class="icon-text">
