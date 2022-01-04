@@ -73,6 +73,7 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("snapshotWrapper", tplFuncMap, "templates/layout/base.tpl", "templates/snapshot_wrapper.tpl")
 	r.AddFromFilesFuncs("view-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/view_bookmark.tpl")
 	r.AddFromFilesFuncs("edit-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/edit_bookmark.tpl")
+	r.AddFromFilesFuncs("api", tplFuncMap, "templates/layout/base.tpl", "templates/api.tpl")
 	return r
 }
 
@@ -108,6 +109,21 @@ func renderHTML(c *gin.Context, status int, page string, vars map[string]interfa
 	c.HTML(status, page, tplVars)
 }
 
+func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
+	switch e.Method {
+	case GET:
+		r.GET(e.Path, e.Handler)
+	case POST:
+		r.POST(e.Path, e.Handler)
+	case PUT:
+		r.PUT(e.Path, e.Handler)
+	case PATCH:
+		r.PATCH(e.Path, e.Handler)
+	case HEAD:
+		r.HEAD(e.Path, e.Handler)
+	}
+}
+
 func Run(cfg *config.Config) {
 	e = gin.Default()
 	if !cfg.App.Debug {
@@ -134,26 +150,13 @@ func Run(cfg *config.Config) {
 
 	// ROUTES
 	e.Static("/static", "./static")
-	e.GET("/", index)
-	e.GET("/signup", signup)
-	e.POST("/signup", signup)
-	e.GET("/login", login)
-	e.POST("/login", login)
-	e.GET("/logout", logout)
-	e.GET("/bookmarks", bookmarks)
-	e.GET("/snapshot", snapshotWrapper)
-	e.GET("/view_snapshot", snapshot)
-	e.POST("/add_bookmark", addBookmark)
-	e.GET("/check_bookmark", checkBookmark)
-	e.GET("/bookmark", viewBookmark)
-
-	authorized.GET("/profile", profile)
-	authorized.GET("/generate_addon_token", generateAddonToken)
-	authorized.POST("/delete_addon_token", deleteAddonToken)
-	authorized.GET("/my_bookmarks", myBookmarks)
-	authorized.GET("/edit_bookmark", editBookmark)
-	authorized.POST("/save_bookmark", saveBookmark)
-	authorized.POST("/delete_snapshot", deleteSnapshot)
+	for _, ep := range Endpoints {
+		if ep.AuthRequired {
+			registerEndpoint(authorized, ep)
+		} else {
+			registerEndpoint(&e.RouterGroup, ep)
+		}
+	}
 
 	log.Println("Starting server")
 	e.Run(cfg.Server.Address)
