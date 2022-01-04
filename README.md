@@ -14,9 +14,23 @@ go >= 1.14
 
 ## Setup & run
 
-Checkout the repo and execute `go get -u` then `go run omnom.go` in the repo root.
+Checkout the repo and execute `go get -u` then `go run omnom.go listen` in the repo root.
 
 Settings can be configured in `config.yml` config file - restart webapp after updating.
+
+### Command line tool
+
+Basic management actions are available using the command line tool (`go run omnom.go` or `go build; ./omnom`)
+
+#### Available Commands
+```
+  create-token create new login token for a user
+  create-user  create new user
+  listen       start server
+  show-user    show user details
+  help         Help about any command
+  completion   generate the autocompletion script for the specified shell
+```
 
 ### Browser addon
 
