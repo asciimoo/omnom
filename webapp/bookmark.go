@@ -108,49 +108,62 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	b := &model.Bookmark{
-		Title:   c.PostForm("title"),
-		URL:     url.String(),
-		Domain:  url.Hostname(),
-		Notes:   c.PostForm("notes"),
-		Favicon: c.PostForm("favicon"),
-		UserID:  u.ID,
+	var b *model.Bookmark
+	newBookmark := false
+	model.DB.
+		Model(&model.Bookmark{}).
+		Preload("Snapshots").
+		Where("url = ? and user_id = ?", url.String(), u.ID).
+		First(&b)
+	if b == nil {
+		newBookmark = true
 	}
-	if b.Title == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "missing title",
-		})
-		return
+	if newBookmark {
+		b = &model.Bookmark{
+			Title:     c.PostForm("title"),
+			URL:       url.String(),
+			Domain:    url.Hostname(),
+			Notes:     c.PostForm("notes"),
+			Favicon:   c.PostForm("favicon"),
+			UserID:    u.ID,
+			Snapshots: make([]model.Snapshot, 0, 8),
+		}
+		if b.Title == "" {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "missing title",
+			})
+			return
+		}
+		if !strings.HasPrefix(b.Favicon, "data:image") {
+			b.Favicon = ""
+		}
+		if c.PostForm("public") != "" {
+			b.Public = true
+		}
+		tags := c.PostForm("tags")
+		if tags != "" {
+			b.Tags = make([]model.Tag, 0, 8)
+			for _, t := range strings.Split(tags, ",") {
+				t = strings.TrimSpace(t)
+				b.Tags = append(b.Tags, model.Tag{
+					Text: t,
+				})
+			}
+		}
 	}
-	if !strings.HasPrefix(b.Favicon, "data:image") {
-		b.Favicon = ""
-	}
-	if c.PostForm("public") != "" {
-		b.Public = true
-	}
+	model.DB.Save(b)
 	snapshot := []byte(c.PostForm("snapshot"))
 	if !bytes.Equal(snapshot, []byte("")) {
 		key := storage.Hash(snapshot)
 		_ = storage.SaveSnapshot(key, snapshot)
-		b.Snapshots = []model.Snapshot{
-			model.Snapshot{
-				Key:   key,
-				Text:  c.PostForm("snapshot_text"),
-				Title: c.PostForm("snapshot_title"),
-			},
+		s := &model.Snapshot{
+			Key:        key,
+			Text:       c.PostForm("snapshot_text"),
+			Title:      c.PostForm("snapshot_title"),
+			BookmarkID: b.ID,
 		}
+		model.DB.Save(s)
 	}
-	tags := c.PostForm("tags")
-	if tags != "" {
-		b.Tags = make([]model.Tag, 0, 8)
-		for _, t := range strings.Split(tags, ",") {
-			t = strings.TrimSpace(t)
-			b.Tags = append(b.Tags, model.Tag{
-				Text: t,
-			})
-		}
-	}
-	model.DB.Save(b)
 	c.Redirect(http.StatusFound, "/")
 }
 
