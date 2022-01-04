@@ -62,7 +62,7 @@
   <div class="container">
     <div class="content has-text-centered">
       <p>
-          <strong>Omnom</strong> © 2021
+          <strong>Omnom</strong> © 2022
       </p>
       <p>
           <a href="{{ BaseURL "/api" }}">API</a>
