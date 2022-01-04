@@ -52,6 +52,17 @@ func signup(c *gin.Context) {
 			})
 			return
 		}
+		u = model.GetUser(username)
+		err = mail.Send(u.Email, "login", map[string]interface{}{
+			"Token":   u.LoginToken,
+			"BaseURL": baseURL("/login"),
+		})
+		if err != nil {
+			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
+				"Error": err,
+			})
+			return
+		}
 		renderHTML(c, http.StatusOK, "signup-confirm", nil)
 		return
 	}
@@ -78,7 +89,7 @@ func login(c *gin.Context) {
 		}
 		err = mail.Send(u.Email, "login", map[string]interface{}{
 			"Token":   u.LoginToken,
-			"BaseURL": tplFuncMap["BaseURL"].(func(string) string)("login"),
+			"BaseURL": baseURL("/login"),
 		})
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
