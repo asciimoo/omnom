@@ -48,7 +48,7 @@ func signup(c *gin.Context) {
 		err := model.CreateUser(username, email)
 		if err != nil {
 			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": err,
+				"Error": err.Error(),
 			})
 			return
 		}
@@ -59,7 +59,7 @@ func signup(c *gin.Context) {
 		})
 		if err != nil {
 			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": err,
+				"Error": err.Error(),
 			})
 			return
 		}
@@ -115,7 +115,7 @@ func login(c *gin.Context) {
 		err := model.DB.Save(u).Error
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err,
+				"Error": err.Error(),
 			})
 			return
 		}
@@ -124,7 +124,7 @@ func login(c *gin.Context) {
 		err = session.Save()
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err,
+				"Error": err.Error(),
 			})
 			return
 		}
