@@ -39,7 +39,7 @@ func bookmarks(c *gin.Context) {
 		}
 	}
 	cq.Count(&bookmarkCount)
-	q.Order("bookmarks.created_at desc").Find(&bs)
+	q.Order("bookmarks.updated_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
@@ -80,7 +80,7 @@ func myBookmarks(c *gin.Context) {
 		}
 	}
 	cq.Count(&bookmarkCount)
-	q.Order("bookmarks.created_at desc").Find(&bs)
+	q.Order("bookmarks.updated_at desc").Find(&bs)
 	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
