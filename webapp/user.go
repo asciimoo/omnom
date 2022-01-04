@@ -52,8 +52,6 @@ func signup(c *gin.Context) {
 			})
 			return
 		}
-		log.Println("New extension token generated:", u.SubmissionTokens[0])
-
 		renderHTML(c, http.StatusOK, "signup-confirm", nil)
 		return
 	}
