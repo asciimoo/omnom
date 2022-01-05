@@ -97,6 +97,18 @@ function getDOMData() {
 
         }
     }
+    const styleElement = document.getElementsByTagName('style');
+    if (styleElement) {
+        for (let style of styleElement) {
+            const sheetRules = style.sheet?.cssRules;
+            if (sheetRules) {
+                const concatRules = [...sheetRules].reduce((rules, rule) => rules.concat(rule.cssText), '');
+                console.log(concatRules);
+                styleElement.innerText = concatRules;
+            }
+        }
+
+    }
     ret.html = ret.html.outerHTML;
     return ret;
 }
