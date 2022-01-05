@@ -132,7 +132,8 @@ export default function () {
             debugPopup(snapshotData['dom']);
             return;
         }
-        form.append('snapshot', snapshotData['dom']);
+        const snapshotBlob = new Blob([snapshotData['dom']], { type: 'text/html' });
+        form.append('snapshot', snapshotBlob);
         form.append('snapshot_text', snapshotData['text']);
         form.set('favicon', snapshotData['favicon']);
         const requestBody = {
