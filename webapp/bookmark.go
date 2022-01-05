@@ -156,7 +156,12 @@ func addBookmark(c *gin.Context) {
 				})
 			}
 		}
-		model.DB.Save(b)
+		if err := model.DB.Save(b).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 	}
 	snapshot := []byte(c.PostForm("snapshot"))
 	if !bytes.Equal(snapshot, []byte("")) {
@@ -168,7 +173,12 @@ func addBookmark(c *gin.Context) {
 			Title:      c.PostForm("snapshot_title"),
 			BookmarkID: b.ID,
 		}
-		model.DB.Save(s)
+		if err := model.DB.Save(s).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 	}
 	c.Redirect(http.StatusFound, "/")
 }
