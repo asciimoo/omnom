@@ -97,6 +97,17 @@ function getDOMData() {
 
         }
     }
+    const styleElements = document.getElementsByTagName('style');
+    if (styleElements) {
+        for (let style of styleElements) {
+            const sheetRules = style.sheet?.cssRules;
+            if (sheetRules) {
+                const concatRules = [...sheetRules].reduce((rules, rule) => rules.concat(rule.cssText), '');
+                style.innerText = concatRules;
+            }
+        }
+
+    }
     ret.html = ret.html.outerHTML;
     return ret;
 }
