@@ -108,14 +108,20 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	var b *model.Bookmark
+	var b *model.Bookmark = nil
 	newBookmark := false
-	model.DB.
+	r := model.DB.
 		Model(&model.Bookmark{}).
 		Preload("Snapshots").
 		Where("url = ? and user_id = ?", url.String(), u.ID).
 		First(&b)
-	if b == nil {
+	if r.Error != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": r.Error.Error(),
+		})
+		return
+	}
+	if r.RowsAffected < 1 {
 		newBookmark = true
 	}
 	if newBookmark {
@@ -150,8 +156,8 @@ func addBookmark(c *gin.Context) {
 				})
 			}
 		}
+		model.DB.Save(b)
 	}
-	model.DB.Save(b)
 	snapshot := []byte(c.PostForm("snapshot"))
 	if !bytes.Equal(snapshot, []byte("")) {
 		key := storage.Hash(snapshot)
