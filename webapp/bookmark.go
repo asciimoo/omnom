@@ -115,12 +115,6 @@ func addBookmark(c *gin.Context) {
 		Preload("Snapshots").
 		Where("url = ? and user_id = ?", url.String(), u.ID).
 		First(&b)
-	if r.Error != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": r.Error.Error(),
-		})
-		return
-	}
 	if r.RowsAffected < 1 {
 		newBookmark = true
 	}
