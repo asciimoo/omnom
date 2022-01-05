@@ -97,14 +97,13 @@ function getDOMData() {
 
         }
     }
-    const styleElement = document.getElementsByTagName('style');
-    if (styleElement) {
-        for (let style of styleElement) {
+    const styleElements = document.getElementsByTagName('style');
+    if (styleElements) {
+        for (let style of styleElements) {
             const sheetRules = style.sheet?.cssRules;
             if (sheetRules) {
                 const concatRules = [...sheetRules].reduce((rules, rule) => rules.concat(rule.cssText), '');
-                console.log(concatRules);
-                styleElement.innerText = concatRules;
+                style.innerText = concatRules;
             }
         }
 
