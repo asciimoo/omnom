@@ -2,6 +2,7 @@ package webapp
 
 import (
 	"bytes"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -157,7 +158,20 @@ func addBookmark(c *gin.Context) {
 			return
 		}
 	}
-	snapshot := []byte(c.PostForm("snapshot"))
+	snapshotFile, _, err := c.Request.FormFile("snapshot")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	snapshot, err := ioutil.ReadAll(snapshotFile)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 	if !bytes.Equal(snapshot, []byte("")) {
 		key := storage.Hash(snapshot)
 		_ = storage.SaveSnapshot(key, snapshot)
@@ -174,7 +188,7 @@ func addBookmark(c *gin.Context) {
 			return
 		}
 	}
-	c.Redirect(http.StatusFound, "/")
+	c.JSON(200, map[string]bool{"success": true})
 }
 
 func checkBookmark(c *gin.Context) {
