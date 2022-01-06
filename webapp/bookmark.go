@@ -288,6 +288,7 @@ func saveBookmark(c *gin.Context) {
 		b.Title = t
 	}
 	b.Public = c.PostForm("public") != ""
+	b.Notes = c.PostForm("notes")
 	err := model.DB.Save(b).Error
 	if err != nil {
 		session.Set("Error", "Failed to save bookmark: "+err.Error())

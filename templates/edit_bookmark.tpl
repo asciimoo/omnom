@@ -28,6 +28,12 @@
             </div>
         </div>
         <div class="field">
+            <label class="label">Notes</label>
+            <div class="control">
+                <textarea class="textarea" name="notes">{{ .Bookmark.Notes }}</textarea>
+            </div>
+        </div>
+        <div class="field">
             <div class="control">
                 <input class="button is-primary" type="submit" value="Save" />
             </div>
