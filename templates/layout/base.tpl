@@ -160,7 +160,7 @@
       <div class="bookmark__snapshots">
         <div class="my-bookmarks__section-header">
           <h3>
-            Snapshots
+            Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
           </h3>
         </div>
          {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
@@ -176,7 +176,7 @@
         <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
           <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span> 
           <span class="snapshot__title">
-          {{if $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
+          {{if len $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
           </span>
         </a>
       </div>

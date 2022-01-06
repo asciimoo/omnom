@@ -238,7 +238,7 @@ func viewBookmark(c *gin.Context) {
 		return
 	}
 	renderHTML(c, http.StatusOK, "view-bookmark", map[string]interface{}{
-		"Bookmark": b,
+		"Bookmark": b
 	})
 }
 

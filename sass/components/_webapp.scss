@@ -228,6 +228,10 @@ iframe {
     &__note{
         color: #3d3e3e;
         font-size: 1rem;
+        font-weight: 100;
+    }
+    &__snapshot-count{
+        font-weight: 300;
     }
 }
 
@@ -244,6 +248,7 @@ iframe {
     }
     &__title {
         color: $color-orange;
+        text-decoration: underline;
     }
 
     &__link {
