@@ -128,7 +128,7 @@ func login(c *gin.Context) {
 			})
 			return
 		}
-		c.Redirect(http.StatusFound, "/")
+		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	renderHTML(c, http.StatusOK, "login", nil)
@@ -138,19 +138,19 @@ func logout(c *gin.Context) {
 	session := sessions.Default(c)
 	user := session.Get(SID)
 	if user == nil {
-		c.Redirect(http.StatusFound, "/")
+		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	session.Delete(SID)
 	session.Save()
-	c.Redirect(http.StatusFound, "/")
+	c.Redirect(http.StatusFound, baseURL("/"))
 }
 
 func profile(c *gin.Context) {
 	u, _ := c.Get("user")
 	tplData := map[string]interface{}{}
 	if u == nil {
-		c.Redirect(http.StatusFound, "/")
+		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	var ts []*model.Token
@@ -176,7 +176,7 @@ func generateAddonToken(c *gin.Context) {
 		session.Set("Info", "Token created")
 	}
 	session.Save()
-	c.Redirect(http.StatusFound, "/profile")
+	c.Redirect(http.StatusFound, baseURL("/profile"))
 }
 
 func deleteAddonToken(c *gin.Context) {
@@ -190,5 +190,5 @@ func deleteAddonToken(c *gin.Context) {
 		session.Set("Info", "Token deleted")
 	}
 	session.Save()
-	c.Redirect(http.StatusFound, "/profile")
+	c.Redirect(http.StatusFound, baseURL("/profile"))
 }
