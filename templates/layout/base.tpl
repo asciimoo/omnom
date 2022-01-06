@@ -110,42 +110,81 @@
 
 {{ define "bookmark" }}
 <div class="box media bookmark__container">
-    <div class="media-content">
-        <h4 class="title">
-            <span class="icon-text">
-                {{ if .Bookmark.Favicon }}
-                <span class="icon">
-                    <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
-                </span>
-                {{ end }}
-                <span>
-                    <a href="{{ .Bookmark.URL }}" target="_blank">{{ .Bookmark.Title }}</a>
-                </span>
+    <div class="bookmark__header">
+      <div class="bookmark__title">
+        <div class="bookmark__favicon">
+          {{ if .Bookmark.Favicon }}
+            <span class="icon">
+              <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
             </span>
+            {{ end }}
+        </div>
+        <a href="{{ .Bookmark.URL }}" target="_blank">
+          <h4 class="title">
+                {{ .Bookmark.Title }}
             <p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 100 }}</p>
-        </h4>
-        <p>{{ .Bookmark.Notes }}</p>
+          </h4>
+        </a>
+      </div>
+      <div class="bookmark__actions media-right">
+       {{ if eq .UID .Bookmark.UserID }}
+        <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">
+          <i class="fas fa-pencil-alt"></i>
+        </a>
+        {{ else }}
+          <a href="{{ BaseURL "/bookmark" }}?id={{ .Bookmark.ID }}">
+             <i class="fas fa-eye"></i>
+          </a>
+        {{ end }}
+          <i class="fas fa-trash"></i>
+          <i class="fas fa-heart"></i>
+          <i class="fas fa-share-alt"></i>
+      </div>
+    </div>
+    <div class="bookmark__tags">
         {{ if .Bookmark.Tags }}
           {{ range .Bookmark.Tags }}
             <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
           {{ end }}
         {{ end }}
     </div>
-    <div class="media-right">
-        {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
-        {{ .Bookmark.CreatedAt | ToDate }} {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}
-        {{ if eq .UID .Bookmark.UserID }}
-          <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
-        {{ else }}
-          <a href="{{ BaseURL "/bookmark" }}?id={{ .Bookmark.ID }}">view</a>
-        {{ end }}
+    <div class="bookmark__more-info">
+      <div class="bookmark__notes">
+        <div class="my-bookmarks__section-header">
+          <h3>
+            Notes
+          </h3>
+        </div>
+        <p class="bookmark__note">{{ .Bookmark.Notes }}</p>
+      </div>
+      <div class="bookmark__snapshots">
+        <div class="my-bookmarks__section-header">
+          <h3>
+            Snapshots
+          </h3>
+        </div>
+         {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
+      </div>
     </div>
 </div>
 {{ end}}
 
 {{ define "snapshots" }}
     {{ range $i,$s := . }}
-    <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">snapshot #{{ $i }} {{ $s.Title }} {{ $s.CreatedAt | ToDate }}</a>
+    <div class="snapshot__link">
+      <div>
+        <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
+          <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span> 
+          <span class="snapshot__title">
+          {{if $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
+          </span>
+        </a>
+      </div>
+      <div class="bookmark__actions">
+        <i class="fas fa-pencil-alt"></i>
+        <i class="fas fa-trash"></i>
+      </div>
+    </div>
     {{ end }}
 {{ end }}
 
