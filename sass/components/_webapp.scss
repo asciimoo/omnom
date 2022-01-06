@@ -9,9 +9,11 @@
         margin: 0 0.5rem;
         line-height: 1rem;
     }
-    a{
-        color: $secondary-color;
-        font-weight: 500;
+    nav{
+        a{
+            color: $secondary-color;
+            font-weight: 500;
+        }
     }
 }
 summary {
@@ -147,12 +149,115 @@ iframe {
 
 .bookmark {
     &__container {
+        flex-direction: column;
         border-left: 0.75rem #b8ddee solid;
+    }
+
+    &__header {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    &__title {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+
+        .title{
+            color: $primary-color;
+            font-size: 1.2rem;
+        }
+    }
+
+    &__favicon{
+        height: 2.3rem;
+        width: 2.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.7rem;
+        .icon{
+            width: 2.3rem;
+            height: 2.3rem;
+        }
+    }
+
+    &__tags{
+        .tag:not(body).is-info{
+            background-color: $color-red;
+            border-radius: 0;
+        }
+    }
+
+    &__more-info{
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 1rem;
+        div{
+            width: 100%;
+        }
+        div:first-child{
+            margin-right: 1rem
+        }
+    }
+
+    &__snapshots{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    &__actions {
+        text-align: right;
+        font-size: 1.2rem;
+        i{
+            margin-left: 1rem;
+            color: $color-gray;
+        }
+        a{
+            color: $color-gray;
+        }
+    }
+
+    &__note{
+        color: #3d3e3e;
+        font-size: 1rem;
+        font-weight: 100;
+    }
+    &__snapshot-count{
+        font-weight: 300;
     }
 }
 
 .snapshot {
     &__container {
         height: 75vh;
+    }
+
+    &__date{
+        color: $secondary-color;
+        font-size: 1rem;
+        font-weight: 100;
+        margin-right: 1rem;
+    }
+    &__title {
+        color: $color-orange;
+        text-decoration: underline;
+    }
+
+    &__link {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        width: 100%;
+    }
+    &__actions {
+        text-align: right;
     }
 }
