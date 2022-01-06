@@ -189,7 +189,7 @@ func init() {
 			Path:         "/save_bookmark",
 			Method:       POST,
 			AuthRequired: true,
-			Handler:      editBookmark,
+			Handler:      saveBookmark,
 			Description:  "Saves an edited bookmark",
 		},
 		&Endpoint{
