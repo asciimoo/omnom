@@ -176,7 +176,7 @@
         <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
           <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span> 
           <span class="snapshot__title">
-          {{if len $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
+          {{if $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
           </span>
         </a>
       </div>
