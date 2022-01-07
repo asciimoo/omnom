@@ -42,7 +42,8 @@
   </div>
 </nav>
 
-<div class="section webapp__content {{ block "content-class" . }}{{ end }}">
+<div class="webapp__content {{ block "content-class" . }}{{ end }}">
+<div class="section webapp__main-container">
     <div class="bd-main-container container">
         {{ if .Error }}
         {{ block "error" .Error }}{{ end }}
@@ -73,6 +74,7 @@
     </div>
   </div>
 </footer>
+</div>
 {{ end }}
 </body>
 </html>
