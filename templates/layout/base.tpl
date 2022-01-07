@@ -182,7 +182,13 @@
       </div>
       <div class="bookmark__actions">
         <i class="fas fa-pencil-alt"></i>
-        <i class="fas fa-trash"></i>
+          <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
+            <input type="hidden" name="bid" value="{{ $s.BookmarkID }}" />
+            <input type="hidden" name="sid" value="{{ $s.ID }}" />
+            <button class="snapshot__delete" type="submit">
+                <i class="fas fa-trash"></i>
+            </button>
+          </form>
       </div>
     </div>
     {{ end }}

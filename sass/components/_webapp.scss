@@ -243,6 +243,10 @@ iframe {
         text-align: right;
         font-size: 1.2rem;
 
+        form {
+            display: inline-block;
+        }
+
         i {
             margin-left: 1rem;
             color: $color-gray;
@@ -288,8 +292,12 @@ iframe {
         width: 100%;
     }
 
-    &__actions {
-        text-align: right;
+    &__delete {
+        background-color: transparent;
+        border: none;
+        font-size: 1.2rem;
+        font-weight: 100;
+        cursor: pointer;
     }
 }
 
