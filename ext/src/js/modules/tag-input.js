@@ -1,7 +1,12 @@
-function addTag(event, tagChipContainer, tags) {
-    const value = event.target.value;
+function addTag(value, tagChipContainer, tags) {
     renderTag(value, tagChipContainer, tags);
     tags.push(value);
+}
+
+function checkAddTrigger(event, chipContainer, tags, inputElement) {
+    if (event.target.value.includes(',')) {
+        addTag(event.target.value.slice(0, -1), chipContainer, tags); inputElement.value = '';
+    }
 }
 
 function renderTag(value, tagChipContainer, tags) {
@@ -35,7 +40,8 @@ function TagInputController(inputElement, chipContainer) {
     let tags = [];
     this.getTags = () => (tags);
     this.renderTags = () => renderTags(tags, chipContainer);
-    inputElement?.addEventListener('change', (event) => { addTag(event, chipContainer, tags); inputElement.value = '' });
+    inputElement?.addEventListener('input', (event) => { checkAddTrigger(event, chipContainer, tags, inputElement) })
+    inputElement?.addEventListener('change', (event) => { addTag(event.target.value, chipContainer, tags); inputElement.value = '' });
 }
 
 export { TagInputController };
