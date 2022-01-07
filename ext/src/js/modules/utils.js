@@ -15,7 +15,7 @@ function arrayBufferToBase64(buffer) {
 
 function checkStatus(res) {
     if (!res.ok) {
-        return Promise.reject(res.statusText);
+        return Promise.reject(res);
     }
     return Promise.resolve(res);
 }
@@ -45,8 +45,10 @@ function queryTabsToPromise() {
     });
 }
 
-function renderError(errorMessage) {
-    console.log(errorMessage);
+function renderError(errorMessage, error) {
+    if (error) {
+        error.json().then(data => console.log({ error, data }));
+    }
     document.getElementById('omnom-content').innerHTML = `<h1>${errorMessage}</h1>`;
 }
 

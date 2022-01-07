@@ -68,6 +68,9 @@ export default function () {
         document.querySelector('form').action = `${getOmnomUrl()}add_bookmark`;
         document.getElementById('token').value = getOmnomToken();
 
+        // fill url input field
+        document.getElementById('url').value = getSiteUrl();
+
         // fill title input field
         const title = await executeScriptToPromise(() => document.title);
         if (title && title[0]) {
@@ -146,7 +149,7 @@ export default function () {
                 renderSuccess('Snapshot successfully saved!');
             }, (err) => {
                 destroyProgressBar();
-                renderError(`Failed to save bookmark! Error: ${err}`);
+                renderError(`Failed to save bookmark! Error: ${err.statusText}`, err);
             });
     }
 
