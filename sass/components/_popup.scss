@@ -1,60 +1,72 @@
-.omnom-popup{
-&__container{
-    width: 22rem;
-     padding: 0.5rem 1.5rem;
-     h2{
-        font-size: $small-font;
-        font-weight: 800;
-        margin-bottom: 1rem;
-    }
- }
- &__header {
-    display: flex;
-    align-items:center;
-    justify-content: space-between;
- }
-
- &__title{
-    @extend %omnomTitle;
+#popup {
+    height: 599px;
 }
-&__form {
-    label{
-        font-size: 0.9rem;
-        font-weight: 400;
-    }
-    .tag:not(body).is-rounded{
-        border: 1px solid $primary-color;
 
-        .delete{
-            background-color: $primary-color;
+.omnom-popup {
+    &__container {
+        width: 22rem;
+        padding: 0.2rem 1.5rem 0.5rem 1.5rem;
+        height: 599px;
+
+        h2 {
+            font-size: $small-font;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
         }
     }
 
-    .tags-input {
-        margin-bottom: 0.5rem;
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
-}
-&__controls {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    .button{
-        border-color: $secondary-color;
-        color: $secondary-color;
-    }
-}
 
-&__submit {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 0.75rem;
-    
-    .button.is-primary, .button.is-primary:hover {
-        background-color: $primary-color;        
+    &__title {
+        @extend %omnomTitle;
     }
-}
+
+    &__form {
+        label {
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .tag:not(body).is-rounded {
+            border: 1px solid $primary-color;
+
+            .delete {
+                background-color: $primary-color;
+            }
+        }
+
+        .tags-input {
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    &__controls {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+
+        .button {
+            border-color: $secondary-color;
+            color: $secondary-color;
+        }
+    }
+
+    &__submit {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 0.75rem;
+
+        .button.is-primary,
+        .button.is-primary:hover {
+            background-color: $primary-color;
+        }
+    }
 }

@@ -42,7 +42,7 @@
   </div>
 </nav>
 
-<div class="section {{ block "content-class" . }}{{ end }}">
+<div class="section webapp__content {{ block "content-class" . }}{{ end }}">
     <div class="bd-main-container container">
         {{ if .Error }}
         {{ block "error" .Error }}{{ end }}
