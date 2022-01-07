@@ -1,5 +1,6 @@
 #omnom-webapp {
     height: 100% !important;
+    min-height: 72%;
     display: flex;
     flex-flow: column;
     overflow: auto;
@@ -303,6 +304,6 @@ iframe {
 
 .webapp {
     &__content {
-        min-height: 72%;
+        height: 100%;
     }
 }
