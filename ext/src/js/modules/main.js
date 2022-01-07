@@ -149,7 +149,7 @@ export default function () {
                 renderSuccess('Snapshot successfully saved!');
             }, (err) => {
                 destroyProgressBar();
-                renderError(`Failed to save bookmark! Error: ${err}`);
+                renderError(`Failed to save bookmark! Error: ${err.statusText}`, err);
             });
     }
 

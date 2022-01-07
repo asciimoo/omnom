@@ -42,7 +42,8 @@
   </div>
 </nav>
 
-<div class="section {{ block "content-class" . }}{{ end }}">
+<div class="webapp__content {{ block "content-class" . }}{{ end }}">
+<div class="section webapp__main-container">
     <div class="bd-main-container container">
         {{ if .Error }}
         {{ block "error" .Error }}{{ end }}
@@ -73,6 +74,7 @@
     </div>
   </div>
 </footer>
+</div>
 {{ end }}
 </body>
 </html>
@@ -176,13 +178,19 @@
         <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
           <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span> 
           <span class="snapshot__title">
-          {{if len $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
+          {{if $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
           </span>
         </a>
       </div>
       <div class="bookmark__actions">
         <i class="fas fa-pencil-alt"></i>
-        <i class="fas fa-trash"></i>
+          <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
+            <input type="hidden" name="bid" value="{{ $s.BookmarkID }}" />
+            <input type="hidden" name="sid" value="{{ $s.ID }}" />
+            <button class="snapshot__delete" type="submit">
+                <i class="fas fa-trash"></i>
+            </button>
+          </form>
       </div>
     </div>
     {{ end }}
