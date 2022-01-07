@@ -163,7 +163,7 @@ func init() {
 		&Endpoint{
 			Name:         "Delete addon token",
 			Path:         "/delete_addon_token",
-			Method:       GET,
+			Method:       POST,
 			AuthRequired: true,
 			Handler:      deleteAddonToken,
 			Description:  "Deletes an addon token",
