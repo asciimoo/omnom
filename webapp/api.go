@@ -82,7 +82,7 @@ func init() {
 			Path:         "/logout",
 			Method:       GET,
 			AuthRequired: false,
-			Handler:      login,
+			Handler:      logout,
 			Description:  "Destroys user session",
 		},
 		&Endpoint{
