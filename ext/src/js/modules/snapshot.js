@@ -155,6 +155,16 @@ async function transformStyle(node) {
 async function transfromImg(node) {
     const src = await downloadFile(node.getAttribute('src'));
     node.src = src;
+    if (node.getAttribute('srcset')) {
+        let val = node.getAttribute('srcset');
+        let newParts = [];
+        for (let s of val.split(',')) {
+            let srcParts = s.trim().split(' ');
+            srcParts[0] = await downloadFile(srcParts[0]);
+            newParts.push(srcParts.join(' '));
+        }
+        node.setAttribute('srcset', newParts.join(', '));
+    }
 }
 
 async function setBaseUrl(node) {
@@ -173,15 +183,6 @@ async function rewriteAttributes(node) {
         if (attr.nodeName == 'style') {
             const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, getSiteUrl());
             attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
-        }
-        if (attr.nodeName == 'srcset') {
-            let newParts = [];
-            for (let s of attr.nodeValue.split(',')) {
-                let srcParts = s.trim().split(' ');
-                srcParts[0] = await downloadFile(srcParts[0]);
-                newParts.push(srcParts.join(' '));
-            }
-            attr.nodeValue = newParts.join(', ');
         }
     }));
 }
