@@ -57,7 +57,11 @@ function renderSuccess(successMessage) {
     // setTimeout(window.close, 2000);
 }
 
-async function setSiteUrl() {
+async function setSiteUrl(url) {
+    if (url) {
+        siteUrl = url;
+        return;
+    }
     const tab = await queryTabsToPromise();
     if (tab) {
         siteUrl = tab.url;
@@ -141,6 +145,7 @@ export {
     renderSuccess,
     walkDOM,
     getSiteUrl,
+    setSiteUrl,
     setOmnomSettings,
     isDebug,
     getOmnomUrl,

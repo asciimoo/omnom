@@ -3,7 +3,8 @@ import {
     browser as br,
     walkDOM,
     fullURL,
-    getSiteUrl
+    getSiteUrl,
+    setSiteUrl
 } from './utils';
 import { downloadFile } from './file-download';
 import { sanitizeCSS } from './sanitize';
@@ -12,7 +13,8 @@ const nodeTransformFunctons = new Map([
     ['SCRIPT', (node) => node.remove()],
     ['LINK', transformLink],
     ['STYLE', transformStyle],
-    ['IMG', transfromImg]
+    ['IMG', transfromImg],
+    ['BASE', setBaseUrl]
 ]);
 
 const styleNodes = new Map();
@@ -153,6 +155,10 @@ async function transformStyle(node) {
 async function transfromImg(node) {
     const src = await downloadFile(node.getAttribute('src'));
     node.src = src;
+}
+
+async function setBaseUrl(node) {
+    setSiteUrl(fullURL(node.getAttribute('href')));
 }
 
 async function rewriteAttributes(node) {
