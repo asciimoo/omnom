@@ -42,7 +42,7 @@ export default function () {
         setTemplates();
         evaluateTemplates();
         setEventListeners();
-        setOmnomSettings().then(fillFormFields, renderError);
+        setOmnomSettings().then(fillFormFields, (err) => { optionsHandler(); renderError(err) });
         console.log('Loaded!');
     }
 
