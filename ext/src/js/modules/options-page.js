@@ -28,14 +28,24 @@ export default function () {
                 document.querySelector('#url').value = data.omnom_url || '';
                 document.querySelector('#token').value = data.omnom_token || '';
                 document.querySelector('#debug').checked = data.omnom_debug;
+                isFormValid();
             });
             document.querySelector('form').addEventListener('submit', saveOptions);
+            document.querySelector('#url').addEventListener('input', isFormValid);
         } else {
             document.addEventListener('DOMContentLoaded', () => {
                 loadContent();
             })
         }
     }
+
+    function isFormValid() {
+        const serverUrl = document.querySelector('#url');
+        const backButton = document.querySelector('#back');
+        if (!serverUrl || !backButton) return;
+        backButton.disabled = !!serverUrl.value ? false : true;
+    }
+
     (function onLoad() {
         restoreOptions();
     })()
