@@ -187,7 +187,6 @@ iframe {
         gap: 1rem;
         flex-wrap: wrap;
         margin-bottom: 0.5rem;
-        ;
     }
 
     &__title {
@@ -230,7 +229,7 @@ iframe {
         width: 100%;
         margin-top: 1rem;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap:1rem;
 
         div {
             width: 100%;
@@ -253,7 +252,7 @@ iframe {
         gap: 1rem;
         align-items: center;
         justify-content: flex-end;
-
+        
         i {
             margin-left: 1rem;
             color: $color-gray;
@@ -309,5 +308,14 @@ iframe {
         border: none;
         font-size: 1.2rem;
         cursor: pointer;
+    }
+}
+
+.webapp {
+    &__content {
+        height: 100%;
+    }
+    &__main-container {
+        min-height: 76%;
     }
 }
