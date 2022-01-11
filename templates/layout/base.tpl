@@ -128,7 +128,7 @@
           </h4>
         </a>
       </div>
-      <div class="bookmark__actions media-right">
+      <div class="bookmark__actions">
        {{ if eq .UID .Bookmark.UserID }}
         <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">
           <i class="fas fa-pencil-alt"></i>
