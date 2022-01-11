@@ -42,7 +42,6 @@ export default function () {
     function isFormValid() {
         const serverUrl = document.querySelector('#url');
         const backButton = document.querySelector('#back');
-        console.log(serverUrl.value);
         if (!serverUrl || !backButton) return;
         backButton.disabled = !!serverUrl.value ? false : true;
     }
