@@ -87,7 +87,7 @@ func Send(to string, subject string, msgType string, args map[string]interface{}
 	if err != nil {
 		return err
 	}
-	email.SetBody(smtp.TextHTML, h).AddAlternative(smtp.TextPlain, t)
+	email.SetBody(smtp.TextPlain, t).AddAlternative(smtp.TextHTML, h)
 
 	if email.GetError() != nil {
 		return email.GetError()
