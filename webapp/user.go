@@ -58,8 +58,9 @@ func signup(c *gin.Context) {
 			"Successful registration to Omnom",
 			"login",
 			map[string]interface{}{
-				"Token":   u.LoginToken,
-				"BaseURL": baseURL("/login"),
+				"Token":    u.LoginToken,
+				"Username": u.Username,
+				"BaseURL":  baseURL("/login"),
 			},
 		)
 		if err != nil {
@@ -97,8 +98,9 @@ func login(c *gin.Context) {
 			fmt.Sprintf("Omnom login verification for %s", u.Username),
 			"login",
 			map[string]interface{}{
-				"Token":   u.LoginToken,
-				"BaseURL": baseURL("/login"),
+				"Token":    u.LoginToken,
+				"Username": u.Username,
+				"BaseURL":  baseURL("/login"),
 			},
 		)
 		if err != nil {

@@ -1,5 +1,9 @@
 {{ template "base.html.tpl" . }}
 
 {{ define "content" }}
-You can log in <a href="{{ .BaseURL }}?token={{ .Token }}">here</a>.
+Hello {{ .Username }},<br />
+<p>
+You can log in to Omnom <a href="{{ .BaseURL }}?token={{ .Token }}">here</a>.
+</p>
+Happy Omnoming
 {{ end }}
