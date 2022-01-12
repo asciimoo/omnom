@@ -20,6 +20,7 @@ type Templates struct {
 }
 
 var client *smtp.SMTPClient
+var server *smtp.SMTPServer
 var sender = "Omnom <omnom@127.0.0.1>"
 var disabled = false
 var templates = &Templates{}
@@ -45,7 +46,7 @@ func Init(c *config.Config) error {
 	}
 
 	SetSender(sc.Sender)
-	server := smtp.NewSMTPClient()
+	server = smtp.NewSMTPClient()
 
 	//SMTP server
 	server.Host = sc.Host
@@ -92,7 +93,15 @@ func Send(to string, subject string, msgType string, args map[string]interface{}
 	if email.GetError() != nil {
 		return email.GetError()
 	}
-	return email.Send(client)
+	err = email.Send(client)
+	if err == io.EOF {
+		client, err = server.Connect()
+		if err != nil {
+			return nil
+		}
+		return email.Send(client)
+	}
+	return err
 }
 
 func Disable(t bool) {
