@@ -53,10 +53,15 @@ func signup(c *gin.Context) {
 			return
 		}
 		u = model.GetUser(username)
-		err = mail.Send(u.Email, "login", map[string]interface{}{
-			"Token":   u.LoginToken,
-			"BaseURL": baseURL("/login"),
-		})
+		err = mail.Send(
+			u.Email,
+			"Successful registration to Omnom",
+			"login",
+			map[string]interface{}{
+				"Token":   u.LoginToken,
+				"BaseURL": baseURL("/login"),
+			},
+		)
 		if err != nil {
 			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
 				"Error": err.Error(),
@@ -87,10 +92,15 @@ func login(c *gin.Context) {
 			})
 			return
 		}
-		err = mail.Send(u.Email, "login", map[string]interface{}{
-			"Token":   u.LoginToken,
-			"BaseURL": baseURL("/login"),
-		})
+		err = mail.Send(
+			u.Email,
+			fmt.Sprintf("Omnom login verification for %s", u.Username),
+			"login",
+			map[string]interface{}{
+				"Token":   u.LoginToken,
+				"BaseURL": baseURL("/login"),
+			},
+		)
 		if err != nil {
 			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
 				"Error": err.Error(),

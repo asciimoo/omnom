@@ -69,14 +69,14 @@ func Init(c *config.Config) error {
 	return nil
 }
 
-func Send(to string, msgType string, args map[string]interface{}) error {
+func Send(to string, subject string, msgType string, args map[string]interface{}) error {
 	if disabled {
 		return nil
 	}
 	email := smtp.NewMSG()
 	email.SetFrom(sender).
 		AddTo(to).
-		SetSubject("todo")
+		SetSubject(subject)
 
 	h, err := templates.RenderHTML(msgType, args)
 	if err != nil {
