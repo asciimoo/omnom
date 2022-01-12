@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"syscall"
 	"time"
 
 	html "html/template"
@@ -94,7 +95,7 @@ func Send(to string, subject string, msgType string, args map[string]interface{}
 		return email.GetError()
 	}
 	err = email.Send(client)
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) || errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) {
 		client, err = server.Connect()
 		if err != nil {
 			return nil
