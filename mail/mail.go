@@ -82,16 +82,15 @@ func Send(to string, subject string, msgType string, args map[string]interface{}
 	if err != nil {
 		return err
 	}
-	email.SetBody(smtp.TextHTML, h)
 
 	t, err := templates.RenderText(msgType, args)
 	if err != nil {
 		return err
 	}
-	email.SetBody(smtp.TextPlain, t)
+	email.SetBody(smtp.TextHTML, h).AddAlternative(smtp.TextPlain, t)
 
-	if email.Error != nil {
-		return email.Error
+	if email.GetError() != nil {
+		return email.GetError()
 	}
 	return email.Send(client)
 }
