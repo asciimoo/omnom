@@ -132,6 +132,7 @@ func Run(cfg *config.Config) {
 	if cfg.App.BookmarksPerPage > 0 {
 		bookmarksPerPage = cfg.App.BookmarksPerPage
 	}
+	e.SetTrustedProxies([]string{"127.0.0.1"})
 	e.Use(sessions.Sessions("SID", sessions.NewCookieStore([]byte("secret"))))
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
