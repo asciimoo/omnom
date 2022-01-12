@@ -59,7 +59,7 @@ func Init(c *config.Config) error {
 	}
 	server.ConnectTimeout = time.Duration(sc.ConnectionTimeout) * time.Second
 	server.SendTimeout = time.Duration(sc.SendTimeout) * time.Second
-	server.KeepAlive = false
+	server.KeepAlive = true
 
 	var err error
 	client, err = server.Connect()
