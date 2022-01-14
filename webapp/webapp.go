@@ -137,7 +137,7 @@ func Run(cfg *config.Config) {
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
 	authorized := e.Group("/")
-	authorized.Use(authRequired)
+	authorized.Use(authRequiredMiddleware)
 
 	bu := cfg.Server.BaseURL
 	baseURL = func(u string) string {
@@ -171,7 +171,17 @@ func index(c *gin.Context) {
 	renderHTML(c, http.StatusOK, "index", nil)
 }
 
-func authRequired(c *gin.Context) {
+func getPageno(c *gin.Context) int64 {
+	var pageno int64 = 1
+	if pagenoStr, ok := c.GetQuery("pageno"); ok {
+		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
+			pageno = int64(userPageno)
+		}
+	}
+	return pageno
+}
+
+func authRequiredMiddleware(c *gin.Context) {
 	session := sessions.Default(c)
 	user := session.Get(SID)
 	if user == nil {
@@ -181,16 +191,6 @@ func authRequired(c *gin.Context) {
 		return
 	}
 	c.Next()
-}
-
-func getPageno(c *gin.Context) int64 {
-	var pageno int64 = 1
-	if pagenoStr, ok := c.GetQuery("pageno"); ok {
-		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
-			pageno = int64(userPageno)
-		}
-	}
-	return pageno
 }
 
 func SessionMiddleware() gin.HandlerFunc {
