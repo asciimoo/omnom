@@ -6,8 +6,9 @@
 	"content_scripts": [
 		{
 			"js": [
-				"omnom.js"
+				"site.js"
 			],
+            "all_frames": true,
 			"matches": [
 				"http://*/*",
 				"https://*/*",

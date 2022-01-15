@@ -26,6 +26,7 @@ module.exports = {
     entry: {
         omnom: [path.join(__dirname, "src", "js", "omnom.js"), path.join(__dirname, "src", "css", "style.css")],
         options: path.join(__dirname, "src", "js", "options.js"),
+        site: path.join(__dirname, "src", "js", "site.js"),
         // background: path.join(__dirname, "src", "js", "background.js")
     },
     output: {
@@ -34,7 +35,8 @@ module.exports = {
         filename: "[name].js"
     },
     optimization: {
-        minimize: env.NODE_ENV === 'production' ? true : false,
+        //minimize: env.NODE_ENV === 'production' ? true : false,
+        minimize: false,
         minimizer: [
             new TerserPlugin({
                 terserOptions: {

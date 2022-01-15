@@ -8,6 +8,7 @@ import {
 } from './utils';
 import { downloadFile } from './file-download';
 import { sanitizeCSS } from './sanitize';
+import { saveBookmark } from "./main";
 
 const nodeTransformFunctons = new Map([
     ['SCRIPT', (node) => node.remove()],
@@ -17,12 +18,69 @@ const nodeTransformFunctons = new Map([
     ['BASE', setBaseUrl]
 ]);
 
+const messageHandlers = new Map([
+    ['domData', handleDomDataMessage]
+]);
+
 const styleNodes = new Map();
 
 let styleIndex = 0;
+let commChan = null;
+let numberOfIframes = 0;
+let siteContent = {
+    'main': null,
+    'iframes': [],
+};
+
+function setupComms() {
+    br.tabs.query({
+        active: true,
+        currentWindow: true
+    }, tabs => {
+        let tab = tabs[0];
+        commChan = br.tabs.connect(
+            tab.id,
+            {name: "omnom"}
+        );
+        commChan.onMessage.addListener((msg) => {
+            const msgHandler = messageHandlers.get(msg.type);
+            if(msgHandler) {
+                msgHandler(msg);
+            } else {
+                console.log("unknown message: ", msg);
+            }
+            return true;
+        });
+    });
+}
+
+function handleDomDataMessage(msg) {
+    if (msg.data.url == getSiteUrl()) {
+        siteContent.main = msg.data;
+        numberOfIframes += msg.data.iframeCount;
+    } else {
+        siteContent.iframes.push(msg.data);
+    }
+    if (siteContent.iframes.length >= numberOfIframes) {
+        parseDom();
+    }
+}
 
 async function createSnapshot() {
-    const doc = await getDOM();
+    commChan.postMessage({type: "getDom"});
+}
+
+async function parseDom() {
+    const doc = siteContent.main;
+    const dom = transformDom(doc);
+    saveBookmark({
+        'dom': `${doc.doctype}${dom.outerHTML}`,
+        'text': dom.getElementsByTagName("body")[0].innerText,
+        'favicon': favicon
+    });
+}
+
+async function transformDom(doc) {
     const dom = document.createElement('html');
     dom.innerHTML = doc.html;
     for (const k in doc.attributes) {
@@ -40,11 +98,7 @@ async function createSnapshot() {
             document.getElementsByTagName('head')[0].appendChild(faviconElement);
         }
     }
-    return {
-        'dom': `${doc.doctype}${dom.outerHTML}`,
-        'text': dom.getElementsByTagName("body")[0].innerText,
-        'favicon': favicon
-    };
+    return dom;
 }
 
 function setStyleNodes(dom) {
@@ -58,60 +112,6 @@ function setStyleNodes(dom) {
     sortedStyles.forEach(style => {
         parent.appendChild(style);
     });
-}
-
-async function getDOM() {
-    const data = await executeScriptToPromise(getDOMData, br);
-    if (data && data[0]) {
-        return Promise.resolve(data[0]);
-    } else {
-        return Promise.reject('meh')
-    }
-}
-
-function getDOMData() {
-    const html = document.getElementsByTagName('html')[0];
-    const ret = {
-        'html': html.cloneNode(true),
-        'attributes': {},
-        'title': '',
-        'doctype': '',
-    };
-    if (document.doctype) {
-        ret.doctype = new XMLSerializer().serializeToString(document.doctype);
-    }
-    if (document.getElementsByTagName('title').length > 0) {
-        ret.title = document.getElementsByTagName('title')[0].innerText;
-    }
-    [...html.attributes].forEach(attr => ret.attributes[attr.nodeName] = attr.nodeValue);
-    let canvases = document.getElementsByTagName('canvas');
-    if (canvases) {
-        let canvasImages = [];
-        for (let canvas of canvases) {
-            let el = document.createElement("img");
-            el.src = canvas.toDataURL();
-            canvasImages.push(el);
-        }
-        let snapshotCanvases = ret.html.getElementsByTagName('canvas');
-        for (let i in canvasImages) {
-            let canvas = snapshotCanvases[i];
-            canvas.parentNode.replaceChild(canvasImages[i], canvas);
-
-        }
-    }
-    const styleElements = document.getElementsByTagName('style');
-    if (styleElements) {
-        for (let style of styleElements) {
-            const sheetRules = style.sheet?.cssRules;
-            if (sheetRules) {
-                const concatRules = [...sheetRules].reduce((rules, rule) => rules.concat(rule.cssText), '');
-                style.innerText = concatRules;
-            }
-        }
-
-    }
-    ret.html = ret.html.outerHTML;
-    return ret;
 }
 
 async function transformNode(node) {
@@ -186,5 +186,7 @@ async function rewriteAttributes(node) {
         }
     }));
 }
+
+setupComms();
 
 export { createSnapshot }
