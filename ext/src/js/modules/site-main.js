@@ -1,4 +1,5 @@
 const messageHandlers = new Map([
+    ['ping', handlePingMessage],
     ['getDom', handleGetDomMessage]
 ]);
 
@@ -13,6 +14,10 @@ function initComms() {
             }
         });
     });
+}
+
+async function handlePingMessage(msg, commChan) {
+    commChan.postMessage({type: 'pong'});
 }
 
 async function handleGetDomMessage(msg, commChan) {

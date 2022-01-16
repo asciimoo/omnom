@@ -19,6 +19,7 @@ const nodeTransformFunctons = new Map([
 ]);
 
 const messageHandlers = new Map([
+    ['pong', handlePongMessage],
     ['domData', handleDomDataMessage]
 ]);
 
@@ -51,13 +52,17 @@ function setupComms() {
             }
             return true;
         });
+        commChan.postMessage({type: "ping"});
     });
+}
+
+function handlePongMessage(msg) {
+    numberOfIframes += 1;
 }
 
 function handleDomDataMessage(msg) {
     if (msg.data.url == getSiteUrl()) {
         siteContent.main = msg.data;
-        numberOfIframes += msg.data.iframeCount;
     } else {
         siteContent.iframes.push(msg.data);
     }
