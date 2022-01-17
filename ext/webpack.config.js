@@ -35,8 +35,7 @@ module.exports = {
         filename: "[name].js"
     },
     optimization: {
-        //minimize: env.NODE_ENV === 'production' ? true : false,
-        minimize: false,
+        minimize: env.NODE_ENV === 'production' ? true : false,
         minimizer: [
             new TerserPlugin({
                 terserOptions: {
