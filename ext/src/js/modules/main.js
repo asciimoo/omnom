@@ -138,14 +138,13 @@ async function saveBookmark(snapshotData) {
     form.append('snapshot', snapshotBlob);
     form.append('snapshot_text', snapshotData['text']);
     form.set('favicon', snapshotData['favicon']);
-    console.log(form);
     const requestBody = {
         method: 'POST',
         body: form,
         // headers: {
         //     'Content-type': 'application/json; charset=UTF-8'
         // }
-    }
+    };
     await fetch(`${getOmnomUrl()}add_bookmark`, requestBody)
         .then((resp) => checkStatus(resp)).then(() => {
             destroyProgressBar();

@@ -72,15 +72,6 @@ function getSiteUrl() {
     return siteUrl;
 }
 
-async function walkDOM(node, func) {
-    await func(node);
-    const children = [...node.childNodes];
-    return Promise.allSettled(children.map(async (node) => {
-        await walkDOM(node, func)
-    }));
-}
-
-
 async function setOmnomSettings() {
     const omnomData = await getOmnomDataFromLocal().catch(renderError);
     await setSiteUrl();
@@ -143,7 +134,6 @@ export {
     queryTabsToPromise,
     renderError,
     renderSuccess,
-    walkDOM,
     getSiteUrl,
     setSiteUrl,
     setOmnomSettings,
