@@ -54,7 +54,7 @@ class Document {
         await this.transformNode(node);
         const children = [...node.childNodes];
         return Promise.allSettled(children.map(async (node) => {
-            await this.walkDOM(node);
+            await this.walkDOM(node).catch(e => console.log("Error while transforming DOM: ", e));
         }));
     }
 
@@ -78,6 +78,7 @@ class Document {
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
         await this.rewriteAttributes(node);
         if (transformFunction) {
+            // todo bind vs apply
             await transformFunction(node, this);
             return;
         }
@@ -98,7 +99,7 @@ class Document {
             node.remove();
         }
         if ((node.getAttribute('rel') || '').trim().toLowerCase() == 'icon' || (node.getAttribute('rel') || '').trim().toLowerCase() == 'shortcut icon') {
-            const favicon = await downloadFile(doc.absouleUrl(node.getAttribute('href')));
+            const favicon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
             document.getElementById('favicon').value = favicon;
             node.setAttribute('href', favicon);
         }
