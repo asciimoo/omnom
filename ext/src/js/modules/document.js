@@ -86,7 +86,9 @@ class Document {
     }
 
     async transformLink(node, doc) {
-        if (node.attributes.rel && node.attributes.rel.nodeValue.trim().toLowerCase() == 'stylesheet') {
+        const rel = (node.getAttribute('rel') || '').trim().toLowerCase();
+        switch (rel) {
+        case 'stylesheet':
             if (!node.attributes.href) {
                 return;
             }
@@ -97,19 +99,16 @@ class Document {
             style.innerHTML = await sanitizeCSS(cssText, cssHref);
             doc.styleNodes.set(index, style);
             node.remove();
-        }
-        const rel = (node.getAttribute('rel') || '').trim().toLowerCase()
-        if (rel == 'icon' || rel == 'shortcut icon') {
-            const favicon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
-            node.setAttribute('href', favicon);
-            doc.favicon = favicon;
-        }
-        if (rel == 'apple-touch-icon') {
+            break;
+        case 'icon':
+        case 'shortcut icon':
+        case 'apple-touch-icon':
             const icon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
             node.setAttribute('href', icon);
             if (!doc.favicon) {
                 doc.favicon = icon;
             }
+            break;
         }
     }
 
