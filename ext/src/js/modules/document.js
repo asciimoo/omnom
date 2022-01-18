@@ -108,6 +108,11 @@ class Document {
                 doc.favicon = icon;
             }
             break;
+        case 'preconnect':
+        case 'dns-prefetch':
+            // TODO handle these elements more sophisticatedly
+            node.setAttribute('href', '');
+            break;
         }
     }
 
