@@ -16,7 +16,7 @@ let numberOfPages = 0;
 let doc = null;
 let iframes = [];
 
-function setupComms() {
+function setupComms(msg) {
     br.tabs.query({
         active: true,
         currentWindow: true
@@ -35,7 +35,9 @@ function setupComms() {
             }
             return true;
         });
-        commChan.postMessage({type: "ping"});
+        if (msg) {
+            commChan.postMessage(msg);
+        }
     });
 }
 
@@ -57,7 +59,11 @@ async function handleDomDataMessage(msg) {
 }
 
 async function createSnapshot() {
-    commChan.postMessage({type: "getDom"});
+    try {
+        commChan.postMessage({type: "getDom"});
+    } catch(err) {
+        setupComms({type: "getDom"});
+    }
 }
 
 async function parseDom() {
@@ -69,6 +75,6 @@ async function parseDom() {
     });
 }
 
-setupComms();
+setupComms({type: "ping"});
 
 export { createSnapshot }

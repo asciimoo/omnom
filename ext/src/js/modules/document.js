@@ -100,8 +100,8 @@ class Document {
         }
         if ((node.getAttribute('rel') || '').trim().toLowerCase() == 'icon' || (node.getAttribute('rel') || '').trim().toLowerCase() == 'shortcut icon') {
             const favicon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
-            document.getElementById('favicon').value = favicon;
             node.setAttribute('href', favicon);
+            doc.favicon = favicon;
         }
     }
 
