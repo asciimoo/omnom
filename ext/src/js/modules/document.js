@@ -98,10 +98,18 @@ class Document {
             doc.styleNodes.set(index, style);
             node.remove();
         }
-        if ((node.getAttribute('rel') || '').trim().toLowerCase() == 'icon' || (node.getAttribute('rel') || '').trim().toLowerCase() == 'shortcut icon') {
+        const rel = (node.getAttribute('rel') || '').trim().toLowerCase()
+        if (rel == 'icon' || rel == 'shortcut icon') {
             const favicon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
             node.setAttribute('href', favicon);
             doc.favicon = favicon;
+        }
+        if (rel == 'apple-touch-icon') {
+            const icon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
+            node.setAttribute('href', icon);
+            if (!doc.favicon) {
+                doc.favicon = icon;
+            }
         }
     }
 
