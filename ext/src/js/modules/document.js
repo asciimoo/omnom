@@ -38,14 +38,13 @@ class Document {
     async transformDom() {
         await this.walkDOM(this.dom);
         await this.setStyleNodes();
-        let favicon = document.getElementById('favicon')?.value;
-        if (!favicon) {
+        if (!this.favicon) {
             this.favicon = await downloadFile(this.absoluteUrl('/favicon.ico'));
             if (this.favicon) {
                 const faviconElement = document.createElement('link');
                 faviconElement.setAttribute('rel', 'icon');
                 faviconElement.setAttribute('href', this.favicon);
-                document.getElementsByTagName('head')[0].appendChild(faviconElement);
+                this.dom.getElementsByTagName('head')[0].appendChild(faviconElement);
             }
         }
     }
