@@ -155,9 +155,9 @@ async function saveBookmark(snapshotData) {
         });
 }
 
-/* ---------------------------------*
-    * Template managemen               *
-    * ---------------------------------*/
+/* ------------------------------------*
+* Template management                  *
+* -------------------------------------*/
 
 function setTemplates() {
     const templateElements = document.querySelectorAll('template');
@@ -208,12 +208,6 @@ function clearContentContainer() {
         }
     });
 }
-
-
-function processMsg(msg) {
-    console.log(msg);
-}
-
 
 export {
     displayPopup,

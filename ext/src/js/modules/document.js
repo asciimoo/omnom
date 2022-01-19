@@ -77,68 +77,67 @@ class Document {
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
         await this.rewriteAttributes(node);
         if (transformFunction) {
-            // todo bind vs apply
-            await transformFunction(node, this);
+            await transformFunction.call(this, node);
             return;
         }
         return;
     }
 
-    async transformLink(node, doc) {
+    async transformLink(node) {
         const rel = (node.getAttribute('rel') || '').trim().toLowerCase();
         switch (rel) {
-        case 'stylesheet':
-            if (!node.attributes.href) {
-                return;
-            }
-            const index = doc.styleIndex++;
-            const cssHref = doc.absoluteUrl(node.attributes.href.nodeValue);
-            const style = document.createElement('style');
-            const cssText = await downloadFile(doc.absoluteUrl(cssHref));
-            style.innerHTML = await sanitizeCSS(cssText, cssHref);
-            doc.styleNodes.set(index, style);
-            node.remove();
-            break;
-        case 'icon':
-        case 'shortcut icon':
-        case 'apple-touch-icon':
-            const icon = await downloadFile(doc.absoluteUrl(node.getAttribute('href')));
-            node.setAttribute('href', icon);
-            if (!doc.favicon) {
-                doc.favicon = icon;
-            }
-            break;
-        case 'preconnect':
-        case 'dns-prefetch':
-            // TODO handle these elements more sophisticatedly
-            node.setAttribute('href', '');
-            break;
+            case 'stylesheet':
+                if (!node.attributes.href) {
+                    return;
+                }
+                const index = this.styleIndex++;
+                const cssHref = this.absoluteUrl(node.attributes.href.nodeValue);
+                const style = document.createElement('style');
+                const cssText = await downloadFile(this.absoluteUrl(cssHref));
+                style.innerHTML = await sanitizeCSS(cssText, cssHref);
+                this.styleNodes.set(index, style);
+                node.remove();
+                break;
+            case 'icon':
+            case 'shortcut icon':
+            case 'apple-touch-icon':
+                const icon = await downloadFile(this.absoluteUrl(node.getAttribute('href')));
+                node.setAttribute('href', icon);
+                if (!this.favicon) {
+                    this.favicon = icon;
+                }
+                break;
+            case 'preconnect':
+            case 'dns-prefetch':
+                // TODO handle these elements more sophisticatedly
+                node.setAttribute('href', '');
+                break;
         }
     }
 
-    async transformStyle(node, doc) {
-        const innerText = await sanitizeCSS(node.innerText, doc.url);
+    async transformStyle(node) {
+        const innerText = await sanitizeCSS(node.innerText, this.url);
         node.innerText = innerText;
     }
 
-    async transfromImg(node, doc) {
-        const src = await downloadFile(doc.absoluteUrl(node.getAttribute('src')));
+    async transfromImg(node) {
+        const src = await downloadFile(this.absoluteUrl(node.getAttribute('src')));
         node.src = src;
         if (node.getAttribute('srcset')) {
             let val = node.getAttribute('srcset');
             let newParts = [];
             for (let s of val.split(',')) {
                 let srcParts = s.trim().split(' ');
-                srcParts[0] = await downloadFile(doc.absoluteUrl(srcParts[0]));
+                srcParts[0] = await downloadFile(this.absoluteUrl(srcParts[0]));
                 newParts.push(srcParts.join(' '));
             }
             node.setAttribute('srcset', newParts.join(', '));
         }
     }
 
-    async transfromIframe(node, doc) {
-        const src = doc.absoluteUrl(node.getAttribute('src'));
-        for (let iframe of doc.iframes) {
+    async transfromIframe(node) {
+        const src = this.absoluteUrl(node.getAttribute('src'));
+        for (let iframe of this.iframes) {
             if (iframe.url == src) {
                 await iframe.transformDom();
                 const inlineSrc = `data:text/html;base64,${btoa(iframe.getDomAsText())}`;
@@ -149,8 +148,8 @@ class Document {
         console.log("Meh, iframe not found: ", iframe.src);
     }
 
-    async setUrl(node, doc) {
-        doc.url = doc.absoluteUrl(node.getAttribute('href'));
+    async setUrl(node) {
+        this.url = this.absoluteUrl(node.getAttribute('href'));
     }
 
     async rewriteAttributes(node) {
