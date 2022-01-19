@@ -5,6 +5,7 @@ import {
 } from './utils';
 import { saveBookmark } from "./main";
 import { Document } from "./document";
+import { getDomData } from "./get-dom-data";
 
 const messageHandlers = new Map([
     ['pong', handlePongMessage],
@@ -54,19 +55,28 @@ async function handleDomDataMessage(msg) {
     }
     if (doc && iframes.length == numberOfPages -1) {
         doc.iframes = iframes;
-        parseDom();
+        processDom(doc);
     }
 }
 
 async function createSnapshot() {
-    try {
-        commChan.postMessage({type: "getDom"});
-    } catch(err) {
-        setupComms({type: "getDom"});
+    if (!numberOfPages) {
+        console.log("content js isn't running, falling back to the naive snapshotting, which does not include iframes");
+        let data = await executeScriptToPromise(getDomData, br);
+        if (!data) {
+            // TODO display error to user
+            console.log("failed to get dom information");
+            return;
+        }
+        data = data[0];
+        doc = new Document(data.html, data.url, data.doctype, data.attributes);
+        processDom(doc);
+        return
     }
+    commChan.postMessage({type: "getDom"});
 }
 
-async function parseDom() {
+async function processDom(doc) {
     await doc.transformDom();
     saveBookmark({
         'dom': doc.getDomAsText(),
