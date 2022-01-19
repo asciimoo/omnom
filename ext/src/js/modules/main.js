@@ -1,21 +1,26 @@
+import { Document } from "./document";
 import { renderProgressBar, destroyProgressBar } from './file-download';
-import {
-    createSnapshot
-} from './snapshot';
+import { getDomData } from "./get-dom-data";
+import { createSnapshot } from './snapshot';
 import { TagInputController } from './tag-input';
 import {
-    renderError,
-    renderSuccess,
+    browser as br,
+    checkStatus,
+    copyScript,
     executeScriptToPromise,
+    getOmnomToken,
+    getOmnomUrl,
     getSiteUrl,
     isDebug,
-    setOmnomSettings,
-    getOmnomUrl,
-    getOmnomToken,
-    checkStatus,
-    copyScript
+    renderError,
+    renderSuccess,
+    setOmnomSettings
 } from './utils';
 
+const messageHandlers = new Map([
+    ['pong', handlePongMessage],
+    ['domData', handleDomDataMessage]
+]);
 const is_ff = typeof InstallTrigger !== 'undefined';
 const is_chrome = !is_ff;
 
@@ -24,6 +29,56 @@ let templates = new Map();
 let boundVars = { onoptions: false, onafterdownload: false, onmain: true };
 let contentContainer = null;
 let form = null;
+let commChan = null;
+let numberOfPages = 0;
+let doc = null;
+let iframes = [];
+
+/* ---------------------------------*
+ * Content js messaging             *
+ * ---------------------------------*/
+
+function setupComms(msg) {
+    br.tabs.query({
+        active: true,
+        currentWindow: true
+    }, tabs => {
+        let tab = tabs[0];
+        commChan = br.tabs.connect(
+            tab.id,
+            {name: "omnom"}
+        );
+        commChan.onMessage.addListener((msg) => {
+            const msgHandler = messageHandlers.get(msg.type);
+            if(msgHandler) {
+                msgHandler(msg);
+            } else {
+                console.log("unknown message: ", msg);
+            }
+            return true;
+        });
+        if (msg) {
+            commChan.postMessage(msg);
+        }
+    });
+}
+
+async function handlePongMessage(msg) {
+    numberOfPages += 1;
+}
+
+async function handleDomDataMessage(msg) {
+    let d = new Document(msg.data.html, msg.data.url, msg.data.doctype, msg.data.attributes);
+    if (msg.data.url == getSiteUrl()) {
+        doc = d;
+    } else {
+        iframes.push(d);
+    }
+    if (doc && iframes.length >= numberOfPages -1) {
+        doc.iframes = iframes;
+        saveBookmark();
+    }
+}
 
 function debugPopup(content) {
     if (is_chrome) {
@@ -35,15 +90,15 @@ function debugPopup(content) {
 }
 
 /* ---------------------------------*
-    * Diplay extension popup           *
-    * ---------------------------------*/
+ * Diplay extension popup           *
+ * ---------------------------------*/
 
 function displayPopup() {
     setTemplates();
     evaluateTemplates();
     setEventListeners();
     setOmnomSettings().then(fillFormFields, (err) => { optionsHandler(); renderError(err) });
-    console.log('Loaded!');
+    console.log('Omnom popup loaded!');
 }
 
 function setEventListeners() {
@@ -89,8 +144,8 @@ async function fillFormFields() {
 }
 
 /* ---------------------------------*
-    * Event handlers                   *
-    * ---------------------------------*/
+ * Event handlers                   *
+ * ---------------------------------*/
 
 function backHandler() {
     clearContentContainer();
@@ -115,21 +170,35 @@ function closeHandler() {
 }
 
 /* ---------------------------------*
-    * Save bookmarks                   *
-    * ---------------------------------*/
+ * Save bookmarks                   *
+ * ---------------------------------*/
 
 async function createBookmark(e) {
     e.preventDefault();
     form = new FormData(document.forms['add']);
     updateBoundVar([{ 'onafterdownload': true }, { 'onmain': false }]);
     renderProgressBar(document.getElementById('omnom_status'));
-    createSnapshot();
+    if (!numberOfPages) {
+        console.log("content js isn't running, falling back to the naive snapshotting, which does not include iframes");
+        let data = await executeScriptToPromise(getDomData, br);
+        if (!data) {
+            // TODO display error to user
+            console.log("failed to get dom information");
+            return;
+        }
+        data = data[0];
+        doc = new Document(data.html, data.url, data.doctype, data.attributes);
+        saveBookmark();
+        return
+    } else {
+        commChan.postMessage({type: "getDom"});
+    }
 }
-async function saveBookmark(snapshotData) {
+async function saveBookmark() {
+    console.time('createSnapshot');
+    const snapshotData = await createSnapshot(doc);
+    console.timeEnd('createSnapshot');
     form.set('tags', tagInput.getTags().join(','));
-
-    //console.time('createSnapshot');
-    //console.timeEnd('createSnapshot');
     if (isDebug()) {
         debugPopup(snapshotData['dom']);
         return;
@@ -156,8 +225,8 @@ async function saveBookmark(snapshotData) {
 }
 
 /* ------------------------------------*
-* Template management                  *
-* -------------------------------------*/
+ * Template management                 *
+ * ------------------------------------*/
 
 function setTemplates() {
     const templateElements = document.querySelectorAll('template');
@@ -213,3 +282,5 @@ export {
     displayPopup,
     saveBookmark
 }
+
+setupComms({type: "ping"});
