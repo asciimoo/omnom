@@ -1,6 +1,5 @@
 #omnom-webapp {
     height: 100% !important;
-    min-height: 72%;
     display: flex;
     flex-flow: column;
     overflow: auto;
@@ -144,7 +143,7 @@ iframe {
 
     &__query {
         flex: 3;
-        margin-left: 6rem;
+        min-width: 15rem;
     }
 
     &__advanced-search {
@@ -152,6 +151,8 @@ iframe {
         flex-direction: row;
         align-items: flex-start;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6rem;
         font-size: 1rem;
 
         .label {
@@ -183,6 +184,9 @@ iframe {
         align-items: flex-start;
         justify-content: space-between;
         width: 100%;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
     }
 
     &__title {
@@ -224,13 +228,13 @@ iframe {
         justify-content: space-between;
         width: 100%;
         margin-top: 1rem;
+        flex-wrap: wrap;
+        gap:1rem;
 
         div {
             width: 100%;
-        }
-
-        div:first-child {
-            margin-right: 1rem
+            flex: 1;
+            min-width: 15rem;
         }
     }
 
@@ -243,11 +247,17 @@ iframe {
     &__actions {
         text-align: right;
         font-size: 1.2rem;
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        align-items: center;
+        justify-content: flex-end;
 
-        form {
-            display: inline-block;
+        @include respond('tab-port'){
+            text-align: left;
+            justify-content: flex-start;
         }
-
+        
         i {
             margin-left: 1rem;
             color: $color-gray;
@@ -291,13 +301,17 @@ iframe {
         flex-direction: row;
         align-items: flex-start;
         width: 100%;
+        flex-wrap: wrap;
+    }
+
+    &__actions {
+        text-align: right;
     }
 
     &__delete {
         background-color: transparent;
         border: none;
         font-size: 1.2rem;
-        font-weight: 100;
         cursor: pointer;
     }
 }
@@ -306,8 +320,15 @@ iframe {
     &__content {
         height: 100%;
     }
-
     &__main-container {
         min-height: 76%;
+    }
+}
+
+.navbar-menu {
+    @include respond('tab-port'){
+        position: absolute;
+        top: 3.5rem;
+        left:13rem;
     }
 }
