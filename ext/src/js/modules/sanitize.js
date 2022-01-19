@@ -74,9 +74,9 @@ async function sanitizeCSSRule(r, baseURL) {
     if (!r || !r.style) {
         return '';
     }
-    // TODO handle ::xy { content: }
     await sanitizeCSSBgImage(r, baseURL);
     await sanitizeCSSListStyleImage(r, baseURL);
+    await sanitizeCSSContentImage(r, baseURL);
     return r.cssText;
 }
 
@@ -115,6 +115,27 @@ async function sanitizeCSSListStyleImage(r, baseURL) {
                 }
             } else {
                 r.style.listStyleImage = '';
+            }
+        }
+    }
+}
+
+async function sanitizeCSSContentImage(r, baseURL) {
+    const ci = r.style.content;
+    if (ci && ci.startsWith('url("') && ci.endsWith('")')) {
+        const bgURL = absoluteURL(baseURL, ci.substring(5, ci.length - 2));
+        if (!bgURL.startsWith('data:')) {
+            const inlineImg = await downloadFile(bgURL);
+            if (inlineImg) {
+                try {
+                    r.style.content = `url('${inlineImg}')`;
+                } catch (error) {
+                    console.log('failed to set content image: ', error);
+                    r.style.content = '';
+                }
+            } else {
+                console.log('failed to get content image: ', error);
+                r.style.content = '';
             }
         }
     }

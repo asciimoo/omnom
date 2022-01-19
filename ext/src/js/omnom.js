@@ -1,3 +1,3 @@
-import main from "./modules/main";
+import { displayPopup } from "./modules/main";
 
-main();
+document.addEventListener('DOMContentLoaded', displayPopup);
