@@ -252,6 +252,11 @@ iframe {
         gap: 1rem;
         align-items: center;
         justify-content: flex-end;
+
+        @include respond('tab-port'){
+            text-align: left;
+            justify-content: flex-start;
+        }
         
         i {
             margin-left: 1rem;
@@ -317,5 +322,13 @@ iframe {
     }
     &__main-container {
         min-height: 76%;
+    }
+}
+
+.navbar-menu {
+    @include respond('tab-port'){
+        position: absolute;
+        top: 3.5rem;
+        left:13rem;
     }
 }
