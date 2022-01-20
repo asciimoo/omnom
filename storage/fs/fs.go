@@ -1,6 +1,8 @@
 package fs
 
 import (
+	"bytes"
+	"compress/gzip"
 	"os"
 	"path/filepath"
 )
@@ -24,7 +26,8 @@ func (s *FSStorage) Init(dir string) error {
 }
 
 func (s *FSStorage) GetSnapshot(key string) []byte {
-	path := filepath.Join(s.baseDir, "snapshots", getPrefix(key), key)
+	fname := key + ".gz"
+	path := filepath.Join(s.baseDir, "snapshots", getPrefix(key), fname)
 	snapshot, err := os.ReadFile(path)
 	if err != nil {
 		return nil
@@ -33,12 +36,17 @@ func (s *FSStorage) GetSnapshot(key string) []byte {
 }
 
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
+	fname := key + ".gz"
 	path := filepath.Join(s.baseDir, "snapshots", getPrefix(key))
 	err := mkdir(path)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(path, key), snapshot, 0644)
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	w.Write(snapshot)
+	w.Close()
+	return os.WriteFile(filepath.Join(path, fname), b.Bytes(), 0644)
 }
 
 func mkdir(dir string) error {

@@ -49,6 +49,7 @@ func snapshot(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	c.Header("Content-Encoding", "gzip")
 	c.Data(http.StatusOK, "text/html; charset=utf-8", sBody)
 }
 
