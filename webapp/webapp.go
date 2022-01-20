@@ -164,7 +164,7 @@ func Run(cfg *config.Config) {
 }
 
 func index(c *gin.Context) {
-	if u, ok := c.Get("user"); ok && u != nil {
+	if u, ok := c.Get("user"); ok && u.(*model.User) != nil {
 		dashboard(c, u.(*model.User))
 		return
 	}
@@ -190,6 +190,12 @@ func authRequiredMiddleware(c *gin.Context) {
 		})
 		return
 	}
+	if u, _ := c.Get("user"); u.(*model.User) == nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
 	c.Next()
 }
 
@@ -198,7 +204,8 @@ func SessionMiddleware() gin.HandlerFunc {
 		session := sessions.Default(c)
 		uname := session.Get(SID)
 		if uname != nil {
-			c.Set("user", model.GetUser(uname.(string)))
+			u := model.GetUser(uname.(string))
+			c.Set("user", u)
 		} else {
 			c.Set("user", nil)
 		}

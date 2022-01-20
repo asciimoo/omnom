@@ -54,7 +54,7 @@ type User struct {
 	gorm.Model
 	ID               uint   `gorm:"primaryKey"`
 	Username         string `gorm:"unique"`
-	Email            string
+	Email            string `gorm:"unique"`
 	LoginToken       string
 	SubmissionTokens []Token
 	Bookmarks        []Bookmark
@@ -101,12 +101,12 @@ type Tag struct {
 }
 
 func GetUser(name string) *User {
-	var u User
-	err := DB.Where("LOWER(username) == LOWER(?)", name).First(&u).Error
+	var u *User
+	err := DB.Where("LOWER(username) == LOWER(?) or LOWER(email) == LOWER(?)", name, name).First(&u).Error
 	if err != nil {
 		return nil
 	}
-	return &u
+	return u
 }
 
 func GetUserByLoginToken(tok string) *User {
