@@ -164,7 +164,7 @@ func Run(cfg *config.Config) {
 }
 
 func index(c *gin.Context) {
-	if u, ok := c.Get("user"); ok && u.(*model.User) != nil {
+	if u, ok := c.Get("user"); ok && u != nil && u.(*model.User) != nil {
 		dashboard(c, u.(*model.User))
 		return
 	}
