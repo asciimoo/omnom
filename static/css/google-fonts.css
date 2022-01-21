@@ -12,6 +12,32 @@
          url('../webfonts/dosis-v22-latin-700.ttf') format('truetype'), /* Safari, Android, iOS */         
   }
 
+  /* dosis-100 - latin */
+  @font-face {
+    font-family: 'Dosis';
+    font-style: normal;
+    font-weight: 250;
+    src: url('../webfonts/Dosis-ExtraLight.eot'); /* IE9 Compat Modes */
+    src: local(''),
+         url('../webfonts/Dosis-ExtraLight.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+         url('../webfonts/Dosis-ExtraLight.woff2') format('woff2'), /* Super Modern Browsers */
+         url('../webfonts/Dosis-ExtraLight.woff') format('woff'), /* Modern Browsers */
+         url('../webfonts/Dosis-ExtraLight.ttf') format('truetype'), /* Safari, Android, iOS */         
+  }
+
+    /* dosis-300 - latin */
+    @font-face {
+      font-family: 'Dosis';
+      font-style: normal;
+      font-weight: 300;
+      src: url('../webfonts/Dosis-Regular.eot'); /* IE9 Compat Modes */
+      src: local(''),
+           url('../webfonts/Dosis-Regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+           url('../webfonts/Dosis-Regular.woff2') format('woff2'), /* Super Modern Browsers */
+           url('../webfonts/Dosis-Regular.woff') format('woff'), /* Modern Browsers */
+           url('../webfonts/Dosis-Regular.ttf') format('truetype'), /* Safari, Android, iOS */         
+    }
+
   /* roboto-100 - latin */
 @font-face {
     font-family: 'Roboto';

@@ -1,15 +1,54 @@
-{{ define "content" }}
-<section id="home" class="hero is-medium">
-    <div class="hero-body mt-6">
-        <div class="container">
-            <h1 class="title is-title is-size-1 has-text-weight-bold"><img src="/static/icons/omnom.png" width="80em" /> Om<span class="has-text-primary">nom</span></h1>
-            <p class="subtitle is-4 has-margin-top-20 is-family-primary">Self-hosted bookmark and website snapshot manager</p>
+{{ define "full-content" }}
+<section id="home" class="landing-page">
+    <div class="landing-page__hero">
+        <div class="landing-page__headline">
+            <div class="landing-page__title">
+                <h1>Bookmarking and snapshotting websites made easy</h1>
+                <button class="button">Sign me up!</button>
+            </div>
+        </div>
+        <div class="landing-page__menu">
+        <a href="#whatis"><span class="landing-page__menu-item">What's OMNOM?</span></a>
+        <a href="#extensions"><span class="landing-page__menu-item">Extensions</span></a>
         </div>
     </div>
-    <div class="hero-body mt-6">
-        <div class="container">
-            <p class="subtitle is-4 has-margin-top-20 is-family-primary has-text-centered">Manage your web history effortlessly</p>
-        </div>
+    <div class="landing-page__content">
+            <section id="whatis" class="landing-page__section">
+                <div class="landing-page__article">
+                    <div class="landing-page__pic">
+                        <img src="{{ BaseURL "/static/placeholder-image.png" }}" />
+                    </div>
+                    <div class="landing-page__text">
+                        <h2>What's OMNOM</h2>
+                        <p>Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsum</p>
+                    </div>
+                </div>
+                <a href="#extensions"><div class="next-section">
+                    <i class="fas fa-angle-down"></i>
+                </div></a>
+            </section>
+            <section id="extensions" class="landing-page__section">
+                <div class="landing-page__article">
+                    <div class="landing-page__pic">
+                        <img src="{{ BaseURL "/static/placeholder-image.png" }}" />
+                    </div>
+                    <div class="landing-page__text">
+                        <h2>Extensions</h2>
+                        <p>Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsum</p>
+                        <h3>Get plugin</h3>
+                        <div class="landing-page__extensions">
+                            <button class="extension-button">
+                                <i class="fab fa-firefox"></i>
+                                <p>Firefox</p>
+                            </button>
+                            <button class="extension-button">
+                                <i class="fab fa-chrome"></i>
+                                <p>Chrome</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>                
+            </section>   
     </div>
 </section>
 {{ end }}
