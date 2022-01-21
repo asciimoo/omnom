@@ -53,31 +53,29 @@
         {{ if .Info }}
         {{ block "info" .Info }}{{ end }}
         {{ end }}
-  {{block "full-content" . }}
+{{block "full-content" . }}
 <div class="section webapp__main-container">
     <div class="bd-main-container container">
         {{ block "content" . }}{{ end }}
-    </div>
-  {{end}}
+    </div>  
 </div>
+{{ end }}
 {{ if (not .hideFooter) }}
 <footer class="footer">
   <div class="container">
-    <div class="content has-text-centered">
-      <p>
-          <strong>Omnom</strong> © 2022
-      </p>
-      <p>
+    <div class="footer__content">
+      <span>Omnom © 2022</span>
+      <span>
           <a href="{{ BaseURL "/api" }}">API</a>
           | <a href="https://github.com/asciimoo/omnom">GitHub</a>
           | <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
           | <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
-      </p>
+      </span>
     </div>
   </div>
 </footer>
-</div>
 {{ end }}
+</div>
 </body>
 </html>
 

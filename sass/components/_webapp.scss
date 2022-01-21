@@ -326,8 +326,7 @@ iframe {
 }
 
 .landing-page {
-    width: 100%;
-    height: 100%;
+    width: 100%;    
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -469,7 +468,13 @@ iframe {
 }
 
 .footer {
-    display: none;
+    height: 5rem;
+    &__content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+    }
 }
 
 .navbar{
