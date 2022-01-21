@@ -1,15 +1,24 @@
-{{ define "content" }}
-<section id="home" class="hero is-medium">
-    <div class="hero-body mt-6">
-        <div class="container">
-            <h1 class="title is-title is-size-1 has-text-weight-bold"><img src="/static/icons/omnom.png" width="80em" /> Om<span class="has-text-primary">nom</span></h1>
-            <p class="subtitle is-4 has-margin-top-20 is-family-primary">Self-hosted bookmark and website snapshot manager</p>
+{{ define "full-content" }}
+<section id="home" class="landing-page">
+    <div class="landing-page__hero">
+        <div class="landing-page__headline">
+            <div class="landing-page__title">
+                <h1>Bookmarking and snapshotting websites made easy</h1>
+                <button class="button">Sign me up!</button>
+            </div>
+        </div>
+        <div class="landing-page__menu">
+        <span class="landing-page__menu-item">What's OMNOM?</span>
+        <span class="landing-page__menu-item">Extensions</span>
         </div>
     </div>
-    <div class="hero-body mt-6">
-        <div class="container">
-            <p class="subtitle is-4 has-margin-top-20 is-family-primary has-text-centered">Manage your web history effortlessly</p>
-        </div>
+    <div class="landing-page__content">
+            <div class="landing-page__article">
+                <div class="landing-page__pic">
+                </div>
+                <div class="landing-page__text">
+                </div>
+            </div>        
     </div>
 </section>
 {{ end }}

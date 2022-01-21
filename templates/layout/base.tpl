@@ -10,7 +10,7 @@
     {{ block "head" . }} {{ end }}
 </head>
 <body id="omnom-webapp">
-<nav class="navbar shadow-bottom {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
+<nav class="navbar {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
   <div class="navbar__container">
     <div class="navbar-brand is-size-4">
       <a class="navbar__logo" href="{{ BaseURL "/" }}"><span>om</span><span class="text--primary">nom</span> </a>
@@ -44,8 +44,6 @@
 </nav>
 
 <div class="webapp__content {{ block "content-class" . }}{{ end }}">
-<div class="section webapp__main-container">
-    <div class="bd-main-container container">
         {{ if .Error }}
         {{ block "error" .Error }}{{ end }}
         {{ end }}
@@ -55,9 +53,12 @@
         {{ if .Info }}
         {{ block "info" .Info }}{{ end }}
         {{ end }}
-
+  {{block "full-content" . }}
+<div class="section webapp__main-container">
+    <div class="bd-main-container container">
         {{ block "content" . }}{{ end }}
     </div>
+  {{end}}
 </div>
 {{ if (not .hideFooter) }}
 <footer class="footer">
