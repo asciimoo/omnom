@@ -8,12 +8,12 @@
             </div>
         </div>
         <div class="landing-page__menu">
-        <span class="landing-page__menu-item">What's OMNOM?</span>
-        <span class="landing-page__menu-item">Extensions</span>
+        <a href="#whatis"><span class="landing-page__menu-item">What's OMNOM?</span></a>
+        <a href="#extensions"><span class="landing-page__menu-item">Extensions</span></a>
         </div>
     </div>
     <div class="landing-page__content">
-            <section class="landing-page__section">
+            <section id="whatis" class="landing-page__section">
                 <div class="landing-page__article">
                     <div class="landing-page__pic">
                         <img src="{{ BaseURL "/static/placeholder-image.png" }}" />
@@ -23,11 +23,11 @@
                         <p>Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsumLoremimpsum Loremimpsum LoremimpsumLoremimpsum</p>
                     </div>
                 </div>
-                <div class="next-section">
+                <a href="#extensions"><div class="next-section">
                     <i class="fas fa-angle-down"></i>
-                </div> 
+                </div></a>
             </section>
-            <section class="landing-page__section">
+            <section id="extensions" class="landing-page__section">
                 <div class="landing-page__article">
                     <div class="landing-page__pic">
                         <img src="{{ BaseURL "/static/placeholder-image.png" }}" />
@@ -47,10 +47,7 @@
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="next-section">
-                    <i class="fas fa-angle-down"></i>
-                </div> 
+                </div>                
             </section>   
     </div>
 </section>

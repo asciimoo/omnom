@@ -325,7 +325,7 @@ iframe {
     }
 }
 
-.landing-page {    
+.landing-page {
     width: 100%;
     height: 100%;
     display: flex;
@@ -429,6 +429,10 @@ iframe {
             font-size: 1.2rem;
         }
         color: $color-black;
+    }
+    a, a:hover{
+        text-decoration: none;
+        color: $color-white;
     }
 }
 
