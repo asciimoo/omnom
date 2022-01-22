@@ -63,13 +63,13 @@
 {{ if (not .hideFooter) }}
 <footer class="footer">
   <div class="container">
-    <div class="footer__content">
-      <span>Omnom © 2022</span>
+    <div class="content has-text-centered py-4">
+      <p>Omnom © 2022</p>
       <span>
           <a href="{{ BaseURL "/api" }}">API</a>
-          | <a href="https://github.com/asciimoo/omnom">GitHub</a>
-          | <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
-          | <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
+          &#8226; <a href="https://github.com/asciimoo/omnom">GitHub</a>
+          &#8226; <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
+          &#8226; <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
       </span>
     </div>
   </div>

@@ -468,12 +468,17 @@ iframe {
 }
 
 .footer {
-    height: 5rem;
     &__content {
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: flex-start;
+    }
+    a, a:hover {
+        color: $color-orange;
+    }
+    a:hover {
+        text-decoration: underline;
     }
 }
 
