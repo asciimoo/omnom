@@ -7,7 +7,20 @@
     {{ end }}
     <div class="content">
     <form action="" method="get">
-    {{ block "textFilter" .}}{{ end }}
+    <div class="columns mb-2">
+        <div class="column">
+        {{ block "textFilter" .}}{{ end }}
+        </div>
+        <div class="column is-narrow has-text-right">
+            <span class="select">
+                <select name="order_by">
+                    <option value="date_desc"{{ if eq .OrderBy "date_desc" }} selected="selected"{{ end }}>Date desc</option>
+                    <option value="date_asc"{{ if eq .OrderBy "date_asc" }} selected="selected"{{ end }}>Date asc</option>
+                </select>
+            </span>
+            <input type="submit" value="sort" class="button is-primary" />
+        </div>
+    </div>
     <div class="accordion-tabs">
         <div class="accordion-tab">
           <input {{ if .HasSearch }} checked{{ end }} class="accordion-tab__control" type="checkbox" id="chck2">

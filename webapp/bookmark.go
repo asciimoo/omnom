@@ -40,7 +40,15 @@ func bookmarks(c *gin.Context) {
 		}
 	}
 	cq.Count(&bookmarkCount)
-	q.Order("bookmarks.updated_at desc").Find(&bs)
+	orderBy, _ := c.GetQuery("order_by")
+	switch orderBy {
+	case "date_asc":
+		q = q.Order("bookmarks.updated_at asc")
+	case "date_desc":
+	default:
+		q = q.Order("bookmarks.updated_at desc")
+	}
+	q.Find(&bs)
 	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
@@ -48,6 +56,7 @@ func bookmarks(c *gin.Context) {
 		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 		"SearchParams":  sp,
 		"HasSearch":     hasSearch,
+		"OrderBy":       orderBy,
 	})
 }
 
@@ -81,7 +90,15 @@ func myBookmarks(c *gin.Context) {
 		}
 	}
 	cq.Count(&bookmarkCount)
-	q.Order("bookmarks.updated_at desc").Find(&bs)
+	orderBy, _ := c.GetQuery("order_by")
+	switch orderBy {
+	case "date_asc":
+		q = q.Order("bookmarks.updated_at asc")
+	case "date_desc":
+	default:
+		q = q.Order("bookmarks.updated_at desc")
+	}
+	q.Find(&bs)
 	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
@@ -89,6 +106,7 @@ func myBookmarks(c *gin.Context) {
 		"HasNextPage":   offset+bookmarksPerPage < bookmarkCount,
 		"SearchParams":  sp,
 		"HasSearch":     hasSearch,
+		"OrderBy":       orderBy,
 	})
 }
 
