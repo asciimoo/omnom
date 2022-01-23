@@ -123,24 +123,24 @@
         {{ end }}
         <a href="{{ .Bookmark.URL }}" target="_blank">
           <h4 class="title">
-                {{ .Bookmark.Title }}
-            <p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 100 }}</p>
+                {{ Truncate .Bookmark.Title 100 }}
+              <p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 100 }}</p>
           </h4>
         </a>
       </div>
       <div class="bookmark__actions">
-       {{ if eq .UID .Bookmark.UserID }}
-        <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">
-          <i class="fas fa-pencil-alt"></i>
-        </a>
-        {{ else }}
+          <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end}}</span> 
           <a href="{{ BaseURL "/bookmark" }}?id={{ .Bookmark.ID }}">
-             <i class="fas fa-eye"></i>
+              <i class="fas fa-eye"></i>
           </a>
-        {{ end }}
+          {{ if eq .UID .Bookmark.UserID }}
+          <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">
+              <i class="fas fa-pencil-alt"></i>
+          </a>
           <i class="fas fa-trash"></i>
-          <i class="fas fa-heart"></i>
-          <i class="fas fa-share-alt"></i>
+          {{ end }}
+          <!--<i class="fas fa-heart"></i>
+          <i class="fas fa-share-alt"></i>-->
       </div>
     </div>
     <div class="bookmark__tags">
@@ -165,14 +165,14 @@
             Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
           </h3>
         </div>
-         {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
+         {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) }}{{ end }}
       </div>
     </div>
 </div>
 {{ end}}
 
 {{ define "snapshots" }}
-    {{ range $i,$s := . }}
+    {{ range $i,$s := .Snapshots }}
     <div class="snapshot__link">
       <div>
         <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
@@ -183,14 +183,16 @@
         </a>
       </div>
       <div class="bookmark__actions">
-        <i class="fas fa-pencil-alt"></i>
+          {{ if $.IsOwn }}
+          <i class="fas fa-pencil-alt"></i>
           <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
-            <input type="hidden" name="bid" value="{{ $s.BookmarkID }}" />
-            <input type="hidden" name="sid" value="{{ $s.ID }}" />
-            <button class="snapshot__delete" type="submit">
-                <i class="fas fa-trash"></i>
-            </button>
+              <input type="hidden" name="bid" value="{{ $s.BookmarkID }}" />
+              <input type="hidden" name="sid" value="{{ $s.ID }}" />
+              <button class="snapshot__delete" type="submit">
+                  <i class="fas fa-trash"></i>
+              </button>
           </form>
+          {{ end }}
       </div>
     </div>
     {{ end }}

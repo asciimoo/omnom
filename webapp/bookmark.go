@@ -45,6 +45,7 @@ func bookmarks(c *gin.Context) {
 	case "date_asc":
 		q = q.Order("bookmarks.updated_at asc")
 	case "date_desc":
+		q = q.Order("bookmarks.updated_at desc")
 	default:
 		q = q.Order("bookmarks.updated_at desc")
 	}
@@ -95,6 +96,7 @@ func myBookmarks(c *gin.Context) {
 	case "date_asc":
 		q = q.Order("bookmarks.updated_at asc")
 	case "date_desc":
+		q = q.Order("bookmarks.updated_at desc")
 	default:
 		q = q.Order("bookmarks.updated_at desc")
 	}
