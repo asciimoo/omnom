@@ -5,7 +5,7 @@ function getDomData() {
         'attributes': {},
         'title': '',
         'doctype': '',
-        'iframeCount': document.getElementsByTagName('iframe').length,
+        'iframeCount': html.querySelectorAll('iframe').length,
         'url': document.URL
     };
     if (document.doctype) {
@@ -15,7 +15,7 @@ function getDomData() {
         ret.title = document.getElementsByTagName('title')[0].innerText;
     }
     [...html.attributes].forEach(attr => ret.attributes[attr.nodeName] = attr.nodeValue);
-    let canvases = document.getElementsByTagName('canvas');
+    let canvases = html.querySelectorAll('canvas');
     if (canvases) {
         let canvasImages = [];
         for (let canvas of canvases) {
@@ -23,14 +23,14 @@ function getDomData() {
             el.src = canvas.toDataURL();
             canvasImages.push(el);
         }
-        let snapshotCanvases = ret.html.getElementsByTagName('canvas');
+        let snapshotCanvases = ret.html.querySelectorAll('canvas');
         for (let i in canvasImages) {
             let canvas = snapshotCanvases[i];
-            canvas.parentNode.replaceChild(canvasImages[i], canvas);
+            canvas.replaceWith(canvasImages[i]);
 
         }
     }
-    const styleElements = document.getElementsByTagName('style');
+    const styleElements = html.querySelectorAll('style');
     if (styleElements) {
         for (let style of styleElements) {
             const sheetRules = style.sheet?.cssRules;
