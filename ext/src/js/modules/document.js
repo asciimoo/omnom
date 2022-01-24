@@ -1,9 +1,9 @@
 import { downloadFile } from './file-download';
 import { sanitizeCSS } from './sanitize';
+import { UrlResolver } from './utils';
 
 class Document {
     constructor(html, url, doctype, htmlAttributes) {
-        this.url = url;
         this.doctype = doctype;
         this.dom = document.createElement('html');
         this.iframes = [];
@@ -11,6 +11,7 @@ class Document {
         this.styleNodes = new Map();
         this.favicon = null;
         this.dom.innerHTML = html;
+        this.resolver = new UrlResolver(url);
         for (const k in htmlAttributes) {
             this.dom.setAttribute(k, htmlAttributes[k]);
         }
@@ -25,10 +26,7 @@ class Document {
     }
 
     absoluteUrl(url) {
-        if (!url) {
-            return this.url;
-        }
-        return new URL(url, this.url).href;
+        return this.resolver.resolve(url);
     }
 
     getDomAsText() {
@@ -75,11 +73,11 @@ class Document {
             return;
         }
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
-        await this.rewriteAttributes(node);
         if (transformFunction) {
             await transformFunction.call(this, node);
             return;
         }
+        await this.rewriteAttributes(node);
         return;
     }
 
@@ -116,7 +114,7 @@ class Document {
     }
 
     async transformStyle(node) {
-        const innerText = await sanitizeCSS(node.innerText, this.url);
+        const innerText = await sanitizeCSS(node.innerText, this.absoluteUrl());
         node.innerText = innerText;
     }
 
@@ -149,7 +147,8 @@ class Document {
     }
 
     async setUrl(node) {
-        this.url = this.absoluteUrl(node.getAttribute('href'));
+        this.resolver.setBaseUrl(node.getAttribute('href'));
+        node.setAttribute('href', '');
     }
 
     async rewriteAttributes(node) {
@@ -162,7 +161,7 @@ class Document {
                 attr.nodeValue = this.absoluteUrl(attr.nodeValue);
             }
             if (attr.nodeName == 'style') {
-                const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, this.url);
+                const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, this.absoluteUrl());
                 attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
             }
         }));

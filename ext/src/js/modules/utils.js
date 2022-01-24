@@ -125,21 +125,47 @@ function copyScript(script) {
     return newScript;
 }
 
+class UrlResolver {
+    constructor(rootUrl) {
+        this.url = rootUrl;
+        this.hasBaseUrl = false;
+    }
+    resolve(url) {
+        if (!url) {
+            return this.url;
+        }
+        if (url.startsWith("data:")) {
+            return url;
+        }
+        if (this.hasBaseUrl) {
+            if (!url.startsWith("/") && url.search(/^[a-zA-Z]+:\/\//) == -1) {
+                return this.url+url;
+            }
+        }
+        return new URL(url, this.url).href;
+    }
+    setBaseUrl(url) {
+        this.hasBaseUrl = true;
+        this.url = this.resolve(url);
+    }
+}
+
 export {
+    UrlResolver,
+    absoluteURL,
     arrayBufferToBase64,
+    browser,
     checkStatus,
+    copyScript,
     executeScriptToPromise,
     fullURL,
-    absoluteURL,
+    getOmnomToken,
+    getOmnomUrl,
+    getSiteUrl,
+    isDebug,
     queryTabsToPromise,
     renderError,
     renderSuccess,
-    getSiteUrl,
-    setSiteUrl,
     setOmnomSettings,
-    isDebug,
-    getOmnomUrl,
-    getOmnomToken,
-    copyScript,
-    browser
+    setSiteUrl
 }
