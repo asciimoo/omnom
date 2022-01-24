@@ -103,6 +103,9 @@ class Document {
     }
 
     async transfromImg(node) {
+        if (!node.getAttribute('src')) {
+            return;
+        }
         const src = await downloadFile(this.absoluteUrl(node.getAttribute('src')));
         node.src = src;
         if (node.getAttribute('srcset')) {
@@ -118,6 +121,9 @@ class Document {
     }
 
     async transfromIframe(node) {
+        if (!node.getAttribute('src')) {
+            return;
+        }
         const src = this.absoluteUrl(node.getAttribute('src'));
         for (let iframe of this.iframes) {
             if (iframe.url == src) {
