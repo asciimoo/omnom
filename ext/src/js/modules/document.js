@@ -8,7 +8,6 @@ class Document {
         this.dom = document.createElement('html');
         this.iframes = [];
         this.styleIndex = 0;
-        this.styleNodes = new Map();
         this.favicon = null;
         this.dom.innerHTML = html;
         this.resolver = new UrlResolver(url);
@@ -35,7 +34,6 @@ class Document {
 
     async transformDom() {
         await this.walkDOM(this.dom);
-        await this.setStyleNodes();
         if (!this.favicon) {
             this.favicon = await downloadFile(this.absoluteUrl('/favicon.ico'));
             if (this.favicon) {
@@ -53,19 +51,6 @@ class Document {
         return Promise.allSettled(children.map(async (node) => {
             await this.walkDOM(node).catch(e => console.log("Error while transforming DOM: ", e));
         }));
-    }
-
-    async setStyleNodes() {
-        const sortedStyles = new Map([...this.styleNodes.entries()].sort((e1, e2) => e1[0] - e2[0]));
-        let parent;
-        if (this.dom.getElementsByTagName("head")) {
-            parent = this.dom.getElementsByTagName("head")[0];
-        } else {
-            parent = this.dom.documentElement;
-        }
-        sortedStyles.forEach(style => {
-            parent.appendChild(style);
-        });
     }
 
     async transformNode(node) {
@@ -93,8 +78,7 @@ class Document {
                 const style = document.createElement('style');
                 const cssText = await downloadFile(this.absoluteUrl(cssHref));
                 style.innerHTML = await sanitizeCSS(cssText, cssHref);
-                this.styleNodes.set(index, style);
-                node.remove();
+                node.replaceWith(style);
                 break;
             case 'icon':
             case 'shortcut icon':
