@@ -12,6 +12,7 @@ import {
     getOmnomUrl,
     getSiteUrl,
     isDebug,
+    isOmnomDefaultPublic,
     renderError,
     renderSuccess,
     setOmnomSettings
@@ -122,6 +123,7 @@ function setEventListeners() {
 async function fillFormFields() {
     document.querySelector('form').action = `${getOmnomUrl()}add_bookmark`;
     document.getElementById('token').value = getOmnomToken();
+    document.getElementById('public').checked = isOmnomDefaultPublic();
 
     // fill url input field
     document.getElementById('url').value = getSiteUrl();

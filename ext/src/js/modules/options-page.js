@@ -4,6 +4,7 @@ export default function () {
             omnom_url: document.querySelector('#url').value,
             omnom_token: document.querySelector('#token').value,
             omnom_debug: document.querySelector('#debug').checked,
+            omnom_public: document.querySelector('#public').checked,
         });
         e.preventDefault();
         window.close();
@@ -24,10 +25,11 @@ export default function () {
     function restoreOptions() {
         const optionsElement = document.getElementById('omnom-options');
         if (optionsElement) {
-            chrome.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug'], function (data) {
+            chrome.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug', 'omnom_public'], function (data) {
                 document.querySelector('#url').value = data.omnom_url || '';
                 document.querySelector('#token').value = data.omnom_token || '';
                 document.querySelector('#debug').checked = data.omnom_debug;
+                document.querySelector('#public').checked = data.omnom_public;
                 isFormValid();
             });
             document.querySelector('form').addEventListener('submit', saveOptions);

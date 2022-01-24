@@ -4,6 +4,7 @@ let siteUrl = '';
 let debug = false;
 let omnomUrl = '';
 let omnomToken = '';
+let defaultPublic = false;
 
 function arrayBufferToBase64(buffer) {
     let binary = '';
@@ -78,6 +79,7 @@ async function setOmnomSettings() {
     setOmnomUrl(omnomData.omnom_url || '');
     setOmnomToken(omnomData.omnom_token || '');
     setDebug(omnomData.omnom_debug || false);
+    setDefaultPublic(omnomData.omnom_public || false);
     if (omnomToken == '') {
         return Promise.reject('Token not found. Specify it in the extension\'s options');
     }
@@ -89,7 +91,7 @@ async function setOmnomSettings() {
 
 function getOmnomDataFromLocal() {
     return new Promise((resolve, reject) => {
-        browser.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug'], (data) => {
+        browser.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug', 'omnom_public'], (data) => {
             data ? resolve(data) : reject('Could not get Data');
         });
     });
@@ -103,6 +105,10 @@ function getOmnomToken() {
     return omnomToken;
 }
 
+function isOmnomDefaultPublic() {
+    return defaultPublic;
+}
+
 function isDebug() {
     return debug;
 }
@@ -113,6 +119,10 @@ function setDebug(isDebug) {
 
 function setOmnomUrl(url) {
     omnomUrl = url;
+}
+
+function setDefaultPublic(isPublic) {
+    defaultPublic = isPublic;
 }
 
 function setOmnomToken(token) {
@@ -163,6 +173,7 @@ export {
     getOmnomUrl,
     getSiteUrl,
     isDebug,
+    isOmnomDefaultPublic,
     queryTabsToPromise,
     renderError,
     renderSuccess,
