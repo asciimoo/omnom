@@ -83,6 +83,7 @@ class Document {
             case 'icon':
             case 'shortcut icon':
             case 'apple-touch-icon':
+            case 'fluid-icon':
                 const icon = await downloadFile(this.absoluteUrl(node.getAttribute('href')));
                 node.setAttribute('href', icon);
                 if (!this.favicon) {
