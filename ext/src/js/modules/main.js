@@ -176,6 +176,7 @@ function closeHandler() {
 async function createBookmark(e) {
     e.preventDefault();
     form = new FormData(document.forms['add']);
+    form.set('tags', tagInput.getTags().join(','));
     updateBoundVar([{ 'onafterdownload': true }, { 'onmain': false }]);
     renderProgressBar(document.getElementById('omnom_status'));
     if (!numberOfPages) {
@@ -198,7 +199,6 @@ async function saveBookmark() {
     console.time('createSnapshot');
     const snapshotData = await createSnapshot(doc);
     console.timeEnd('createSnapshot');
-    form.set('tags', tagInput.getTags().join(','));
     if (isDebug()) {
         debugPopup(snapshotData['dom']);
         return;
