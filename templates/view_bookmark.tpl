@@ -21,7 +21,7 @@
         <a href="{{ if ne $uid $.Bookmark.UserID }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
         {{ end }}
     {{ end }}
-    {{ block "snapshots" .Bookmark.Snapshots }}{{ end }}
+    {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .User.ID ) }}{{ end }}
     {{ .Bookmark.CreatedAt | ToDate }} {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}
     {{ if .User }}
       {{ if eq .User.ID .Bookmark.UserID }}
