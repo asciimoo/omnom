@@ -43,7 +43,7 @@ async function downloadFile(url) {
     }
     const contentType = responseObj.headers.get('Content-Type');
     updateStatus(downloadStatus.DOWNLOADED);
-    if (contentType.toLowerCase().search('text') != -1) {
+    if (contentType && contentType.toLowerCase().search('text') != -1) {
         // TODO use charset of the response        
         return await responseObj.text();
     }
