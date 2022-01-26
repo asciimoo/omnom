@@ -69,7 +69,7 @@ type Bookmark struct {
 	Notes     string
 	Domain    string
 	Favicon   string
-	Tags      []Tag
+	Tags      []Tag `gorm:"many2many:bookmark_tags;"`
 	Snapshots []Snapshot
 	Public    bool
 	UserID    uint
@@ -97,16 +97,17 @@ type Tag struct {
 	gorm.Model
 	ID         uint `gorm:"primaryKey"`
 	BookmarkID uint
-	Text       string
+	Text       string     `gorm:"unique"`
+	Bookmarks  []Bookmark `gorm:"many2many:bookmark_tags;"`
 }
 
 func GetUser(name string) *User {
-	var u *User
+	var u User
 	err := DB.Where("LOWER(username) == LOWER(?) or LOWER(email) == LOWER(?)", name, name).First(&u).Error
 	if err != nil {
 		return nil
 	}
-	return u
+	return &u
 }
 
 func GetUserByLoginToken(tok string) *User {
@@ -148,4 +149,15 @@ func GenerateToken() string {
 	rand.Read(b)
 	tok := fmt.Sprintf("%x", b)
 	return tok
+}
+
+func GetOrCreateTag(tag string) Tag {
+	var t Tag
+	if err := DB.Where("text = ?", tag).First(&t).Error; err != nil {
+		t = Tag{
+			Text: tag,
+		}
+		DB.Create(&t)
+	}
+	return t
 }

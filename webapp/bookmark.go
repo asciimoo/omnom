@@ -166,9 +166,7 @@ func addBookmark(c *gin.Context) {
 			b.Tags = make([]model.Tag, 0, 8)
 			for _, t := range strings.Split(tags, ",") {
 				t = strings.TrimSpace(t)
-				b.Tags = append(b.Tags, model.Tag{
-					Text: t,
-				})
+				b.Tags = append(b.Tags, model.GetOrCreateTag(t))
 			}
 		}
 		if err := model.DB.Save(b).Error; err != nil {
