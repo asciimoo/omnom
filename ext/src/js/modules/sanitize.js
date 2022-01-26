@@ -80,22 +80,31 @@ async function sanitizeCSSRule(r, baseURL) {
     return r.cssText;
 }
 
+function parseCssUrls(rule) {
+    let ret = new Set();
+    for (let m of rule.matchAll(/url\(\"[^\"]+\"\)/g)) {
+        ret.add(m[0].substring(5, m[0].length-2));
+    }
+    return ret;
+}
+
 async function sanitizeCSSBgImage(r, baseURL) {
-    const bgi = r.style.backgroundImage;
-    if (bgi && bgi.startsWith('url("') && bgi.endsWith('")')) {
-        const bgURL = absoluteURL(baseURL, bgi.substring(5, bgi.length - 2));
-        if (!bgURL.startsWith('data:')) {
-            const inlineImg = await downloadFile(bgURL);
-            if (inlineImg) {
-                try {
-                    r.style.backgroundImage = `url('${inlineImg}')`;
-                } catch (error) {
-                    console.log('failed to set background image: ', error);
-                    r.style.backgroundImage = '';
-                }
-            } else {
-                r.style.backgroundImage = '';
-            }
+    for (let u of parseCssUrls(r.style.backgroundImage)) {
+        if (!u || u.startsWith('data:')) {
+            continue;
+        }
+        const inlineImg = await downloadFile(absoluteURL(baseURL, u));
+        if (!inlineImg) {
+            console.log('failed to download background image: ', u);
+            r.style.backgroundImage = '';
+            break;
+        }
+        try {
+            r.style.backgroundImage = r.style.backgroundImage.replaceAll(u, inlineImg);
+        } catch (error) {
+            console.log('failed to set background image: ', error);
+            r.style.backgroundImage = '';
+            break;
         }
     }
 }
