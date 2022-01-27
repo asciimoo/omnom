@@ -95,10 +95,9 @@ type Token struct {
 
 type Tag struct {
 	gorm.Model
-	ID         uint `gorm:"primaryKey"`
-	BookmarkID uint
-	Text       string     `gorm:"unique"`
-	Bookmarks  []Bookmark `gorm:"many2many:bookmark_tags;"`
+	ID        uint       `gorm:"primaryKey"`
+	Text      string     `gorm:"unique"`
+	Bookmarks []Bookmark `gorm:"many2many:bookmark_tags;"`
 }
 
 func GetUser(name string) *User {
