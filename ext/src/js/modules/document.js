@@ -96,6 +96,43 @@ class Document {
                 // TODO handle these elements more sophisticatedly
                 node.setAttribute('href', '');
                 break;
+            case 'preload':
+                const href = node.getAttribute('href');
+                if (!href) {
+                    break;
+                }
+                switch ((node.getAttribute('as') || '').toLowerCase()) {
+                    case 'script':
+                    case 'fetch':
+                    case 'track':
+                    case 'worker':
+                        node.setAttribute('href', '');
+                        break;
+                    case 'font':
+                        const inlineFont = await downloadFile(this.absoluteUrl(href)));
+                        if (inlineFont) {
+                            node.setAttribute('href', inlineFont);
+                        }
+                        break;
+                    case 'style':
+                        const index = this.styleIndex++;
+                        const cssHref = this.absoluteUrl(href);
+                        const style = document.createElement('style');
+                        const cssText = await downloadFile(this.absoluteUrl(cssHref));
+                        style.innerHTML = await sanitizeCSS(cssText, cssHref);
+                        node.replaceWith(style);
+                        break;
+                    case 'document':
+                    case 'embed':
+                    case 'image':
+                    case 'audio':
+                    case 'object':
+                        // TODO handle preloading of the above types
+                        node.setAttribute('href', '');
+                        break;
+
+                }
+                break;
         }
     }
 
