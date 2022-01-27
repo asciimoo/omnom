@@ -121,12 +121,15 @@
             </span>
         </div>
         {{ end }}
-        <a href="{{ .Bookmark.URL }}" target="_blank">
           <h4 class="title">
+              <a href="{{ .Bookmark.URL }}" target="_blank">
                 {{ Truncate .Bookmark.Title 100 }}
-              <p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 100 }}</p>
+              </a>
+              <p class="is-size-7 has-text-grey has-text-weight-normal">
+                  {{ Truncate .Bookmark.URL 100 }}<br />
+                  <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
+              </p>
           </h4>
-        </a>
       </div>
       <div class="bookmark__actions">
           <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end}}</span> 
@@ -157,7 +160,7 @@
             Notes
           </h3>
         </div>
-        <p class="bookmark__note">{{ .Bookmark.Notes }}</p>
+        <p class="has-text-black">{{ .Bookmark.Notes }}</p>
       </div>
       <div class="bookmark__snapshots">
         <div class="my-bookmarks__section-header">
