@@ -7,7 +7,6 @@ class Document {
         this.doctype = doctype;
         this.dom = document.createElement('html');
         this.iframes = [];
-        this.styleIndex = 0;
         this.favicon = null;
         this.dom.innerHTML = html;
         this.resolver = new UrlResolver(url);
@@ -73,7 +72,6 @@ class Document {
                 if (!node.attributes.href) {
                     return;
                 }
-                const index = this.styleIndex++;
                 const cssHref = this.absoluteUrl(node.attributes.href.nodeValue);
                 const style = document.createElement('style');
                 const cssText = await downloadFile(this.absoluteUrl(cssHref));
@@ -115,7 +113,6 @@ class Document {
                         }
                         break;
                     case 'style':
-                        const index = this.styleIndex++;
                         const cssHref = this.absoluteUrl(href);
                         const style = document.createElement('style');
                         const cssText = await downloadFile(this.absoluteUrl(cssHref));
