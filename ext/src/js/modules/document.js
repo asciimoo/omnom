@@ -1,6 +1,10 @@
 import { downloadFile } from './file-download';
 import { sanitizeCSS } from './sanitize';
-import { UrlResolver } from './utils';
+import {
+    UrlResolver,
+    base64Decode,
+    base64Encode
+} from './utils';
 
 class Document {
     constructor(html, url, doctype, htmlAttributes) {
@@ -157,19 +161,37 @@ class Document {
     }
 
     async transfromIframe(node) {
+        const dataHtmlAttr = 'data-omnom-iframe-html';
+        const dataUrlAttr = 'data-omnom-iframe-url';
+        if (node.hasAttribute(dataHtmlAttr)) {
+            let iframeUrl = node.getAttribute(dataUrlAttr);
+            if (iframeUrl == "about:blank") {
+                iframeUrl = this.absoluteUrl();
+            }
+            let iframeHtml = base64Decode(node.getAttribute(dataHtmlAttr));
+            let iframe = new Document(iframeHtml, iframeUrl, '<!DOCTYPE html>', {});
+            await iframe.transformDom();
+            console.log(iframe.getDomAsText());
+            const inlineSrc = `data:text/html;base64,${base64Encode(iframe.getDomAsText())}`;
+            node.setAttribute('src', inlineSrc);
+            node.removeAttribute(dataHtmlAttr);
+            node.removeAttribute(dataUrlAttr);
+            return;
+        }
         if (!node.getAttribute('src')) {
             return;
         }
         const src = this.absoluteUrl(node.getAttribute('src'));
         for (let iframe of this.iframes) {
-            if (iframe.url == src) {
+            if (iframe.absoluteUrl() == src) {
                 await iframe.transformDom();
-                const inlineSrc = `data:text/html;base64,${btoa(iframe.getDomAsText())}`;
+                const inlineSrc = `data:text/html;base64,${base64Encode(iframe.getDomAsText())}`;
                 node.setAttribute('src', inlineSrc);
                 return;
             }
         }
-        console.log("Meh, iframe not found: ", iframe.src);
+        console.log("Meh, iframe not found: ", src);
+        node.setAttribute('src', '');
     }
 
     async setUrl(node) {

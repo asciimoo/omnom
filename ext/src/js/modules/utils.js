@@ -160,10 +160,20 @@ class UrlResolver {
     }
 }
 
+function base64Decode(s) {
+    return decodeURIComponent(escape(atob(s)));
+}
+
+function base64Encode(s) {
+    return btoa(unescape(encodeURIComponent(s)));
+}
+
 export {
     UrlResolver,
     absoluteURL,
     arrayBufferToBase64,
+    base64Decode,
+    base64Encode,
     browser,
     checkStatus,
     copyScript,
