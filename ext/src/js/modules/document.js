@@ -107,7 +107,7 @@ class Document {
                         node.setAttribute('href', '');
                         break;
                     case 'font':
-                        const inlineFont = await downloadFile(this.absoluteUrl(href)));
+                        const inlineFont = await downloadFile(this.absoluteUrl(href));
                         if (inlineFont) {
                             node.setAttribute('href', inlineFont);
                         }
