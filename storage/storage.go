@@ -47,6 +47,9 @@ func SaveSnapshot(key string, snapshot []byte) error {
 }
 
 func GetSnapshotSize(key string) uint {
+	if store == nil {
+		panic("Uninitialized storage")
+	}
 	return store.GetSnapshotSize(key)
 }
 

@@ -46,7 +46,9 @@ func Init(c *config.Config) error {
 		&Snapshot{},
 		&Tag{},
 		&Token{},
+		&Database{},
 	)
+	migrate()
 	return nil
 }
 
@@ -99,6 +101,11 @@ type Tag struct {
 	ID        uint       `gorm:"primaryKey"`
 	Text      string     `gorm:"unique"`
 	Bookmarks []Bookmark `gorm:"many2many:bookmark_tags;"`
+}
+
+type Database struct {
+	ID      uint `gorm:"primaryKey"`
+	Version uint
 }
 
 func GetUser(name string) *User {

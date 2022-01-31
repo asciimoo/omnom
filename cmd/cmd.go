@@ -19,6 +19,7 @@ var cfgFile string
 var cfg *config.Config
 
 func initDB(cmd *cobra.Command, args []string) {
+	initStorage()
 	err := model.Init(cfg)
 	if err != nil {
 		panic(err)
@@ -53,7 +54,6 @@ var listenCmd = &cobra.Command{
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
-		initStorage()
 		initMail()
 		webapp.Run(cfg)
 	},
