@@ -10,6 +10,7 @@ type Config struct {
 	App struct {
 		Debug            bool  `yaml:"debug"`
 		BookmarksPerPage int64 `yaml:"bookmarks_per_page"`
+		DisableSignup    bool  `yaml:"disable_signup"`
 	} `yaml:"app"`
 	Server struct {
 		Address string `yaml:"address"`

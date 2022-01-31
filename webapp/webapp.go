@@ -96,9 +96,11 @@ func createRenderer() multitemplate.Renderer {
 func renderHTML(c *gin.Context, status int, page string, vars map[string]interface{}) {
 	session := sessions.Default(c)
 	u, _ := c.Get("user")
+	cfg, _ := c.Get("config")
 	tplVars := gin.H{
-		"Page": page,
-		"User": u,
+		"Page":          page,
+		"User":          u,
+		"DisableSignup": cfg.(*config.Config).App.DisableSignup,
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {

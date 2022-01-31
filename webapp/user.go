@@ -18,6 +18,10 @@ import (
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 
 func signup(c *gin.Context) {
+	cfg := c.Get("config")
+	if cfg.(*config.Config).App.DisableSignup {
+		return
+	}
 	if c.Request.Method == "POST" {
 		username := c.PostForm("username")
 		email := c.PostForm("email")

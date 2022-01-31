@@ -36,7 +36,7 @@
             <div class="navbar-item"><a href="{{ BaseURL "/logout" }}" class="button is-outlined is-info">Logout</a></div>
         {{ else }}
             <div class="navbar-item"><a href="{{ BaseURL "/login" }}" class="button is-outlined is-info">Login</a></div>
-            <div class="navbar-item"><a href="{{ BaseURL "/signup" }}" class="button is-outlined is-info">Signup</a></div>
+            {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ BaseURL "/signup" }}" class="button is-outlined is-info">Signup</a></div>{{ end }}
         {{ end }}
       </div>
     </div>
