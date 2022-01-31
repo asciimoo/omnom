@@ -11,6 +11,7 @@ import (
 type Storage interface {
 	Init(string) error
 	GetSnapshot(string) []byte
+	GetSnapshotSize(string) int64
 	SaveSnapshot(string, []byte) error
 }
 
