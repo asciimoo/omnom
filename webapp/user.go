@@ -167,11 +167,21 @@ func profile(c *gin.Context) {
 		return
 	}
 	var ts []*model.Token
-	err := model.DB.Where("user_id = ?", u.(*model.User).ID).Find(&ts).Error
+	uid := u.(*model.User).ID
+	err := model.DB.Where("user_id = ?", uid).Find(&ts).Error
 	if err != nil {
 		tplData["Error"] = err.Error()
 	}
 	tplData["AddonTokens"] = ts
+	var sSize int64
+	model.DB.
+		Model(&model.Snapshot{}).
+		Select("sum(snapshots.size)").
+		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
+		Joins("join users on bookmarks.user_id = users.id").
+		Group("users.id").
+		Where("users.id = ?", uid).First(&sSize)
+	tplData["SnapshotsSize"] = uint(sSize)
 	renderHTML(c, http.StatusOK, "profile", tplData)
 }
 
