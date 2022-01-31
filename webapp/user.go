@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 
@@ -18,7 +19,7 @@ import (
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 
 func signup(c *gin.Context) {
-	cfg := c.Get("config")
+	cfg, _ := c.Get("config")
 	if cfg.(*config.Config).App.DisableSignup {
 		return
 	}
