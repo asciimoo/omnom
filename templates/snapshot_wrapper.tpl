@@ -2,7 +2,7 @@
 <div class="snapshot__container">
 <section id="home" class="hero is-medium">
     <h3>Snapshot of {{ .Bookmark.URL }}</h3>
-    <h4>{{ .Snapshot.CreatedAt }} ({{ .Snapshot.Size | FormatSize }})</h4>
+    <h4>{{ .Snapshot.CreatedAt | ToDate }} ({{ .Snapshot.Size | FormatSize }})</h4>
     <p><a href="{{ BaseURL "/view_snapshot" }}?id={{ .Snapshot.Key }}">Fullscreen snapshot</a></p>
 </section>
 <div class="iframe-box">
