@@ -33,6 +33,13 @@ func snapshotWrapper(c *gin.Context) {
 	if s.BookmarkID != b.ID {
 		return
 	}
+	if s.Size == 0 {
+		s.Size = storage.GetSnapshotSize(s.Key)
+		err = model.DB.Save(s).Error
+		if err != nil {
+			return
+		}
+	}
 	renderHTML(c, http.StatusOK, "snapshotWrapper", map[string]interface{}{
 		"Bookmark":   b,
 		"Snapshot":   s,

@@ -83,6 +83,7 @@ type Snapshot struct {
 	Key        string
 	Text       string
 	BookmarkID uint
+	Size       uint
 	CreatedAt  time.Time
 }
 

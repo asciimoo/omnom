@@ -11,7 +11,7 @@ import (
 type Storage interface {
 	Init(string) error
 	GetSnapshot(string) []byte
-	GetSnapshotSize(string) int64
+	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
 }
 
@@ -44,6 +44,10 @@ func SaveSnapshot(key string, snapshot []byte) error {
 		return errors.New("Uninitialized storage")
 	}
 	return store.SaveSnapshot(key, snapshot)
+}
+
+func GetSnapshotSize(key string) uint {
+	return store.GetSnapshotSize(key)
 }
 
 func Hash(x []byte) string {

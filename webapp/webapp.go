@@ -2,6 +2,7 @@ package webapp
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -54,6 +55,21 @@ var tplFuncMap = template.FuncMap{
 			dict[key] = values[i+1]
 		}
 		return dict, nil
+	},
+	"FormatSize": func(s uint) string {
+		if s > 1024*1024*1024*1024 {
+			return fmt.Sprintf("%.2fTb", float64(s)/(1024*1024*1024*1024))
+		}
+		if s > 1024*1024*1024 {
+			return fmt.Sprintf("%.2fGb", float64(s)/(1024*1024*1024))
+		}
+		if s > 1024*1024 {
+			return fmt.Sprintf("%.2fMb", float64(s)/(1024*1024))
+		}
+		if s > 1024 {
+			return fmt.Sprintf("%.2fKb", float64(s)/1024)
+		}
+		return fmt.Sprintf("%.2fb", float64(s))
 	},
 }
 

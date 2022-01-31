@@ -34,13 +34,13 @@ func (s *FSStorage) GetSnapshot(key string) []byte {
 	return snapshot
 }
 
-func (s *FSStorage) GetSnapshotSize(key string) int64 {
+func (s *FSStorage) GetSnapshotSize(key string) uint {
 	path := s.getSnapshotPath(key)
 	fi, err := os.Stat(path)
 	if err != nil {
 		return 0
 	}
-	return fi.Size()
+	return uint(fi.Size())
 }
 
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
