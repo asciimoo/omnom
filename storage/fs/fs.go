@@ -45,7 +45,7 @@ func (s *FSStorage) GetSnapshotSize(key string) uint {
 
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 	path := s.getSnapshotPath(key)
-	err := mkdir(path)
+	err := mkdir(filepath.Dir(path))
 	if err != nil {
 		return err
 	}
