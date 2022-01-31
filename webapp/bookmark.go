@@ -198,6 +198,7 @@ func addBookmark(c *gin.Context) {
 			Text:       c.PostForm("snapshot_text"),
 			Title:      c.PostForm("snapshot_title"),
 			BookmarkID: b.ID,
+			Size:       storage.GetSnapshotSize(key),
 		}
 		if err := model.DB.Save(s).Error; err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
