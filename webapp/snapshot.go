@@ -33,6 +33,10 @@ func snapshotWrapper(c *gin.Context) {
 	if s.BookmarkID != b.ID {
 		return
 	}
+	err = model.DB.Where("key = ? and bookmark_id = ?", sid, bid).First(&s).Error
+	if err != nil {
+		return
+	}
 	if s.Size == 0 {
 		s.Size = storage.GetSnapshotSize(s.Key)
 		err = model.DB.Save(s).Error
@@ -40,10 +44,24 @@ func snapshotWrapper(c *gin.Context) {
 			return
 		}
 	}
+	var otherSnapshots []struct {
+		Title string
+		Bid   int64
+		Sid   string
+	}
+	err = model.DB.
+		Model(&model.Snapshot{}).
+		Select("bookmarks.id as bid, snapshots.key as sid, snapshots.title as title").
+		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
+		Where("bookmarks.url = ? and snapshots.key != ?", b.URL, s.Key).Find(&otherSnapshots).Error
+	if err != nil {
+		return
+	}
 	renderHTML(c, http.StatusOK, "snapshotWrapper", map[string]interface{}{
-		"Bookmark":   b,
-		"Snapshot":   s,
-		"hideFooter": true,
+		"Bookmark":       b,
+		"Snapshot":       s,
+		"hideFooter":     true,
+		"OtherSnapshots": otherSnapshots,
 	})
 }
 
