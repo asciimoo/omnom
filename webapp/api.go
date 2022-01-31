@@ -200,6 +200,14 @@ func init() {
 			Handler:      deleteSnapshot,
 			Description:  "Deletes a snapshot",
 		},
+		&Endpoint{
+			Name:         "Delete bookmark",
+			Path:         "/delete_bookmark",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      deleteBookmark,
+			Description:  "Deletes a bookmark",
+		},
 	}
 }
 

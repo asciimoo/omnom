@@ -316,3 +316,28 @@ func saveBookmark(c *gin.Context) {
 	}
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
+
+func deleteBookmark(c *gin.Context) {
+	id := c.PostForm("id")
+	if id == "" {
+		return
+	}
+	u, _ := c.Get("user")
+	session := sessions.Default(c)
+	defer session.Save()
+	var b *model.Bookmark
+	err := model.DB.
+		Model(&model.Bookmark{}).
+		Where("bookmarks.id = ? and bookmarks.user_id", id, u.(*model.User).ID).First(&b).Error
+	if err != nil {
+		session.Set("Error", "Failed to delete bookmark: "+err.Error())
+	} else {
+		session.Set("Info", "Bookmark deleted")
+	}
+	if b != nil {
+		model.DB.Delete(&model.Snapshot{}, "bookmark_id = ?", id)
+		model.DB.Delete(&model.Bookmark{}, "id = ?", id)
+		model.DB.Delete("bookmark_tags", "bookmark_id = ?", id)
+	}
+	c.Redirect(http.StatusFound, baseURL("/"))
+}

@@ -39,6 +39,12 @@
             </div>
         </div>
     </form>
+    <div class="field is-grouped is-grouped-right">
+        <form method="post" action="{{ BaseURL "/delete_bookmark" }}">
+            <input class="button is-danger" type="submit" value="Delete this bookmark" />
+            <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
+        </form>
+    </div>
 
     {{ if .Bookmark.Snapshots }}
     <h3 class="title">Snapshots</h3>
