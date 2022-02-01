@@ -3,7 +3,13 @@ function getDomData() {
     const styleElements = html.querySelectorAll('style');
     if (styleElements) {
         for (let style of styleElements) {
-            const sheetRules = style.sheet?.cssRules;
+            let sheetRules;
+            try {
+                sheetRules = style.sheet?.cssRules;
+            } catch (e) {
+                console.log("failed to access to css, probably it comes from another extension: " + e);
+                continue;
+            }
             if (sheetRules) {
                 const concatRules = [...sheetRules].reduce((rules, rule) => rules.concat(rule.cssText), '');
                 style.innerText = concatRules;
