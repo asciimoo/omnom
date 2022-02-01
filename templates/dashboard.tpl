@@ -40,8 +40,9 @@
       <h4 class="title">My latest bookmarks</h4>
       {{ $uid := .User.ID }}
       {{ $page := .Page }}
+      {{ $csrf := .CSRF }}
       {{ range .Bookmarks }}
-          {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page }}{{ end }}
+        {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "CSRF" $csrf }}{{ end }}
       {{ end }}
     {{ else }}
       {{ block "warning" "No bookmarks added yet"}}{{ end }}

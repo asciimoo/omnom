@@ -140,7 +140,13 @@
           <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-pencil-alt"></i>
           </a>
-          <i class="fas fa-trash"></i>
+          <form method="post" action="{{ BaseURL "/delete_bookmark" }}">
+              <button class="button is-white" type="submit" value="Delete this bookmark" >
+                  <span class="icon is-small"><i class="fas fa-trash"></i></span>
+              </button>
+              <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
+              <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
+          </form>
           {{ end }}
           <!--<i class="fas fa-heart"></i>
           <i class="fas fa-share-alt"></i>-->
@@ -168,7 +174,7 @@
             Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
           </h3>
         </div>
-         {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) }}{{ end }}
+         {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) "CSRF" .CSRF }}{{ end }}
       </div>
     </div>
 </div>
@@ -190,6 +196,7 @@
           <i class="fas fa-pencil-alt"></i>
           <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
               <input type="hidden" name="bid" value="{{ $s.BookmarkID }}" />
+              <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
               <input type="hidden" name="sid" value="{{ $s.ID }}" />
               <button class="snapshot__delete" type="submit">
                   <i class="fas fa-trash"></i>

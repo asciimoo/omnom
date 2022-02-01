@@ -12,6 +12,7 @@
     </h2>
 
     <form method="post" action="{{ BaseURL "/save_bookmark" }}">
+        <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
         <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
         <div class="field">
             <label class="label">Title</label>
@@ -43,6 +44,7 @@
         <form method="post" action="{{ BaseURL "/delete_bookmark" }}">
             <input class="button is-danger" type="submit" value="Delete this bookmark" />
             <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
+            <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
         </form>
     </div>
 
@@ -58,6 +60,7 @@
                             <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
                                 <h4 class="has-text-dark"><a href="{{ BaseURL "/snapshot" }}?sid={{ .Key }}&bid={{ $.Bookmark.ID }}">{{ .Title }} {{ .CreatedAt | ToDate }}</a>
                                     <input type="hidden" name="bid" value="{{ $.Bookmark.ID }}" />
+                                    <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                                     <input type="hidden" name="sid" value="{{ .ID }}" />
                                     <input type="submit" class="button is-danger is-small" value="Delete" />
                                 </h4>

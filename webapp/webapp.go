@@ -97,10 +97,12 @@ func renderHTML(c *gin.Context, status int, page string, vars map[string]interfa
 	session := sessions.Default(c)
 	u, _ := c.Get("user")
 	cfg, _ := c.Get("config")
+	csrf, _ := c.Get("_csrf")
 	tplVars := gin.H{
 		"Page":          page,
 		"User":          u,
 		"DisableSignup": cfg.(*config.Config).App.DisableSignup,
+		"CSRF":          csrf,
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {
@@ -154,6 +156,7 @@ func Run(cfg *config.Config) {
 	e.Use(sessions.Sessions("SID", sessions.NewCookieStore([]byte("secret"))))
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
+	e.Use(CSRFMiddleware())
 	authorized := e.Group("/")
 	authorized.Use(authRequiredMiddleware)
 
@@ -235,5 +238,28 @@ func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("config", cfg)
 		c.Next()
+	}
+}
+
+func CSRFMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		newToken := model.GenerateToken()
+		c.Set("_csrf", newToken)
+		session := sessions.Default(c)
+		prevToken := session.Get("_csrf")
+		session.Set("_csrf", newToken)
+		session.Save()
+		if c.Request.Method != "POST" {
+			c.Next()
+			return
+		}
+		uname := session.Get(SID)
+		if uname != nil {
+			if t := c.Request.FormValue("_csrf"); t == "" || prevToken != t {
+				c.String(400, "CSRF token mismatch")
+				c.Abort()
+				return
+			}
+		}
 	}
 }

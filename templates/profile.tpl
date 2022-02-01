@@ -13,7 +13,7 @@
                 <li class="pure-list">
                     <form method="post" action="{{ BaseURL "/delete_addon_token" }}">
                             <code class="has-text-dark">{{ .Text }}</code>
-                            <input type="hidden" name="bid" value="{{ $.Bookmark.ID }}" />
+                            <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                             <input type="hidden" name="id" value="{{ .ID }}" />
                             <input type="submit" class="button is-danger is-small" value="Delete" />
                     </form>

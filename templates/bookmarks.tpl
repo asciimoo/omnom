@@ -58,8 +58,9 @@
       {{ $uid = .User.ID }}
     {{ end }}
     {{ $page := .Page }}
+    {{ $csrf := .CSRF }}
     {{ range .Bookmarks }}
-        {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page }}{{ end }}
+        {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "CSRF" $csrf }}{{ end }}
     {{ end }}
 {{ block "paging" .}}{{ end }}
 </div>
