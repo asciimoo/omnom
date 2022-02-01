@@ -76,8 +76,14 @@ func filterTag(t string, q, cq *gorm.DB) error {
 	if t == "" {
 		return nil
 	}
-	q = q.Joins("join tags on tags.bookmark_id == bookmarks.id").Where("tags.text = ?", t)
-	cq = cq.Joins("join tags on tags.bookmark_id == bookmarks.id").Where("tags.text = ?", t)
+	q = q.
+		Joins("join bookmark_tags on bookmark_tags.bookmark_id == bookmarks.id").
+		Joins("join tags on bookmark_tags.tag_id == tags.id").
+		Where("tags.text = ?", t)
+	cq = cq.
+		Joins("join bookmark_tags on bookmark_tags.bookmark_id == bookmarks.id").
+		Joins("join tags on bookmark_tags.tag_id == tags.id").
+		Where("tags.text = ?", t)
 	return nil
 }
 
