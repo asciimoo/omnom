@@ -56,21 +56,7 @@ var tplFuncMap = template.FuncMap{
 		}
 		return dict, nil
 	},
-	"FormatSize": func(s uint) string {
-		if s > 1024*1024*1024*1024 {
-			return fmt.Sprintf("%.2fTb", float64(s)/(1024*1024*1024*1024))
-		}
-		if s > 1024*1024*1024 {
-			return fmt.Sprintf("%.2fGb", float64(s)/(1024*1024*1024))
-		}
-		if s > 1024*1024 {
-			return fmt.Sprintf("%.2fMb", float64(s)/(1024*1024))
-		}
-		if s > 1024 {
-			return fmt.Sprintf("%.2fKb", float64(s)/1024)
-		}
-		return fmt.Sprintf("%.2fb", float64(s))
-	},
+	"FormatSize": formatSize,
 }
 
 var bookmarksPerPage int64 = 20
@@ -262,4 +248,20 @@ func CSRFMiddleware() gin.HandlerFunc {
 			}
 		}
 	}
+}
+
+func formatSize(s uint) string {
+	if s > 1024*1024*1024*1024 {
+		return fmt.Sprintf("%.2fTb", float64(s)/(1024*1024*1024*1024))
+	}
+	if s > 1024*1024*1024 {
+		return fmt.Sprintf("%.2fGb", float64(s)/(1024*1024*1024))
+	}
+	if s > 1024*1024 {
+		return fmt.Sprintf("%.2fMb", float64(s)/(1024*1024))
+	}
+	if s > 1024 {
+		return fmt.Sprintf("%.2fKb", float64(s)/1024)
+	}
+	return fmt.Sprintf("%.2fb", float64(s))
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/asciimoo/omnom/model"
@@ -190,6 +191,7 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
+	var sSize uint
 	if !bytes.Equal(snapshot, []byte("")) {
 		key := storage.Hash(snapshot)
 		_ = storage.SaveSnapshot(key, snapshot)
@@ -206,8 +208,13 @@ func addBookmark(c *gin.Context) {
 			})
 			return
 		}
+		sSize = uint(s.Size)
 	}
-	c.JSON(200, map[string]bool{"success": true})
+	c.JSON(200, map[string]interface{}{
+		"success":       true,
+		"url":           baseURL("/bookmark?id=" + strconv.Itoa(int(b.ID))),
+		"snapshot_size": formatSize(sSize),
+	})
 }
 
 func checkBookmark(c *gin.Context) {
