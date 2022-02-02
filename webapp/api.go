@@ -216,6 +216,14 @@ func init() {
 			Handler:      addTag,
 			Description:  "Add tag to a bookmark",
 		},
+		&Endpoint{
+			Name:         "Delete tag",
+			Path:         "/delete_tag",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      deleteTag,
+			Description:  "Delete tag's bookmark",
+		},
 	}
 }
 

@@ -48,6 +48,20 @@
         </form>
     </div>
     <h3 class="title">Tags</h3>
+    <div class="bookmark__tags mb-4">
+        {{ if .Bookmark.Tags }}
+          {{ range .Bookmark.Tags }}
+            <span class="tag is-info">{{ .Text }}
+                <form method="post" action="{{ BaseURL "/delete_tag" }}">
+                    <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
+                    <input type="hidden" name="tid" value="{{ .ID }}"/>
+                    <input type="hidden" name="bid" value="{{ $.Bookmark.ID}}"/>
+                    <button class="delete" type="submit"></button>
+                </form>
+            </span>
+          {{ end }}
+        {{ end }}
+    </div>
     <form method="post" action="{{ BaseURL "/add_tag" }}">
         <label class="label">Add tag</label>
         <div class="field has-addons">
