@@ -11,6 +11,7 @@ import (
 
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
+	"github.com/asciimoo/omnom/validator"
 
 	"github.com/gin-gonic/gin"
 
@@ -193,6 +194,12 @@ func addBookmark(c *gin.Context) {
 	}
 	var sSize uint
 	if !bytes.Equal(snapshot, []byte("")) {
+		if err := validator.ValidateHTML(snapshot); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "HTML validation failed: " + err.Error(),
+			})
+			return
+		}
 		key := storage.Hash(snapshot)
 		_ = storage.SaveSnapshot(key, snapshot)
 		s := &model.Snapshot{
