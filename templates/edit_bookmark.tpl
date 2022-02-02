@@ -47,6 +47,20 @@
             <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
         </form>
     </div>
+    <h3 class="title">Tags</h3>
+    <form method="post" action="{{ BaseURL "/add_tag" }}">
+        <label class="label">Add tag</label>
+        <div class="field has-addons">
+            <div class="control">
+                <input class="input" type="text" name="tag" />
+            </div>
+            <div class="control">
+                <input class="button is-primary" type="submit" value="Add" />
+                <input type="hidden" name="bid" value="{{ .Bookmark.ID }}" />
+                <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
+            </div>
+        </div>
+    </form>
 
     {{ if .Bookmark.Snapshots }}
     <h3 class="title">Snapshots</h3>

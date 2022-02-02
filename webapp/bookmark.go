@@ -355,3 +355,35 @@ func deleteBookmark(c *gin.Context) {
 	}
 	c.Redirect(http.StatusFound, baseURL("/"))
 }
+
+func addTag(c *gin.Context) {
+	tag := c.PostForm("tag")
+	bid := c.PostForm("bid")
+	session := sessions.Default(c)
+	defer session.Save()
+	if tag == "" || bid == "" {
+		return
+	}
+	var b *model.Bookmark
+	err := model.DB.Where("id = ?", bid).Preload("Tags").First(&b).Error
+	if err != nil {
+		session.Set("Error", "Unknown bookmark")
+		c.Redirect(http.StatusFound, baseURL("/"))
+		return
+	}
+	u, _ := c.Get("user")
+	if u.(*model.User).ID != b.UserID {
+		session.Set("Error", "Permission denied")
+		c.Redirect(http.StatusFound, baseURL("/"))
+		return
+	}
+	b.Tags = append(b.Tags, model.GetOrCreateTag(tag))
+	err = model.DB.Save(b).Error
+	if err != nil {
+		session.Set("Error", err.Error())
+		c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
+		return
+	}
+	session.Set("Info", "Tag added")
+	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
+}
