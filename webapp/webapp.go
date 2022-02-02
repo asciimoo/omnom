@@ -229,6 +229,10 @@ func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 func CSRFMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if strings.HasSuffix(c.HandlerName(), ".addBookmark") {
+			c.Next()
+			return
+		}
 		newToken := model.GenerateToken()
 		c.Set("_csrf", newToken)
 		session := sessions.Default(c)
