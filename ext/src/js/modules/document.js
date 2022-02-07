@@ -22,8 +22,8 @@ class Document {
             ['SCRIPT', (node) => node.remove()],
             ['LINK', this.transformLink],
             ['STYLE', this.transformStyle],
-            ['IMG', this.transfromImg],
-            ['IFRAME', this.transfromIframe],
+            ['IMG', this.transformImg],
+            ['IFRAME', this.transformIframe],
             ['BASE', this.setUrl]
         ]);
     }
@@ -142,25 +142,32 @@ class Document {
         node.innerText = innerText;
     }
 
-    async transfromImg(node) {
+    async transformImg(node) {
         if (!node.getAttribute('src')) {
             return;
         }
         const src = await downloadFile(this.absoluteUrl(node.getAttribute('src')));
-        node.src = src;
+        if (src.startsWith("data:image")) {
+            node.setAttribute('src', src);
+        } else {
+            node.setAttribute('src', '');
+        }
         if (node.getAttribute('srcset')) {
             let val = node.getAttribute('srcset');
             let newParts = [];
             for (let s of val.split(',')) {
                 let srcParts = s.trim().split(' ');
-                srcParts[0] = await downloadFile(this.absoluteUrl(srcParts[0]));
-                newParts.push(srcParts.join(' '));
+                const src = await downloadFile(this.absoluteUrl(srcParts[0]));
+                if (src.startsWith("data:image")) {
+                    srcParts[0] = src;
+                    newParts.push(srcParts.join(' '));
+                }
             }
             node.setAttribute('srcset', newParts.join(', '));
         }
     }
 
-    async transfromIframe(node) {
+    async transformIframe(node) {
         const dataHtmlAttr = 'data-omnom-iframe-html';
         const dataUrlAttr = 'data-omnom-iframe-url';
         if (node.hasAttribute(dataHtmlAttr)) {
