@@ -25,7 +25,9 @@ async function handlePingMessage(msg, commChan) {
 async function handleGetDomMessage(msg, commChan) {
     commChan.postMessage({
         type: 'domData',
-        data: getDomData()
+        data: getDomData(),
+        isIframe: self != top
+        //isIframe: self != top || document.location.ancestorOrigins.length
     });
 }
 

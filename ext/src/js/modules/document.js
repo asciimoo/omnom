@@ -13,6 +13,7 @@ class Document {
         this.iframes = [];
         this.favicon = null;
         this.dom.innerHTML = html;
+        this.originalLength = html.length;
         this.resolver = new UrlResolver(url);
         for (const k in htmlAttributes) {
             this.dom.setAttribute(k, htmlAttributes[k]);

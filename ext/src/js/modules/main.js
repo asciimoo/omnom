@@ -71,13 +71,22 @@ async function handlePongMessage(msg) {
 async function handleDomDataMessage(msg) {
     let d = new Document(msg.data.html, msg.data.url, msg.data.doctype, msg.data.attributes);
     if (msg.data.url == getSiteUrl()) {
-        doc = d;
+        if (!msg.data.isIframe) {
+            if (!doc || doc.originalLength < msg.data.html.length) {
+                // TODO investigate how can this happen, even iframes can return isIframe false
+                // e.g. https://www.calcalistech.com/ctech/articles/0,7340,L-3928830,00.html
+                // checking html length is only a crappy workaround
+                doc = d;
+            }
+        }
+        numberOfPages -= 1;
     } else {
         iframes.push(d);
     }
-    if (doc && iframes.length >= numberOfPages -1) {
+    if (doc && iframes.length >= numberOfPages) {
         doc.iframes = iframes;
         saveBookmark();
+        return;
     }
 }
 
