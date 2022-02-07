@@ -201,6 +201,7 @@ func addBookmark(c *gin.Context) {
 	var sSize uint
 	if !bytes.Equal(snapshot, []byte("")) {
 		if err := validator.ValidateHTML(snapshot); err != nil {
+			setNotification(c, nError, "HTML validation failed: "+err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": "HTML validation failed: " + err.Error(),
 			})
@@ -216,6 +217,7 @@ func addBookmark(c *gin.Context) {
 			Size:       storage.GetSnapshotSize(key),
 		}
 		if err := model.DB.Save(s).Error; err != nil {
+			setNotification(c, nError, err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
