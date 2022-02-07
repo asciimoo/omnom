@@ -63,7 +63,6 @@ class Document {
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
         if (transformFunction) {
             await transformFunction.call(this, node);
-            return;
         }
         await this.rewriteAttributes(node);
         return;
