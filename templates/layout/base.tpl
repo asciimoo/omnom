@@ -44,15 +44,15 @@
 </nav>
 
 <div class="webapp__content {{ block "content-class" . }}{{ end }}">
-        {{ if .Error }}
-        {{ block "error" .Error }}{{ end }}
-        {{ end }}
-        {{ if .Warning }}
-        {{ block "warning" .Warning }}{{ end }}
-        {{ end }}
-        {{ if .Info }}
-        {{ block "info" .Info }}{{ end }}
-        {{ end }}
+    {{ if .Error }}
+    <div class="container">{{ block "error" .Error }}{{ end }}</div>
+    {{ end }}
+    {{ if .Warning }}
+    <div class="container">{{ block "warning" .Warning }}{{ end }}</div>
+    {{ end }}
+    {{ if .Info }}
+    <div class="container">{{ block "info" .Info }}{{ end }}</div>
+    {{ end }}
 {{block "full-content" . }}
 <div class="section webapp__main-container">
     <div class="bd-main-container container">
