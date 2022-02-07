@@ -27,8 +27,8 @@ func ValidateHTML(h []byte) error {
 			}
 			if hasAttr {
 				for {
-					aName, _, moreAttr := doc.TagAttr()
-					if bytes.HasPrefix(aName, []byte("on")) {
+					aName, aVal, moreAttr := doc.TagAttr()
+					if bytes.HasPrefix(aName, []byte("on")) && len(aVal) > 0 {
 						return errors.New("Invalid attribute " + string(aName))
 					}
 					if !moreAttr {
