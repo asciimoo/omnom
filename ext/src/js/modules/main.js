@@ -69,18 +69,20 @@ async function handlePongMessage(msg) {
 }
 
 async function handleDomDataMessage(msg) {
-    let d = new Document(msg.data.html, msg.data.url, msg.data.doctype, msg.data.attributes);
-    if (msg.data.url == getSiteUrl()) {
-        if (!msg.data.isIframe) {
-            if (!doc || doc.originalLength < msg.data.html.length) {
-                // TODO investigate how can this happen, even iframes can return isIframe false
-                // e.g. https://www.calcalistech.com/ctech/articles/0,7340,L-3928830,00.html
-                // checking html length is only a crappy workaround
-                doc = d;
-            }
+    if (!doc) {
+        let data = await executeScriptToPromise(getDomData, br);
+        if (data) {
+            data = data[0];
+            doc = new Document(data.html, data.url, data.doctype, data.attributes);
+        } else {
+            // TODO display error to user
+            console.log("failed to get dom information");
         }
+    }
+    if (msg.data.url == getSiteUrl()) {
         numberOfPages -= 1;
     } else {
+        let d = new Document(msg.data.html, msg.data.url, msg.data.doctype, msg.data.attributes);
         iframes.push(d);
     }
     if (doc && iframes.length >= numberOfPages) {
@@ -190,18 +192,21 @@ async function createBookmark(e) {
     form.set('tags', tagInput.getTags().join(','));
     updateBoundVar([{ 'onafterdownload': true }, { 'onmain': false }]);
     renderProgressBar(document.getElementById('omnom_status'));
-    if (!numberOfPages) {
-        console.log("content js isn't running, falling back to the naive snapshotting, which does not include iframes");
+    if (numberOfPages < 2) {
+        if (!numberOfPages) {
+            console.log("content js isn't running, falling back to the naive snapshotting, which does not include iframes");
+        }
         let data = await executeScriptToPromise(getDomData, br);
         if (!data) {
             // TODO display error to user
             console.log("failed to get dom information");
+            saveBookmark();
             return;
         }
         data = data[0];
         doc = new Document(data.html, data.url, data.doctype, data.attributes);
         saveBookmark();
-        return
+        return;
     } else {
         commChan.postMessage({type: "getDom"});
     }
