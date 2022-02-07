@@ -41,6 +41,8 @@ var tplFuncMap = template.FuncMap{
 	"ToAttr":    func(s string) template.HTMLAttr { return template.HTMLAttr(s) },
 	"ToURL":     func(s string) template.URL { return template.URL(s) },
 	"ToDate":    func(t time.Time) string { return t.Format("2006-01-02") },
+	"Replace":   strings.ReplaceAll,
+	"ToLower":   strings.ToLower,
 	"inc":       func(i int64) int64 { return i + 1 },
 	"dec":       func(i int64) int64 { return i - 1 },
 	"Truncate": func(s string, maxLen int) string {
