@@ -1,8 +1,16 @@
 {{ define "content" }}
 <h2 class="title">API documentation</h2>
 <h3 class="title is-size-3">Endpoints</h3>
+<h4 class="title is-size-5">Table of contents</h4>
+<div class="content">
+    <ul>
+        {{ range .Endpoints }}
+        <li><a href="#{{ Replace .Name " " "_" | ToLower}}_{{ .Method }}">{{ .Name }}</a></li>
+        {{ end }}
+    </ul>
+</div>
 {{ range .Endpoints }}
-<div class="box media">
+<div class="box media" id="{{ Replace .Name " " "_" | ToLower}}_{{ .Method }}">
     <div class="media-content">
         <h3 class="title"><code class="has-background-danger-light">{{ .Method }}</code><code>{{ .Path }}</code></h3>
         <h4 class="title is-size-5">{{ .Name }}{{ if .AuthRequired }}<span class="tag is-warning is-light is-size-7 has-text-weight-normal">authentication required</span>{{ end }}</h4>
