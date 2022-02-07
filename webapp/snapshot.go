@@ -28,19 +28,23 @@ func snapshotWrapper(c *gin.Context) {
 	var b *model.Bookmark
 	err = model.DB.Where("id = ?", bid).First(&b).Error
 	if err != nil {
+		setNotification(c, nError, err.Error(), false)
 		return
 	}
 	if s.BookmarkID != b.ID {
+		setNotification(c, nError, "Invalid bookmark ID", false)
 		return
 	}
 	err = model.DB.Where("key = ? and bookmark_id = ?", sid, bid).First(&s).Error
 	if err != nil {
+		setNotification(c, nError, err.Error(), false)
 		return
 	}
 	if s.Size == 0 {
 		s.Size = storage.GetSnapshotSize(s.Key)
 		err = model.DB.Save(s).Error
 		if err != nil {
+			setNotification(c, nError, err.Error(), false)
 			return
 		}
 	}
@@ -55,6 +59,7 @@ func snapshotWrapper(c *gin.Context) {
 		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
 		Where("bookmarks.url = ? and snapshots.key != ?", b.URL, s.Key).Find(&otherSnapshots).Error
 	if err != nil {
+		setNotification(c, nError, err.Error(), false)
 		return
 	}
 	renderHTML(c, http.StatusOK, "snapshotWrapper", map[string]interface{}{
@@ -93,12 +98,15 @@ func deleteSnapshot(c *gin.Context) {
 		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
 		Where("snapshots.id = ? and snapshots.bookmark_id = ? and bookmarks.user_id", sid, bid, u.(*model.User).ID).First(&s).Error
 	if err != nil {
-		session.Set("Error", "Failed to delete snapshot: "+err.Error())
+		setNotification(c, nError, "Failed to delete snapshot: "+err.Error(), true)
 	} else {
-		session.Set("Info", "Snapshot deleted")
+		setNotification(c, nInfo, "Snapshot deleted", true)
 	}
 	if s != nil {
-		model.DB.Delete(&model.Snapshot{}, "id = ? and bookmark_id = ?", sid, bid)
+		err = model.DB.Delete(&model.Snapshot{}, "id = ? and bookmark_id = ?", sid, bid).Error
+		if err != nil {
+			setNotification(c, nError, "Failed to delete snapshot: "+err.Error(), true)
+		}
 	}
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }

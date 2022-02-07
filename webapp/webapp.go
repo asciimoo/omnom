@@ -19,9 +19,17 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 )
 
+type NotificationType int
+
 const (
 	SERVER_ADDR string = ":7331"
 	SID         string = "sid"
+)
+
+const (
+	nInfo NotificationType = iota
+	nWarning
+	nError
 )
 
 var e *gin.Engine
@@ -106,6 +114,15 @@ func renderHTML(c *gin.Context, status int, page string, vars map[string]interfa
 		session.Delete("Info")
 		sessChanged = true
 	}
+	if s, ok := c.Get("Error"); ok {
+		tplVars["Error"] = s.(string)
+	}
+	if s, ok := c.Get("Warning"); ok {
+		tplVars["Warning"] = s.(string)
+	}
+	if s, ok := c.Get("Info"); ok {
+		tplVars["Info"] = s.(string)
+	}
 	if sessChanged {
 		session.Save()
 	}
@@ -143,6 +160,7 @@ func Run(cfg *config.Config) {
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
+	e.Use(ErrorLoggerMiddleware())
 	authorized := e.Group("/")
 	authorized.Use(authRequiredMiddleware)
 
@@ -192,12 +210,14 @@ func authRequiredMiddleware(c *gin.Context) {
 	session := sessions.Default(c)
 	user := session.Get(SID)
 	if user == nil {
+		setNotification(c, nError, "Unauthorized", false)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": "unauthorized",
 		})
 		return
 	}
 	if u, _ := c.Get("user"); u.(*model.User) == nil {
+		setNotification(c, nError, "Unauthorized", false)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": "unauthorized",
 		})
@@ -246,10 +266,21 @@ func CSRFMiddleware() gin.HandlerFunc {
 		uname := session.Get(SID)
 		if uname != nil {
 			if t := c.Request.FormValue("_csrf"); t == "" || prevToken != t {
+				setNotification(c, nError, "CSRF token mismatch", false)
 				c.String(400, "CSRF token mismatch")
 				c.Abort()
 				return
 			}
+		}
+	}
+}
+
+func ErrorLoggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		err, ok := c.Get("Error")
+		if ok {
+			gin.DefaultWriter.Write([]byte(fmt.Sprintf("\033[31m[ERROR] %s\033[0m\n", err)))
 		}
 	}
 }
@@ -268,4 +299,23 @@ func formatSize(s uint) string {
 		return fmt.Sprintf("%.2fKb", float64(s)/1024)
 	}
 	return fmt.Sprintf("%.2fb", float64(s))
+}
+
+func setNotification(c *gin.Context, t NotificationType, n string, persist bool) {
+	session := sessions.Default(c)
+	if persist {
+		defer session.Save()
+	}
+	switch t {
+	case nInfo:
+		c.Set("Info", n)
+		if persist {
+			session.Set("Info", n)
+		}
+	case nError:
+		c.Set("Error", n)
+		if persist {
+			session.Set("Error", n)
+		}
+	}
 }

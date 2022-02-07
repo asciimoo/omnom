@@ -14,8 +14,6 @@ import (
 	"github.com/asciimoo/omnom/validator"
 
 	"github.com/gin-gonic/gin"
-
-	"github.com/gin-gonic/contrib/sessions"
 )
 
 func bookmarks(c *gin.Context) {
@@ -28,6 +26,7 @@ func bookmarks(c *gin.Context) {
 	sp := &searchParams{}
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
+		setNotification(c, nError, err.Error(), false)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	} else {
@@ -74,6 +73,7 @@ func myBookmarks(c *gin.Context) {
 	sp := &searchParams{}
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
+		setNotification(c, nError, err.Error(), false)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	} else {
@@ -119,15 +119,17 @@ func addBookmark(c *gin.Context) {
 	tok := c.PostForm("token")
 	u := model.GetUserBySubmissionToken(tok)
 	if u == nil {
+		setNotification(c, nError, "Invalid token", false)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error": "invalid token",
+			"error": "Invalid token",
 		})
 		return
 	}
 	url, err := url.Parse(c.PostForm("url"))
 	if err != nil || url.Hostname() == "" || url.Scheme == "" {
+		setNotification(c, nError, "Invalid URL", false)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "invalid url",
+			"error": "Invalid URL",
 		})
 		return
 	}
@@ -152,8 +154,9 @@ func addBookmark(c *gin.Context) {
 			Snapshots: make([]model.Snapshot, 0, 8),
 		}
 		if b.Title == "" {
+			setNotification(c, nError, "Missing title", false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "missing title",
+				"error": "Missing title",
 			})
 			return
 		}
@@ -172,6 +175,7 @@ func addBookmark(c *gin.Context) {
 			}
 		}
 		if err := model.DB.Save(b).Error; err != nil {
+			setNotification(c, nError, err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
@@ -180,6 +184,7 @@ func addBookmark(c *gin.Context) {
 	}
 	snapshotFile, _, err := c.Request.FormFile("snapshot")
 	if err != nil {
+		setNotification(c, nError, err.Error(), false)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -187,6 +192,7 @@ func addBookmark(c *gin.Context) {
 	}
 	snapshot, err := ioutil.ReadAll(snapshotFile)
 	if err != nil {
+		setNotification(c, nError, err.Error(), false)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -296,23 +302,21 @@ func editBookmark(c *gin.Context) {
 
 func saveBookmark(c *gin.Context) {
 	u, _ := c.Get("user")
-	session := sessions.Default(c)
-	defer session.Save()
 	bid := c.PostForm("id")
 	if bid == "" {
-		session.Set("Error", "Missing bookmark ID")
+		setNotification(c, nError, "Missing bookmark ID", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	var b *model.Bookmark
 	model.DB.Model(b).Where("id = ?", bid).First(&b)
 	if b == nil {
-		session.Set("Error", "Missing bookmark")
+		setNotification(c, nError, "Missing bookmark", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	if u.(*model.User).ID != b.UserID {
-		session.Set("Error", "Insufficient permission")
+		setNotification(c, nError, "Permission denied", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
@@ -324,9 +328,9 @@ func saveBookmark(c *gin.Context) {
 	b.Notes = c.PostForm("notes")
 	err := model.DB.Save(b).Error
 	if err != nil {
-		session.Set("Error", "Failed to save bookmark: "+err.Error())
+		setNotification(c, nError, "Failed to save bookmark: "+err.Error(), true)
 	} else {
-		session.Set("Info", "Bookmark saved")
+		setNotification(c, nInfo, "Bookmark saved", true)
 	}
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
@@ -337,16 +341,14 @@ func deleteBookmark(c *gin.Context) {
 		return
 	}
 	u, _ := c.Get("user")
-	session := sessions.Default(c)
-	defer session.Save()
 	var b *model.Bookmark
 	err := model.DB.
 		Model(&model.Bookmark{}).
 		Where("bookmarks.id = ? and bookmarks.user_id", id, u.(*model.User).ID).First(&b).Error
 	if err != nil {
-		session.Set("Error", "Failed to delete bookmark: "+err.Error())
+		setNotification(c, nError, "Failed to delete bookmark: "+err.Error(), true)
 	} else {
-		session.Set("Info", "Bookmark deleted")
+		setNotification(c, nInfo, "Bookmark deleted", true)
 	}
 	if b != nil {
 		model.DB.Delete(&model.Snapshot{}, "bookmark_id = ?", id)
@@ -359,53 +361,49 @@ func deleteBookmark(c *gin.Context) {
 func addTag(c *gin.Context) {
 	tag := c.PostForm("tag")
 	bid := c.PostForm("bid")
-	session := sessions.Default(c)
-	defer session.Save()
 	if tag == "" || bid == "" {
 		return
 	}
 	var b *model.Bookmark
 	err := model.DB.Where("id = ?", bid).Preload("Tags").First(&b).Error
 	if err != nil {
-		session.Set("Error", "Unknown bookmark")
+		setNotification(c, nError, "Unknown bookmark", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	u, _ := c.Get("user")
 	if u.(*model.User).ID != b.UserID {
-		session.Set("Error", "Permission denied")
+		setNotification(c, nError, "Permission denied", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	b.Tags = append(b.Tags, model.GetOrCreateTag(tag))
 	err = model.DB.Save(b).Error
 	if err != nil {
-		session.Set("Error", err.Error())
+		setNotification(c, nError, err.Error(), true)
 		c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 		return
 	}
-	session.Set("Info", "Tag added")
+	setNotification(c, nInfo, "Tag added", true)
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
 
 func deleteTag(c *gin.Context) {
 	tid := c.PostForm("tid")
 	bid := c.PostForm("bid")
-	session := sessions.Default(c)
-	defer session.Save()
 	if tid == "" || bid == "" {
 		return
 	}
 	var b *model.Bookmark
 	err := model.DB.Where("id = ?", bid).First(&b).Error
 	if err != nil {
-		session.Set("Error", "Unknown bookmark")
+		setNotification(c, nError, "Unknown bookmark", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
 	u, _ := c.Get("user")
 	if u.(*model.User).ID != b.UserID {
-		session.Set("Error", "Permission denied")
+		setNotification(c, nError, "Permission denied", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
@@ -413,10 +411,10 @@ func deleteTag(c *gin.Context) {
 	model.DB.Where("id = ?", tid).First(&t)
 	err = model.DB.Model(b).Association("Tags").Delete(t)
 	if err != nil {
-		session.Set("Error", err.Error())
+		setNotification(c, nError, err.Error(), true)
 		c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 		return
 	}
-	session.Set("Info", "Tag deleted")
+	setNotification(c, nInfo, "Tag deleted", true)
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }

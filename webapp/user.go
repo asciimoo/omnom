@@ -27,35 +27,30 @@ func signup(c *gin.Context) {
 		username := c.PostForm("username")
 		email := c.PostForm("email")
 		if username == "" || email == "" {
-			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": "Missing data",
-			})
+			setNotification(c, nError, "Missing email", false)
+			renderHTML(c, http.StatusOK, "signup", nil)
 			return
 		}
 		if strings.ToLower(username) == "admin" {
-			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": "Reserved username",
-			})
+			setNotification(c, nError, "Reserved username", false)
+			renderHTML(c, http.StatusOK, "signup", nil)
 			return
 		}
 		if match := userRe.MatchString(username); !match {
-			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": "Invalid username. Use only letters, numbers and underscore",
-			})
+			setNotification(c, nError, "Invalid username. Use only letters, numbers and underscore", false)
+			renderHTML(c, http.StatusOK, "signup", nil)
 			return
 		}
 		u := model.GetUser(username)
 		if u != nil {
-			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": "Username already exists",
-			})
+			setNotification(c, nError, "Username already exists", false)
+			renderHTML(c, http.StatusOK, "signup", nil)
 			return
 		}
 		err := model.CreateUser(username, email)
 		if err != nil {
-			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": err.Error(),
-			})
+			setNotification(c, nError, err.Error(), false)
+			renderHTML(c, http.StatusOK, "signup", nil)
 			return
 		}
 		u = model.GetUser(username)
@@ -70,9 +65,8 @@ func signup(c *gin.Context) {
 			},
 		)
 		if err != nil {
-			renderHTML(c, http.StatusOK, "signup", map[string]interface{}{
-				"Error": err.Error(),
-			})
+			setNotification(c, nError, err.Error(), false)
+			renderHTML(c, http.StatusOK, "signup", nil)
 			return
 		}
 		renderHTML(c, http.StatusOK, "signup-confirm", nil)
@@ -86,17 +80,15 @@ func login(c *gin.Context) {
 	if ok {
 		u := model.GetUser(uname)
 		if u == nil {
-			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": "Unknown user",
-			})
+			setNotification(c, nError, "Unknown user", false)
+			renderHTML(c, http.StatusOK, "login", nil)
 			return
 		}
 		u.LoginToken = model.GenerateToken()
 		err := model.DB.Save(u).Error
 		if err != nil {
-			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err.Error(),
-			})
+			setNotification(c, nError, err.Error(), false)
+			renderHTML(c, http.StatusOK, "login", nil)
 			return
 		}
 		err = mail.Send(
@@ -110,9 +102,8 @@ func login(c *gin.Context) {
 			},
 		)
 		if err != nil {
-			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err.Error(),
-			})
+			setNotification(c, nError, err.Error(), false)
+			renderHTML(c, http.StatusOK, "login", nil)
 			return
 		}
 		log.Println("New login token generated:", u.LoginToken)
@@ -124,26 +115,23 @@ func login(c *gin.Context) {
 	if ok && tok != "" {
 		u := model.GetUserByLoginToken(tok)
 		if u == nil {
-			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": "Invalid token",
-			})
+			setNotification(c, nError, "Unknown user", false)
+			renderHTML(c, http.StatusOK, "login", nil)
 			return
 		}
 		u.LoginToken = ""
 		err := model.DB.Save(u).Error
 		if err != nil {
-			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err.Error(),
-			})
+			setNotification(c, nError, err.Error(), false)
+			renderHTML(c, http.StatusOK, "login", nil)
 			return
 		}
 		session := sessions.Default(c)
 		session.Set(SID, u.Username)
 		err = session.Save()
 		if err != nil {
-			renderHTML(c, http.StatusOK, "login", map[string]interface{}{
-				"Error": err.Error(),
-			})
+			setNotification(c, nError, err.Error(), false)
+			renderHTML(c, http.StatusOK, "login", nil)
 			return
 		}
 		c.Redirect(http.StatusFound, baseURL("/"))
@@ -175,7 +163,7 @@ func profile(c *gin.Context) {
 	uid := u.(*model.User).ID
 	err := model.DB.Where("user_id = ?", uid).Find(&ts).Error
 	if err != nil {
-		tplData["Error"] = err.Error()
+		setNotification(c, nError, err.Error(), false)
 	}
 	tplData["AddonTokens"] = ts
 	var sSize int64
@@ -213,9 +201,9 @@ func deleteAddonToken(c *gin.Context) {
 	u, _ := c.Get("user")
 	err := model.DB.Where("user_id = ? AND id = ?", u.(*model.User).ID, id).Delete(&model.Token{}).Error
 	if err != nil {
-		session.Set("Error", err.Error())
+		setNotification(c, nError, err.Error(), true)
 	} else {
-		session.Set("Info", "Token deleted")
+		setNotification(c, nInfo, "Token deleted", true)
 	}
 	session.Save()
 	c.Redirect(http.StatusFound, baseURL("/profile"))
