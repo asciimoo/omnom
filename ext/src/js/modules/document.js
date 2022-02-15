@@ -54,7 +54,7 @@ class Document {
         await this.transformNode(node);
         const children = [...node.childNodes];
         return Promise.allSettled(children.map(async (node) => {
-            await this.walkDOM(node).catch(e => console.log("Error while transforming DOM: ", e));
+            await this.walkDOM(node).catch(e => console.log("Error while transforming DOM:", e));
         }));
     }
 
@@ -65,9 +65,12 @@ class Document {
         await this.rewriteAttributes(node);
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
         if (transformFunction) {
-            await transformFunction.call(this, node);
+            try {
+                await transformFunction.call(this, node);
+            } catch(e) {
+                console.log("Error in transformer function " + transformFunction.name + ":", e);
+            }
         }
-        return;
     }
 
     async transformLink(node) {
@@ -169,7 +172,7 @@ class Document {
                 let srcParts = s.trim().split(' ');
                 const res = await resources.create(this.absoluteUrl(srcParts[0]));
                 if (res) {
-                    srcParts[0] = src;
+                    srcParts[0] = res.src;
                     newParts.push(srcParts.join(' '));
                 }
             }
