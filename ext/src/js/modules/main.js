@@ -218,7 +218,6 @@ async function saveBookmark() {
     console.timeEnd('createSnapshot');
     if (isDebug()) {
         debugPopup(snapshotData['dom']);
-        return;
     }
     const snapshotBlob = new Blob([snapshotData['dom']], { type: 'text/html' });
     form.append('snapshot', snapshotBlob);
