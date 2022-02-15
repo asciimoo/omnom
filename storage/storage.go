@@ -13,6 +13,8 @@ type Storage interface {
 	GetSnapshot(string) []byte
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
+	SaveResource(string, []byte) error
+	GetResourceSize(string) uint
 }
 
 var store Storage
@@ -46,11 +48,25 @@ func SaveSnapshot(key string, snapshot []byte) error {
 	return store.SaveSnapshot(key, snapshot)
 }
 
+func SaveResource(key string, resource []byte) error {
+	if store == nil {
+		return errors.New("Uninitialized storage")
+	}
+	return store.SaveResource(key, resource)
+}
+
 func GetSnapshotSize(key string) uint {
 	if store == nil {
 		panic("Uninitialized storage")
 	}
 	return store.GetSnapshotSize(key)
+}
+
+func GetResourceSize(key string) uint {
+	if store == nil {
+		panic("Uninitialized storage")
+	}
+	return store.GetResourceSize(key)
 }
 
 func Hash(x []byte) string {

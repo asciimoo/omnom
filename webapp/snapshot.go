@@ -1,7 +1,10 @@
 package webapp
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
@@ -109,4 +112,68 @@ func deleteSnapshot(c *gin.Context) {
 		}
 	}
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
+}
+
+func addResource(c *gin.Context) {
+	tok := c.PostForm("token")
+	u := model.GetUserBySubmissionToken(tok)
+	if u == nil {
+		setNotification(c, nError, "Invalid token", false)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error": "Invalid token",
+		})
+		return
+	}
+	sid := c.PostForm("sid")
+	var s *model.Snapshot
+	model.DB.
+		Model(&model.Snapshot{}).
+		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
+		Where("snapshots.key = ? and bookmarks.user_id = ?", sid, u.ID).
+		Order("snapshots.updated_at desc").
+		First(&s)
+	if s == nil {
+		setNotification(c, nError, "Snapshot not found", false)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Snapshot not found",
+		})
+		return
+	}
+	fname := c.PostForm("filename")
+	resourceFile, _, err := c.Request.FormFile("resource")
+	if err != nil {
+		setNotification(c, nError, err.Error(), false)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	resource, err := ioutil.ReadAll(resourceFile)
+	if err != nil {
+		setNotification(c, nError, err.Error(), false)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	if !bytes.Equal(resource, []byte("")) {
+		fparts := strings.Split(fname, ".")
+		key := storage.Hash(resource) + "." + fparts[len(fparts)-1]
+		err = storage.SaveResource(key, resource)
+		if err != nil {
+			setNotification(c, nError, err.Error(), false)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		mt := c.PostForm("mimetype")
+		size := storage.GetResourceSize(key)
+		s.Size += size
+		s.Resources = append(s.Resources, model.GetOrCreateResource(key, fname, mt, size))
+		model.DB.Save(s)
+	}
+	c.JSON(200, map[string]interface{}{
+		"success": true,
+	})
 }

@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/asciimoo/omnom/config"
 
@@ -47,6 +46,7 @@ func Init(c *config.Config) error {
 		&Tag{},
 		&Token{},
 		&Database{},
+		&Resource{},
 	)
 	migrate()
 	return nil
@@ -60,7 +60,6 @@ type User struct {
 	LoginToken       string
 	SubmissionTokens []Token
 	Bookmarks        []Bookmark
-	CreatedAt        time.Time
 }
 
 type Bookmark struct {
@@ -75,7 +74,6 @@ type Bookmark struct {
 	Snapshots []Snapshot
 	Public    bool
 	UserID    uint
-	CreatedAt time.Time
 }
 
 type Snapshot struct {
@@ -86,7 +84,7 @@ type Snapshot struct {
 	Text       string
 	BookmarkID uint
 	Size       uint
-	CreatedAt  time.Time
+	Resources  []Resource `gorm:"many2many:snapshot_resources;"`
 }
 
 type Token struct {
@@ -101,6 +99,16 @@ type Tag struct {
 	ID        uint       `gorm:"primaryKey"`
 	Text      string     `gorm:"unique"`
 	Bookmarks []Bookmark `gorm:"many2many:bookmark_tags;"`
+}
+
+type Resource struct {
+	gorm.Model
+	ID               uint   `gorm:"primaryKey"`
+	Key              string `gorm:"unique"`
+	MimeType         string
+	OriginalFilename string
+	Size             uint
+	Snapshots        []Snapshot `gorm:"many2many:snapshot_resources;"`
 }
 
 type Database struct {
@@ -167,4 +175,18 @@ func GetOrCreateTag(tag string) Tag {
 		DB.Create(&t)
 	}
 	return t
+}
+
+func GetOrCreateResource(key string, mimeType string, fname string, size uint) Resource {
+	var r Resource
+	if err := DB.Where("key = ?", key).First(&r).Error; err != nil {
+		r = Resource{
+			Key:              key,
+			MimeType:         mimeType,
+			OriginalFilename: fname,
+			Size:             size,
+		}
+		DB.Create(&r)
+	}
+	return r
 }

@@ -2,6 +2,7 @@ import { Document } from "./document";
 import { renderProgressBar, destroyProgressBar } from './file-download';
 import { getDomData } from "./get-dom-data";
 import { createSnapshot } from './snapshot';
+import { resources } from './resources';
 import { TagInputController } from './tag-input';
 import {
     browser as br,
@@ -231,8 +232,22 @@ async function saveBookmark() {
         // }
     };
     await fetch(`${getOmnomUrl()}add_bookmark`, requestBody)
-        .then((resp) => checkStatus(resp)).then(() => {
+        .then((resp) => checkStatus(resp)).then(async (resp) => {
             destroyProgressBar();
+            const msg = await resp.json();
+            for (const resource of resources.getAll()) {
+                let rform = new FormData();
+                const resourceBlob = new Blob([resource.content], { type: resource.mimetype });
+                rform.append('resource', resourceBlob);
+                rform.append('token', getOmnomToken());
+                rform.append('sid', msg.snapshot_key);
+                rform.append('filename', resource.filename);
+                rform.append('mimetype', resource.mimetype);
+                await fetch(`${getOmnomUrl()}add_resource`, {
+                    method: 'POST',
+                    body: rform
+                });
+            }
             renderSuccess('Snapshot successfully saved!');
         }, async function(err) {
             destroyProgressBar();

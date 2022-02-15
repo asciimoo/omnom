@@ -43,6 +43,15 @@ func (s *FSStorage) GetSnapshotSize(key string) uint {
 	return uint(fi.Size())
 }
 
+func (s *FSStorage) GetResourceSize(key string) uint {
+	path := s.getResourcePath(key)
+	fi, err := os.Stat(path)
+	if err != nil {
+		return 0
+	}
+	return uint(fi.Size())
+}
+
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 	path := s.getSnapshotPath(key)
 	err := mkdir(filepath.Dir(path))
@@ -56,9 +65,25 @@ func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 	return os.WriteFile(path, b.Bytes(), 0644)
 }
 
+func (s *FSStorage) SaveResource(key string, resource []byte) error {
+	path := s.getResourcePath(key)
+	err := mkdir(filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	w.Write(resource)
+	w.Close()
+	return os.WriteFile(path, b.Bytes(), 0644)
+}
+
 func mkdir(dir string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return os.MkdirAll(dir, os.ModePerm)
+	if _, err := os.Stat(dir); err != nil {
+		if os.IsNotExist(err) {
+			return os.MkdirAll(dir, os.ModePerm)
+		}
+		return err
 	}
 	return nil
 }
@@ -66,6 +91,10 @@ func mkdir(dir string) error {
 func (s *FSStorage) getSnapshotPath(key string) string {
 	fname := key + ".gz"
 	return filepath.Join(s.baseDir, "snapshots", getPrefix(key), fname)
+}
+
+func (s *FSStorage) getResourcePath(key string) string {
+	return filepath.Join(s.baseDir, "resources", getPrefix(key), key)
 }
 
 func getPrefix(s string) string {

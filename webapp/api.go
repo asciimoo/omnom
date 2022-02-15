@@ -274,6 +274,46 @@ func init() {
 			},
 		},
 		&Endpoint{
+			Name:         "Add resource",
+			Path:         "/add_resource",
+			Method:       POST,
+			AuthRequired: false,
+			Handler:      addResource,
+			Description:  "Add new resource to a snapshot",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "token",
+					Type:        "string",
+					Required:    true,
+					Description: "Extension token. It can be found on the profile page",
+				},
+				&EndpointArg{
+					Name:        "sid",
+					Type:        "string",
+					Required:    true,
+					Description: "Snapshot ID",
+				},
+				&EndpointArg{
+					Name:        "filename",
+					Type:        "string",
+					Required:    true,
+					Description: "Name of the resource",
+				},
+				&EndpointArg{
+					Name:        "mimetype",
+					Type:        "string",
+					Required:    true,
+					Description: "Mime type of the resource",
+				},
+				&EndpointArg{
+					Name:        "resource",
+					Type:        "multipart file",
+					Required:    true,
+					Description: "Resource file",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "Check bookmark",
 			Path:         "/check_bookmark",
 			Method:       GET,

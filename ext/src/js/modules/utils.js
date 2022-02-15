@@ -168,6 +168,19 @@ function base64Encode(s) {
     return btoa(unescape(encodeURIComponent(s)));
 }
 
+async function sha256(data) {
+    // __proto__.constructor.name
+    if (data.__proto__.constructor.name == 'String') {
+        data = new TextEncoder().encode(data);
+    }
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+          .map((bytes) => bytes.toString(16).padStart(2, '0'))
+          .join('');
+    return hashHex;
+}
+
 export {
     UrlResolver,
     absoluteURL,
@@ -188,5 +201,6 @@ export {
     renderError,
     renderSuccess,
     setOmnomSettings,
-    setSiteUrl
+    setSiteUrl,
+    sha256
 }
