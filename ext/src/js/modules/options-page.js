@@ -1,7 +1,11 @@
 export default function () {
     function saveOptions(e) {
+        let serverUrl = document.querySelector('#url').value;
+        if (!serverUrl.endsWith('/')) {
+            serverUrl += '/';
+        }
         chrome.storage.local.set({
-            omnom_url: document.querySelector('#url').value,
+            omnom_url: serverUrl,
             omnom_token: document.querySelector('#token').value,
             omnom_debug: document.querySelector('#debug').checked,
             omnom_public: document.querySelector('#public').checked,
