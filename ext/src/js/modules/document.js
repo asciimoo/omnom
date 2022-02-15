@@ -87,7 +87,7 @@ class Document {
                     await res.updateContent(await sanitizeCSS(res.content, cssHref));
                     node.setAttribute('href', res.src);
                 } else {
-                    node.setAttribute('href', '');
+                    node.removeAttribute('href', '');
                 }
                 break;
             case 'icon':
@@ -104,7 +104,7 @@ class Document {
             case 'preconnect':
             case 'dns-prefetch':
                 // TODO handle these elements more sophisticatedly
-                node.setAttribute('href', '');
+                node.removeAttribute('href');
                 break;
             case 'preload':
                 const href = node.getAttribute('href');
@@ -116,14 +116,14 @@ class Document {
                     case 'fetch':
                     case 'track':
                     case 'worker':
-                        node.setAttribute('href', '');
+                        node.removeAttribute('href');
                         break;
                     case 'font':
                         res = await resources.create(this.absoluteUrl(href));
                         if (res) {
                             node.setAttribute('href', res.src);
                         } else {
-                            node.setAttribute('href', '');
+                            node.removeAttribute('href');
                         }
                         break;
                     case 'style':
@@ -133,7 +133,7 @@ class Document {
                             await res.updateContent(await sanitizeCSS(res.content, cssHref));
                             node.setAttribute('href', res.src);
                         } else {
-                            node.setAttribute('href', '');
+                            node.removeAttribute('href');
                         }
                         break;
                     case 'document':
@@ -142,7 +142,7 @@ class Document {
                     case 'audio':
                     case 'object':
                         // TODO handle preloading of the above types
-                        node.setAttribute('href', '');
+                        node.removeAttribute('href');
                         break;
 
                 }
@@ -162,7 +162,7 @@ class Document {
             if (res) {
                 node.setAttribute('src', res.src);
             } else {
-                node.setAttribute('src', '');
+                node.removeAttribute('src');
             }
         }
         if (node.getAttribute('srcset')) {
