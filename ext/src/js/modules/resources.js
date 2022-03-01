@@ -10,16 +10,16 @@ class Resource {
         this.content = content;
         this.mimetype = mimetype;
         this.filename = filename;
-        this.filetype = mimetype.split(" ")[0].split("/").pop().toLowerCase().split("+")[0];
-        if (extMap.has(this.filetype)) {
-            this.filetype = extMap.get(this.filetype);
+        this.extension = mimetype.split(" ")[0].split("/").pop().toLowerCase().split("+")[0].split(";")[0];
+        if (extMap.has(this.extension)) {
+            this.extension = extMap.get(this.extension);
         }
         this.src = '';
     }
 
     async sha() {
         this.sha256sum = await sha256(this.content);
-        this.src = `../../resources/${this.sha256sum[0]}${this.sha256sum[1]}/${this.sha256sum}.${this.filetype}`;
+        this.src = `../../resources/${this.sha256sum[0]}${this.sha256sum[1]}/${this.sha256sum}.${this.extension}`;
     }
 
     async updateContent(newContent) {

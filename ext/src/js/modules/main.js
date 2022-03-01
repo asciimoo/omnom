@@ -35,6 +35,7 @@ let commChan = null;
 let numberOfPages = 0;
 let doc = null;
 let iframes = [];
+let blobSizeLimit = 7 * 1024 * 1024; // 7Mb
 
 /* ---------------------------------*
  * Content js messaging             *
@@ -234,14 +235,43 @@ async function saveBookmark() {
         .then((resp) => checkStatus(resp)).then(async (resp) => {
             destroyProgressBar();
             const msg = await resp.json();
+            let blobs = new Array();
+            let blobMetas = new Array();
+            let blobsSize = 0;
             for (const resource of resources.getAll()) {
-                let rform = new FormData();
                 const resourceBlob = new Blob([resource.content], { type: resource.mimetype });
-                rform.append('resource', resourceBlob);
+                if (blobsSize && blobsSize + resourceBlob.size > blobSizeLimit) {
+                    let rform = new FormData();
+                    rform.append('token', getOmnomToken());
+                    rform.append('sid', msg.snapshot_key);
+                    rform.append('meta', JSON.stringify(blobMetas));
+                    for (let i in blobs) {
+                        rform.append('resource'+i, blobs[i]);
+                    }
+                    await fetch(`${getOmnomUrl()}add_resource`, {
+                        method: 'POST',
+                        body: rform
+                    });
+                    blobs = new Array();
+                    blobMetas = new Array();
+                    blobsSize = 0;
+                }
+                blobsSize += resourceBlob.size;
+                blobs.push(resourceBlob);
+                blobMetas.push({
+                    'filename': resource.filename,
+                    'mimetype': resource.mimetype,
+                    'extension': resource.extension,
+                });
+            }
+            if (blobs) {
+                let rform = new FormData();
                 rform.append('token', getOmnomToken());
                 rform.append('sid', msg.snapshot_key);
-                rform.append('filename', resource.filename);
-                rform.append('mimetype', resource.mimetype);
+                rform.append('meta', JSON.stringify(blobMetas));
+                for (let i in blobs) {
+                    rform.append('resource'+i, blobs[i]);
+                }
                 await fetch(`${getOmnomUrl()}add_resource`, {
                     method: 'POST',
                     body: rform
