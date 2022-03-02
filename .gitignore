@@ -1,6 +1,6 @@
 omnom
 omnom.exe
-data/
+static/data/
 sass/node_modules/
 ext/node_modules/
 ext/build/

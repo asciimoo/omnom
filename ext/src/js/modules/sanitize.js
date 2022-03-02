@@ -1,5 +1,5 @@
 import { absoluteURL } from './utils';
-import { downloadFile } from './file-download';
+import { resources } from './resources';
 
 const cssSanitizeFunctions = new Map([
     ['CSSStyleRule', sanitizeStyleRule],
@@ -24,7 +24,10 @@ async function sanitizeStyleRule(rule, baseURL) {
 async function sanitizeImportRule(rule, baseURL) {
     // TODO handle import loops
     let href = absoluteURL(baseURL, rule.href);
-    return await sanitizeCSS(await downloadFile(href), href);
+    let res = await resources.create(href);
+    await res.updateContent(await sanitizeCSS(res.content, href));
+    rule.href = res.src;
+    return rule.cssText;
 }
 
 async function sanitizeMediaRule(rule, baseURL) {
@@ -93,16 +96,18 @@ async function sanitizeCSSBgImage(r, baseURL) {
         if (!u || u.startsWith('data:')) {
             continue;
         }
-        const inlineImg = await downloadFile(absoluteURL(baseURL, u));
-        if (!inlineImg) {
+        const href = absoluteURL(baseURL, u);
+        let res = await resources.create(href);
+        if (res) {
+            try {
+                r.style.backgroundImage = r.style.backgroundImage.replaceAll(u, res.src);
+            } catch (error) {
+                console.log('failed to set background image: ', error);
+                r.style.backgroundImage = '';
+                break;
+            }
+        } else {
             console.log('failed to download background image: ', u);
-            r.style.backgroundImage = '';
-            break;
-        }
-        try {
-            r.style.backgroundImage = r.style.backgroundImage.replaceAll(u, inlineImg);
-        } catch (error) {
-            console.log('failed to set background image: ', error);
             r.style.backgroundImage = '';
             break;
         }
@@ -114,10 +119,10 @@ async function sanitizeCSSListStyleImage(r, baseURL) {
     if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
         const iURL = absoluteURL(baseURL, lsi.substring(5, lsi.length - 2));
         if (!iURL.startsWith('data:')) {
-            const inlineImg = await downloadFile(iURL);
-            if (inlineImg) {
+            let res = await resources.create(iURL);
+            if (res) {
                 try {
-                    r.style.listStyleImage = `url('${inlineImg}')`;
+                    r.style.listStyleImage = `url('${res.src}')`;
                 } catch (error) {
                     console.log('failed to set list-style-image:', error);
                     r.style.listStyleImage = '';
@@ -134,10 +139,10 @@ async function sanitizeCSSContentImage(r, baseURL) {
     if (ci && ci.startsWith('url("') && ci.endsWith('")')) {
         const bgURL = absoluteURL(baseURL, ci.substring(5, ci.length - 2));
         if (!bgURL.startsWith('data:')) {
-            const inlineImg = await downloadFile(bgURL);
-            if (inlineImg) {
+            let res = await resources.create(bgURL);
+            if (res) {
                 try {
-                    r.style.content = `url('${inlineImg}')`;
+                    r.style.content = `url('${res.src}')`;
                 } catch (error) {
                     console.log('failed to set content image: ', error);
                     r.style.content = '';
@@ -159,8 +164,12 @@ async function sanitizeCSSFontFace(r, baseURL) {
         if (part && part.startsWith('url("') && part.endsWith('")')) {
             const iURL = absoluteURL(baseURL, part.substring(5, part.length - 2));
             if (!iURL.startsWith('data:')) {
-                const inlineImg = await downloadFile(absoluteURL(baseURL, iURL));
-                srcParts[i] = `url('${inlineImg}')`;
+                let res = await resources.create(iURL);
+                if (res) {
+                    srcParts[i] = `url('${res.src}')`;
+                } else {
+                    srcParts[i] = '';
+                }
                 changed = true;
             }
         }
@@ -173,6 +182,7 @@ async function sanitizeCSSFontFace(r, baseURL) {
             r.style.src = '';
         }
     }
+    return '';
 }
 
 function parseCSS(styleContent) {
@@ -186,6 +196,10 @@ function parseCSS(styleContent) {
 }
 
 async function sanitizeCSS(rules, baseURL) {
+    if (rules.constructor == ArrayBuffer || rules.constructor == Uint8Array) {
+        let dec = new TextDecoder("utf-8");
+        rules = dec.decode(rules);
+    }
     if (typeof rules === 'string' || rules instanceof String) {
         rules = parseCSS(rules);
     }

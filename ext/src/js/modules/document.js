@@ -1,4 +1,5 @@
 import { downloadFile } from './file-download';
+import { resources } from './resources';
 import { sanitizeCSS } from './sanitize';
 import {
     UrlResolver,
@@ -53,7 +54,7 @@ class Document {
         await this.transformNode(node);
         const children = [...node.childNodes];
         return Promise.allSettled(children.map(async (node) => {
-            await this.walkDOM(node).catch(e => console.log("Error while transforming DOM: ", e));
+            await this.walkDOM(node).catch(e => console.log("Error while transforming DOM:", e));
         }));
     }
 
@@ -61,26 +62,33 @@ class Document {
         if (node.nodeType !== Node.ELEMENT_NODE) {
             return;
         }
+        await this.rewriteAttributes(node);
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
         if (transformFunction) {
-            await transformFunction.call(this, node);
+            try {
+                await transformFunction.call(this, node);
+            } catch(e) {
+                console.log("Error in transformer function " + transformFunction.name + ":", e);
+            }
         }
-        await this.rewriteAttributes(node);
-        return;
     }
 
     async transformLink(node) {
         const rel = (node.getAttribute('rel') || '').trim().toLowerCase();
+        let res = null;
         switch (rel) {
             case 'stylesheet':
                 if (!node.attributes.href) {
                     return;
                 }
                 const cssHref = this.absoluteUrl(node.attributes.href.nodeValue);
-                const style = document.createElement('style');
-                const cssText = await downloadFile(this.absoluteUrl(cssHref));
-                style.innerHTML = await sanitizeCSS(cssText, cssHref);
-                node.replaceWith(style);
+                res = await resources.create(cssHref);
+                if (res) {
+                    await res.updateContent(await sanitizeCSS(res.content, cssHref));
+                    node.setAttribute('href', res.src);
+                } else {
+                    node.removeAttribute('href', '');
+                }
                 break;
             case 'icon':
             case 'shortcut icon':
@@ -96,7 +104,7 @@ class Document {
             case 'preconnect':
             case 'dns-prefetch':
                 // TODO handle these elements more sophisticatedly
-                node.setAttribute('href', '');
+                node.removeAttribute('href');
                 break;
             case 'preload':
                 const href = node.getAttribute('href');
@@ -108,20 +116,25 @@ class Document {
                     case 'fetch':
                     case 'track':
                     case 'worker':
-                        node.setAttribute('href', '');
+                        node.removeAttribute('href');
                         break;
                     case 'font':
-                        const inlineFont = await downloadFile(this.absoluteUrl(href));
-                        if (inlineFont) {
-                            node.setAttribute('href', inlineFont);
+                        res = await resources.create(this.absoluteUrl(href));
+                        if (res) {
+                            node.setAttribute('href', res.src);
+                        } else {
+                            node.removeAttribute('href');
                         }
                         break;
                     case 'style':
                         const cssHref = this.absoluteUrl(href);
-                        const style = document.createElement('style');
-                        const cssText = await downloadFile(this.absoluteUrl(cssHref));
-                        style.innerHTML = await sanitizeCSS(cssText, cssHref);
-                        node.replaceWith(style);
+                        res = await resources.create(cssHref);
+                        if (res) {
+                            await res.updateContent(await sanitizeCSS(res.content, cssHref));
+                            node.setAttribute('href', res.src);
+                        } else {
+                            node.removeAttribute('href');
+                        }
                         break;
                     case 'document':
                     case 'embed':
@@ -129,7 +142,7 @@ class Document {
                     case 'audio':
                     case 'object':
                         // TODO handle preloading of the above types
-                        node.setAttribute('href', '');
+                        node.removeAttribute('href');
                         break;
 
                 }
@@ -143,23 +156,23 @@ class Document {
     }
 
     async transformImg(node) {
-        if (!node.getAttribute('src')) {
-            return;
-        }
-        const src = await downloadFile(this.absoluteUrl(node.getAttribute('src')));
-        if (src.startsWith("data:image")) {
-            node.setAttribute('src', src);
-        } else {
-            node.setAttribute('src', '');
+        if (node.getAttribute('src') && !node.getAttribute('src').startsWith('data:')) {
+            const src = this.absoluteUrl(node.getAttribute('src'));
+            const res = await resources.create(src);
+            if (res) {
+                node.setAttribute('src', res.src);
+            } else {
+                node.removeAttribute('src');
+            }
         }
         if (node.getAttribute('srcset')) {
             let val = node.getAttribute('srcset');
             let newParts = [];
             for (let s of val.split(',')) {
                 let srcParts = s.trim().split(' ');
-                const src = await downloadFile(this.absoluteUrl(srcParts[0]));
-                if (src.startsWith("data:image")) {
-                    srcParts[0] = src;
+                const res = await resources.create(this.absoluteUrl(srcParts[0]));
+                if (res) {
+                    srcParts[0] = res.src;
                     newParts.push(srcParts.join(' '));
                 }
             }
@@ -178,7 +191,6 @@ class Document {
             let iframeHtml = base64Decode(node.getAttribute(dataHtmlAttr));
             let iframe = new Document(iframeHtml, iframeUrl, '<!DOCTYPE html>', {});
             await iframe.transformDom();
-            console.log(iframe.getDomAsText());
             const inlineSrc = `data:text/html;base64,${base64Encode(iframe.getDomAsText())}`;
             node.setAttribute('src', inlineSrc);
             node.removeAttribute(dataHtmlAttr);
@@ -203,7 +215,7 @@ class Document {
 
     async setUrl(node) {
         this.resolver.setBaseUrl(node.getAttribute('href'));
-        node.setAttribute('href', '');
+        node.removeAttribute('href');
     }
 
     async rewriteAttributes(node) {
@@ -212,7 +224,7 @@ class Document {
             if (attr.nodeName.startsWith('on') || attr.nodeValue.startsWith('javascript:')) {
                 attr.nodeValue = '';
             }
-            if (attr.nodeName == 'href') {
+            if (attr.nodeName == 'href' && node.nodeName != 'BASE') {
                 attr.nodeValue = this.absoluteUrl(attr.nodeValue);
             }
             if (attr.nodeName == 'style') {

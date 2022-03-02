@@ -52,6 +52,25 @@ async function downloadFile(url) {
     return `${base64Flag}${arrayBufferToBase64(buff)}`
 }
 
+async function fetchURL(url) {
+    const options = {
+        method: 'GET',
+        cache: isDebug ? 'no-cache' : 'default',
+    };
+    updateStatus(downloadStatus.DOWNLOADING);
+    const request = new Request(url, options);
+    let hasError = false;
+    const responseObj = await fetch(request, options).then(checkStatus).catch(() => {
+        hasError = true;
+        updateStatus(downloadStatus.FAILED);
+    });
+    if (!hasError) {
+        updateStatus(downloadStatus.DOWNLOADED);
+        return responseObj;
+    }
+    return '';
+}
+
 function updateStatus(status) {
     switch (status) {
         case downloadStatus.DOWNLOADING: {
@@ -104,4 +123,10 @@ function createFragment(componentString) {
     return
 }
 
-export { downloadState, downloadFile, renderProgressBar, destroyProgressBar };
+export {
+    downloadState,
+    downloadFile,
+    fetchURL,
+    renderProgressBar,
+    destroyProgressBar
+};

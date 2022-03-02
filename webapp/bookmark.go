@@ -199,7 +199,9 @@ func addBookmark(c *gin.Context) {
 		return
 	}
 	var sSize uint
+	var sKey = ""
 	if !bytes.Equal(snapshot, []byte("")) {
+		// TODO don't save identical snapshots twice
 		if err := validator.ValidateHTML(snapshot); err != nil {
 			setNotification(c, nError, "HTML validation failed: "+err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -224,11 +226,13 @@ func addBookmark(c *gin.Context) {
 			return
 		}
 		sSize = uint(s.Size)
+		sKey = key
 	}
 	c.JSON(200, map[string]interface{}{
 		"success":       true,
 		"url":           baseURL("/bookmark?id=" + strconv.Itoa(int(b.ID))),
 		"snapshot_size": formatSize(sSize),
+		"snapshot_key":  sKey,
 	})
 }
 

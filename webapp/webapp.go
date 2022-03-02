@@ -45,6 +45,9 @@ var tplFuncMap = template.FuncMap{
 	"ToLower":   strings.ToLower,
 	"inc":       func(i int64) int64 { return i + 1 },
 	"dec":       func(i int64) int64 { return i - 1 },
+	"SnapshotURL": func(key string) string {
+		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
+	},
 	"Truncate": func(s string, maxLen int) string {
 		if len(s) > maxLen {
 			return s[:maxLen] + "[..]"
@@ -163,6 +166,7 @@ func Run(cfg *config.Config) {
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
 	e.Use(ErrorLoggerMiddleware())
+	e.Use(GzipMiddleware())
 	authorized := e.Group("/")
 	authorized.Use(authRequiredMiddleware)
 
@@ -284,6 +288,18 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 		if ok {
 			gin.DefaultWriter.Write([]byte(fmt.Sprintf("\033[31m[ERROR] %s\033[0m\n", err)))
 		}
+	}
+}
+
+func GzipMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.Contains(c.Request.URL.Path, "/static/data/") {
+			if strings.Contains(c.Request.URL.Path, "/static/data/snapshots") {
+				c.Header("Content-Type", "text/html; charset=utf-8")
+			}
+			c.Header("Content-Encoding", "gzip")
+		}
+		c.Next()
 	}
 }
 
