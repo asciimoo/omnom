@@ -89,6 +89,7 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("view-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/view_bookmark.tpl")
 	r.AddFromFilesFuncs("edit-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/edit_bookmark.tpl")
 	r.AddFromFilesFuncs("api", tplFuncMap, "templates/layout/base.tpl", "templates/api.tpl")
+	r.AddFromFilesFuncs("error", tplFuncMap, "templates/layout/base.tpl", "templates/error.tpl")
 	return r
 }
 
@@ -189,9 +190,17 @@ func Run(cfg *config.Config) {
 			registerEndpoint(&e.RouterGroup, ep)
 		}
 	}
+	e.NoRoute(notFoundView)
 
 	log.Println("Starting server")
 	e.Run(cfg.Server.Address)
+}
+
+func notFoundView(c *gin.Context) {
+	renderHTML(c, http.StatusNotFound, "error", gin.H{
+		"Title":   "Not found.",
+		"Message": "This page does not exist.",
+	})
 }
 
 func index(c *gin.Context) {
