@@ -187,22 +187,22 @@ func init() {
 				},
 			},
 		},
-		&Endpoint{
-			Name:         "Fullscreen snapshot view",
-			Path:         "/view_snapshot",
-			Method:       GET,
-			AuthRequired: false,
-			Handler:      snapshot,
-			Description:  "Displays bookmark snapshots as a fullscreen page",
-			Args: []*EndpointArg{
-				&EndpointArg{
-					Name:        "sid",
-					Type:        "string",
-					Required:    true,
-					Description: "Snapshot key",
-				},
-			},
-		},
+		//&Endpoint{
+		//	Name:         "Self-contained snapshot view",
+		//	Path:         "/self_contained_snapshot",
+		//	Method:       GET,
+		//	AuthRequired: false,
+		//	Handler:      selfContainedSnapshot,
+		//	Description:  "Displays snapshots as self-contained pages",
+		//	Args: []*EndpointArg{
+		//		&EndpointArg{
+		//			Name:        "sid",
+		//			Type:        "string",
+		//			Required:    true,
+		//			Description: "Snapshot key",
+		//		},
+		//	},
+		//},
 		&Endpoint{
 			Name:         "Add bookmark",
 			Path:         "/add_bookmark",
