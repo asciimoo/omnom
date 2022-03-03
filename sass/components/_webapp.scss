@@ -79,20 +79,8 @@ a.navbar-item.is-active {
     margin-left: 0.75rem;
 }
 
-.iframe-box {
-    display: flex;
-    flex-flow: column;
-    height: 100%;
-    border-top: 4px solid pink;
-    overflow: hide;
-}
-
-.iframe-container {
-    flex: 1 1 auto;
-}
-
 iframe {
-    height: 100%;
+    flex-grow: 1;
 }
 
 .navbar {
@@ -281,9 +269,7 @@ iframe {
 
 .snapshot {
     &__container {
-        height: 75vh;
     }
-
     &__date {
         color: $secondary-color;
         font-size: 1rem;
@@ -319,6 +305,8 @@ iframe {
 .webapp {
     &__content {
         height: 100%;
+        display: flex;
+        flex-flow: column;
     }
     &__main-container {
         min-height: 76%;
