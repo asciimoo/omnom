@@ -308,9 +308,6 @@ iframe {
         display: flex;
         flex-flow: column;
     }
-    &__main-container {
-        min-height: 76%;
-    }
 }
 
 .landing-page {
@@ -456,12 +453,7 @@ iframe {
 }
 
 .footer {
-    &__content {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-    }
+    margin-top: auto;
     a, a:hover {
         color: $color-orange;
     }
