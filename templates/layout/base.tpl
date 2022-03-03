@@ -45,13 +45,13 @@
 
 <div class="webapp__content {{ block "content-class" . }}{{ end }}">
     {{ if .Error }}
-    <div class="container">{{ block "error" .Error }}{{ end }}</div>
+    <div class="section">{{ block "error" .Error }}{{ end }}</div>
     {{ end }}
     {{ if .Warning }}
-    <div class="container">{{ block "warning" .Warning }}{{ end }}</div>
+    <div class="section">{{ block "warning" .Warning }}{{ end }}</div>
     {{ end }}
     {{ if .Info }}
-    <div class="container">{{ block "info" .Info }}{{ end }}</div>
+    <div class="section">{{ block "info" .Info }}{{ end }}</div>
     {{ end }}
 {{block "full-content" . }}
 <div class="section webapp__main-container">
