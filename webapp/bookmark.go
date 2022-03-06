@@ -16,6 +16,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	dateAsc  = "date_asc"
+	dateDesc = "date_desc"
+)
+
 func bookmarks(c *gin.Context) {
 	var bs []*model.Bookmark
 	pageno := getPageno(c)
@@ -27,15 +32,15 @@ func bookmarks(c *gin.Context) {
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
 		setNotification(c, nError, err.Error(), false)
-		c.AbortWithError(http.StatusBadRequest, err)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	} else {
 		if !reflect.DeepEqual(*sp, searchParams{}) {
 			hasSearch = true
 			filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
 			filterOwner(sp.Owner, q, cq)
-			filterFromDate(sp.FromDate, q, cq)
-			filterToDate(sp.ToDate, q, cq)
+			_ = filterFromDate(sp.FromDate, q, cq)
+			_ = filterToDate(sp.ToDate, q, cq)
 			filterDomain(sp.Domain, q, cq)
 			filterTag(sp.Tag, q, cq)
 		}
@@ -43,9 +48,9 @@ func bookmarks(c *gin.Context) {
 	cq.Count(&bookmarkCount)
 	orderBy, _ := c.GetQuery("order_by")
 	switch orderBy {
-	case "date_asc":
+	case dateAsc:
 		q = q.Order("bookmarks.updated_at asc")
-	case "date_desc":
+	case dateDesc:
 		q = q.Order("bookmarks.updated_at desc")
 	default:
 		q = q.Order("bookmarks.updated_at desc")
@@ -74,14 +79,14 @@ func myBookmarks(c *gin.Context) {
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
 		setNotification(c, nError, err.Error(), false)
-		c.AbortWithError(http.StatusBadRequest, err)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	} else {
 		if !reflect.DeepEqual(*sp, searchParams{}) {
 			hasSearch = true
 			filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
-			filterFromDate(sp.FromDate, q, cq)
-			filterToDate(sp.ToDate, q, cq)
+			_ = filterFromDate(sp.FromDate, q, cq)
+			_ = filterToDate(sp.ToDate, q, cq)
 			filterDomain(sp.Domain, q, cq)
 			filterTag(sp.Tag, q, cq)
 			if sp.IsPublic {
@@ -95,9 +100,9 @@ func myBookmarks(c *gin.Context) {
 	cq.Count(&bookmarkCount)
 	orderBy, _ := c.GetQuery("order_by")
 	switch orderBy {
-	case "date_asc":
+	case dateAsc:
 		q = q.Order("bookmarks.updated_at asc")
-	case "date_desc":
+	case dateDesc:
 		q = q.Order("bookmarks.updated_at desc")
 	default:
 		q = q.Order("bookmarks.updated_at desc")
@@ -225,7 +230,7 @@ func addBookmark(c *gin.Context) {
 			})
 			return
 		}
-		sSize = uint(s.Size)
+		sSize = s.Size
 		sKey = key
 	}
 	c.JSON(200, map[string]interface{}{

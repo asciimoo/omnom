@@ -3,6 +3,7 @@ package mail
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"syscall"
 	"time"
@@ -13,6 +14,10 @@ import (
 	"github.com/asciimoo/omnom/config"
 
 	smtp "github.com/xhit/go-simple-mail/v2"
+)
+
+var (
+	ErrTemplateNotFound = errors.New("mail template not found")
 )
 
 type Templates struct {
@@ -98,7 +103,7 @@ func Send(to string, subject string, msgType string, args map[string]interface{}
 	if errors.Is(err, io.EOF) || errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) {
 		client, err = server.Connect()
 		if err != nil {
-			return nil
+			return fmt.Errorf("failed to connect to mail server: %w", err)
 		}
 		return email.Send(client)
 	}
@@ -116,12 +121,15 @@ func SetSender(s string) {
 func (t *Templates) RenderHTML(tname string, args map[string]interface{}) (string, error) {
 	m := templates.HTML.Lookup(tname + ".html.tpl")
 	if m == nil {
-		return "", errors.New("Mail template not found")
+		return "", ErrTemplateNotFound
 	}
 	b := bytes.NewBuffer(nil)
-	m.Execute(b, args)
+	err := m.Execute(b, args)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute template '%s': %w", tname, err)
+	}
 	s, err := b.ReadString(0)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return "", err
 	}
 	return s, nil
@@ -130,12 +138,15 @@ func (t *Templates) RenderHTML(tname string, args map[string]interface{}) (strin
 func (t *Templates) RenderText(tname string, args map[string]interface{}) (string, error) {
 	m := templates.Text.Lookup(tname + ".txt.tpl")
 	if m == nil {
-		return "", errors.New("Mail template not found")
+		return "", ErrTemplateNotFound
 	}
 	b := bytes.NewBuffer(nil)
-	m.Execute(b, args)
+	err := m.Execute(b, args)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute template '%s': %w", tname, err)
+	}
 	s, err := b.ReadString(0)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return "", err
 	}
 	return s, nil

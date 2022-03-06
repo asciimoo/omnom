@@ -45,7 +45,6 @@ func addSnapshotSizes() error {
 		}
 		size := storage.GetSnapshotSize(s)
 		DB.Model(&Snapshot{}).Where("key = ?", s).Update("size", size)
-
 	}
 	return nil
 }

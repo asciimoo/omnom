@@ -15,6 +15,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	loginCmd = "login"
+	addonCmd = "addon"
+)
+
 var cfgFile string
 var cfg *config.Config
 
@@ -110,7 +115,7 @@ var createTokenCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
-		if args[1] != "login" && args[1] != "addon" {
+		if args[1] != loginCmd && args[1] != addonCmd {
 			log.Println("Invalid token type. Allowed values are 'login' or 'addon'")
 			os.Exit(1)
 		}
@@ -120,7 +125,7 @@ var createTokenCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		tok := model.GenerateToken()
-		if args[1] == "login" {
+		if args[1] == loginCmd {
 			u.LoginToken = tok
 			err := model.DB.Save(u).Error
 			if err != nil {
@@ -139,7 +144,7 @@ var createTokenCmd = &cobra.Command{
 			}
 		}
 		log.Printf("Token %s created\n", tok)
-		if args[1] == "login" {
+		if args[1] == loginCmd {
 			log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
 		}
 	},

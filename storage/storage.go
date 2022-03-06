@@ -19,6 +19,11 @@ type Storage interface {
 	GetResourceSize(string) uint
 }
 
+var ErrUninitialized = errors.New("uninitialized storage")
+var ErrUnknownStorage = errors.New("unknown storage type")
+var ErrSnapshotNotFound = errors.New("snapshot not found")
+var ErrResourceNotFound = errors.New("resource not found")
+
 var store Storage
 
 var storages = map[string]Storage{
@@ -33,41 +38,41 @@ func Init(sType string, sParams string) error {
 		store = s
 		return nil
 	}
-	return errors.New("Unknown storage type")
+	return ErrUnknownStorage
 }
 
 func GetSnapshot(key string) (io.ReadCloser, error) {
 	if store == nil {
-		return nil, errors.New("Uninitialized storage")
+		return nil, ErrUninitialized
 	}
 	r := store.GetSnapshot(key)
 	if r == nil {
-		return nil, errors.New("Snapshot not found")
+		return nil, ErrSnapshotNotFound
 	}
 	return r, nil
 }
 
 func GetResource(key string) (io.ReadCloser, error) {
 	if store == nil {
-		return nil, errors.New("Uninitialized storage")
+		return nil, ErrUninitialized
 	}
 	r := store.GetResource(key)
 	if r == nil {
-		return nil, errors.New("Resource not found")
+		return nil, ErrResourceNotFound
 	}
 	return r, nil
 }
 
 func SaveSnapshot(key string, snapshot []byte) error {
 	if store == nil {
-		return errors.New("Uninitialized storage")
+		return ErrUninitialized
 	}
 	return store.SaveSnapshot(key, snapshot)
 }
 
 func SaveResource(key string, resource []byte) error {
 	if store == nil {
-		return errors.New("Uninitialized storage")
+		return ErrUninitialized
 	}
 	return store.SaveResource(key, resource)
 }
