@@ -40,7 +40,7 @@ Omnom browser addon is available for
 
 ## Bugs
 
-Bugs or suggestions? Visit the [issue tracker](https://github.com/asciimoo/omnom/issues) or join our [discord server](https://discord.gg/XC2az6FG)
+Bugs or suggestions? Visit the [issue tracker](https://github.com/asciimoo/omnom/issues) or join our [discord server](https://discord.gg/GAh4RCruh6)
 
 ## License
 
