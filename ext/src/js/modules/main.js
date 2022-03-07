@@ -277,7 +277,7 @@ async function saveBookmark() {
                     body: rform
                 });
             }
-            renderSuccess('Snapshot successfully saved!');
+            renderSuccess('Snapshot successfully saved!', msg);
         }, async function(err) {
             destroyProgressBar();
             const msg = await err.json();

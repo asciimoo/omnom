@@ -53,8 +53,15 @@ function renderError(errorMessage, error) {
     document.getElementById('omnom-content').innerHTML = `<h1>${errorMessage}</h1>`;
 }
 
-function renderSuccess(successMessage) {
-    document.getElementById('omnom-content').innerHTML = `<h1>${successMessage}</h1>`
+async function renderSuccess(successMessage, bookmarkInfo) {
+    const omnomData = await getOmnomDataFromLocal().catch(renderError);
+    const burl = absoluteURL(omnomData.omnom_url, bookmarkInfo.bookmark_url);
+    const surl = absoluteURL(omnomData.omnom_url, bookmarkInfo.snapshot_url);
+    document.getElementById('omnom-content').innerHTML = `
+<h1>${successMessage}</h1>
+<a href="${burl}">view bookmark</a><br />
+<a href="${surl}">view snapshot</a>
+    `;
     // setTimeout(window.close, 2000);
 }
 

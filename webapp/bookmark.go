@@ -2,6 +2,7 @@ package webapp
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -230,7 +231,8 @@ func addBookmark(c *gin.Context) {
 	}
 	c.JSON(200, map[string]interface{}{
 		"success":       true,
-		"url":           baseURL("/bookmark?id=" + strconv.Itoa(int(b.ID))),
+		"bookmark_url":  baseURL("/bookmark?id=" + strconv.Itoa(int(b.ID))),
+		"snapshot_url":  baseURL(fmt.Sprintf("/static/data/snapshots/%s/%s.gz", sKey[:2], sKey)),
 		"snapshot_size": formatSize(sSize),
 		"snapshot_key":  sKey,
 	})
