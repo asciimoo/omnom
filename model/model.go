@@ -15,7 +15,7 @@ import (
 )
 
 var DB *gorm.DB
-var debug = false
+var debug = false // nolint: unused // it is used in Init
 
 func Init(c *config.Config) error {
 	dbCfg := &gorm.Config{}
@@ -32,14 +32,14 @@ func Init(c *config.Config) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("Unknown database type")
+		return fmt.Errorf("unknown database type")
 		//dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Europe/Budapest"
 		//DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		//if err != nil {
 		//	panic(err)
 		//}
 	}
-	DB.AutoMigrate(
+	err = DB.AutoMigrate(
 		&User{},
 		&Bookmark{},
 		&Snapshot{},
@@ -48,6 +48,9 @@ func Init(c *config.Config) error {
 		&Database{},
 		&Resource{},
 	)
+	if err != nil {
+		return fmt.Errorf("auto migration of database '%s' has failed: %w", c.DB.Connection, err)
+	}
 	migrate()
 	return nil
 }
@@ -161,7 +164,7 @@ func CreateUser(username, email string) error {
 
 func GenerateToken() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	tok := fmt.Sprintf("%x", b)
 	return tok
 }

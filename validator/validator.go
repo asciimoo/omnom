@@ -16,20 +16,20 @@ func ValidateHTML(h []byte) error {
 		switch tt {
 		case html.ErrorToken:
 			err := doc.Err()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 			return err
 		case html.StartTagToken:
 			tn, hasAttr := doc.TagName()
 			if bytes.Equal(tn, []byte("script")) {
-				return errors.New("Script tag found")
+				return errors.New("script tag found")
 			}
 			if hasAttr {
 				for {
 					aName, aVal, moreAttr := doc.TagAttr()
 					if bytes.HasPrefix(aName, []byte("on")) && len(aVal) > 0 {
-						return errors.New("Invalid attribute " + string(aName))
+						return errors.New("invalid attribute " + string(aName))
 					}
 					if !moreAttr {
 						break
@@ -38,5 +38,4 @@ func ValidateHTML(h []byte) error {
 			}
 		}
 	}
-	return nil
 }

@@ -26,9 +26,9 @@ type searchParams struct {
 	SearchInNote     bool   `form:"search_in_note"`
 }
 
-func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
+func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) {
 	if qs == "" {
-		return nil
+		return
 	}
 	if strings.Contains(qs, "*") {
 		qs = strings.ReplaceAll(qs, "*", "%")
@@ -45,46 +45,42 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) error {
 		query += " or LOWER(snapshots.text) LIKE LOWER(@query)"
 	}
 	query = "(" + query + ")"
-	q = q.Where(query, sql.Named("query", qs))
-	cq = cq.Where(query, sql.Named("query", qs))
-	return nil
+	q = q.Where(query, sql.Named("query", qs))   // nolint: staticcheck,wastedassign // it is used in later funcs
+	cq = cq.Where(query, sql.Named("query", qs)) // nolint: staticcheck,wastedassign // it is used in later funcs
 }
 
-func filterOwner(o string, q, cq *gorm.DB) error {
+func filterOwner(o string, q, cq *gorm.DB) {
 	if o == "" {
-		return nil
+		return
 	}
 	u := model.GetUser(o)
 	if u == nil {
-		return nil
+		return
 	}
-	q = q.Where("user_id == ? and public == true", u.ID)
-	cq = cq.Where("user_id == ? and public == true", u.ID)
-	return nil
+	q = q.Where("user_id == ? and public == true", u.ID)   // nolint: staticcheck,wastedassign // it is used in later funcs
+	cq = cq.Where("user_id == ? and public == true", u.ID) // nolint: staticcheck,wastedassign // it is used in later funcs
 }
 
-func filterDomain(d string, q, cq *gorm.DB) error {
+func filterDomain(d string, q, cq *gorm.DB) {
 	if d == "" {
-		return nil
+		return
 	}
-	q = q.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
-	cq = cq.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))
-	return nil
+	q = q.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d))   // nolint: staticcheck,wastedassign // it is used in later funcs
+	cq = cq.Where("domain LIKE ?", fmt.Sprintf("%%%s%%", d)) // nolint: staticcheck,wastedassign // it is used in later funcs
 }
 
-func filterTag(t string, q, cq *gorm.DB) error {
+func filterTag(t string, q, cq *gorm.DB) {
 	if t == "" {
-		return nil
+		return
 	}
-	q = q.
+	q = q. // nolint: staticcheck,wastedassign // it is used in later funcs
 		Joins("join bookmark_tags on bookmark_tags.bookmark_id == bookmarks.id").
 		Joins("join tags on bookmark_tags.tag_id == tags.id").
 		Where("tags.text = ?", t)
-	cq = cq.
-		Joins("join bookmark_tags on bookmark_tags.bookmark_id == bookmarks.id").
-		Joins("join tags on bookmark_tags.tag_id == tags.id").
-		Where("tags.text = ?", t)
-	return nil
+	cq = cq. // nolint: staticcheck,wastedassign // it is used in later funcs
+			Joins("join bookmark_tags on bookmark_tags.bookmark_id == bookmarks.id").
+			Joins("join tags on bookmark_tags.tag_id == tags.id").
+			Where("tags.text = ?", t)
 }
 
 func filterFromDate(d string, q, cq *gorm.DB) error {
@@ -95,8 +91,8 @@ func filterFromDate(d string, q, cq *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	q = q.Where("bookmarks.created_at >= ?", t)
-	cq = cq.Where("bookmarks.created_at >= ?", t)
+	q = q.Where("bookmarks.created_at >= ?", t)   // nolint: staticcheck,wastedassign // it is used in later funcs
+	cq = cq.Where("bookmarks.created_at >= ?", t) // nolint: staticcheck,wastedassign // it is used in later funcs
 	return nil
 }
 
@@ -108,19 +104,12 @@ func filterToDate(d string, q, cq *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	q = q.Where("bookmarks.created_at <= ?", t)
-	cq = cq.Where("bookmarks.created_at <= ?", t)
+	q = q.Where("bookmarks.created_at <= ?", t)   // nolint: staticcheck,wastedassign // it is used in later funcs
+	cq = cq.Where("bookmarks.created_at <= ?", t) // nolint: staticcheck,wastedassign // it is used in later funcs
 	return nil
 }
 
-func filterPublic(q, cq *gorm.DB) error {
+func filterPublic(q, cq *gorm.DB) {
 	q.Where("public == true")
 	cq.Where("public == true")
-	return nil
-}
-
-func filterPrivate(q, cq *gorm.DB) error {
-	q.Where("public == false")
-	cq.Where("public == false")
-	return nil
 }

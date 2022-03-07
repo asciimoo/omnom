@@ -22,13 +22,12 @@ import (
 type NotificationType int
 
 const (
-	SERVER_ADDR string = ":7331"
-	SID         string = "sid"
+	ServerAddr string = ":7331"
+	SID        string = "sid"
 )
 
 const (
 	nInfo NotificationType = iota
-	nWarning
 	nError
 )
 
@@ -37,9 +36,9 @@ var baseURL func(string) string
 
 var tplFuncMap = template.FuncMap{
 	"HasPrefix": strings.HasPrefix,
-	"ToHTML":    func(s string) template.HTML { return template.HTML(s) },
-	"ToAttr":    func(s string) template.HTMLAttr { return template.HTMLAttr(s) },
-	"ToURL":     func(s string) template.URL { return template.URL(s) },
+	"ToHTML":    func(s string) template.HTML { return template.HTML(s) },         // nolint: gosec // HTML is well formed.
+	"ToAttr":    func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, // nolint: gosec // HTML is well formed.
+	"ToURL":     func(s string) template.URL { return template.URL(s) },           // nolint: gosec // HTML is well formed.
 	"ToDate":    func(t time.Time) string { return t.Format("2006-01-02") },
 	"Replace":   strings.ReplaceAll,
 	"ToLower":   strings.ToLower,
@@ -106,31 +105,34 @@ func renderHTML(c *gin.Context, status int, page string, vars map[string]interfa
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {
-		tplVars["Error"] = s.(string)
+		tplVars["Error"], _ = s.(string)
 		session.Delete("Error")
 		sessChanged = true
 	}
 	if s := session.Get("Warning"); s != nil {
-		tplVars["Warning"] = s.(string)
+		tplVars["Warning"], _ = s.(string)
 		session.Delete("Warning")
 		sessChanged = true
 	}
 	if s := session.Get("Info"); s != nil {
-		tplVars["Info"] = s.(string)
+		tplVars["Info"], _ = s.(string)
 		session.Delete("Info")
 		sessChanged = true
 	}
 	if s, ok := c.Get("Error"); ok {
-		tplVars["Error"] = s.(string)
+		tplVars["Error"], _ = s.(string)
 	}
 	if s, ok := c.Get("Warning"); ok {
-		tplVars["Warning"] = s.(string)
+		tplVars["Warning"], _ = s.(string)
 	}
 	if s, ok := c.Get("Info"); ok {
-		tplVars["Info"] = s.(string)
+		tplVars["Info"], _ = s.(string)
 	}
 	if sessChanged {
-		session.Save()
+		err := session.Save()
+		if err != nil {
+			_ = c.Error(fmt.Errorf("error saving context: %w", err))
+		}
 	}
 	for k, v := range vars {
 		tplVars[k] = v
@@ -161,7 +163,7 @@ func Run(cfg *config.Config) {
 	if cfg.App.BookmarksPerPage > 0 {
 		bookmarksPerPage = cfg.App.BookmarksPerPage
 	}
-	e.SetTrustedProxies([]string{"127.0.0.1"})
+	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
 	e.Use(sessions.Sessions("SID", sessions.NewCookieStore([]byte("secret"))))
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
@@ -193,7 +195,10 @@ func Run(cfg *config.Config) {
 	e.NoRoute(notFoundView)
 
 	log.Println("Starting server")
-	e.Run(cfg.Server.Address)
+	err := e.Run(cfg.Server.Address)
+	if err != nil {
+		log.Printf("Error running server: %+v\n", err)
+	}
 }
 
 func notFoundView(c *gin.Context) {
@@ -273,7 +278,10 @@ func CSRFMiddleware() gin.HandlerFunc {
 		session := sessions.Default(c)
 		prevToken := session.Get("_csrf")
 		session.Set("_csrf", newToken)
-		session.Save()
+		err := session.Save()
+		if err != nil {
+			_ = c.Error(fmt.Errorf("error saving context: %w", err))
+		}
 		if c.Request.Method != "POST" {
 			c.Next()
 			return
@@ -295,7 +303,7 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 		c.Next()
 		err, ok := c.Get("Error")
 		if ok {
-			gin.DefaultWriter.Write([]byte(fmt.Sprintf("\033[31m[ERROR] %s\033[0m\n", err)))
+			_, _ = gin.DefaultWriter.Write([]byte(fmt.Sprintf("\033[31m[ERROR] %s\033[0m\n", err)))
 		}
 	}
 }
@@ -331,7 +339,9 @@ func formatSize(s uint) string {
 func setNotification(c *gin.Context, t NotificationType, n string, persist bool) {
 	session := sessions.Default(c)
 	if persist {
-		defer session.Save()
+		defer func() {
+			_ = session.Save()
+		}()
 	}
 	switch t {
 	case nInfo:

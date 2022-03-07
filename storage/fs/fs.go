@@ -22,8 +22,7 @@ func (s *FSStorage) Init(dir string) error {
 	if err != nil {
 		return err
 	}
-	mkdir(filepath.Join(s.baseDir, "snapshots"))
-	return nil
+	return mkdir(filepath.Join(s.baseDir, "snapshots"))
 }
 
 func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {
@@ -70,9 +69,9 @@ func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 	}
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
-	w.Write(snapshot)
+	_, _ = w.Write(snapshot)
 	w.Close()
-	return os.WriteFile(path, b.Bytes(), 0644)
+	return os.WriteFile(path, b.Bytes(), 0600)
 }
 
 func (s *FSStorage) SaveResource(key string, resource []byte) error {
@@ -83,9 +82,9 @@ func (s *FSStorage) SaveResource(key string, resource []byte) error {
 	}
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
-	w.Write(resource)
+	_, _ = w.Write(resource)
 	w.Close()
-	return os.WriteFile(path, b.Bytes(), 0644)
+	return os.WriteFile(path, b.Bytes(), 0600)
 }
 
 func mkdir(dir string) error {

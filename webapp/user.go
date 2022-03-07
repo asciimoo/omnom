@@ -23,7 +23,7 @@ func signup(c *gin.Context) {
 	if cfg.(*config.Config).App.DisableSignup {
 		return
 	}
-	if c.Request.Method == "POST" {
+	if c.Request.Method == http.MethodPost {
 		username := c.PostForm("username")
 		email := c.PostForm("email")
 		if username == "" || email == "" {
@@ -148,7 +148,9 @@ func logout(c *gin.Context) {
 		return
 	}
 	session.Delete(SID)
-	session.Save()
+	defer func() {
+		_ = session.Save()
+	}()
 	c.Redirect(http.StatusFound, baseURL("/"))
 }
 
@@ -191,7 +193,9 @@ func generateAddonToken(c *gin.Context) {
 	} else {
 		session.Set("Info", "Token created")
 	}
-	session.Save()
+	defer func() {
+		_ = session.Save()
+	}()
 	c.Redirect(http.StatusFound, baseURL("/profile"))
 }
 
@@ -205,6 +209,8 @@ func deleteAddonToken(c *gin.Context) {
 	} else {
 		setNotification(c, nInfo, "Token deleted", true)
 	}
-	session.Save()
+	defer func() {
+		_ = session.Save()
+	}()
 	c.Redirect(http.StatusFound, baseURL("/profile"))
 }

@@ -151,7 +151,9 @@ func snapshotWrapper(c *gin.Context) {
 func deleteSnapshot(c *gin.Context) {
 	u, _ := c.Get("user")
 	session := sessions.Default(c)
-	defer session.Save()
+	defer func() {
+		_ = session.Save()
+	}()
 	bid := c.PostForm("bid")
 	sid := c.PostForm("sid")
 	if bid == "" || sid == "" {
