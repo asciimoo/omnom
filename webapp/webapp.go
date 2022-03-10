@@ -269,7 +269,7 @@ func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 func CSRFMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if strings.HasSuffix(c.HandlerName(), ".addBookmark") {
+		if strings.HasSuffix(c.HandlerName(), ".addBookmark") || strings.HasSuffix(c.HandlerName(), ".addResource") {
 			c.Next()
 			return
 		}
