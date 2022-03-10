@@ -289,7 +289,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 		uname := session.Get(SID)
 		if uname != nil {
 			if t := c.Request.FormValue("_csrf"); t == "" || prevToken != t {
-				setNotification(c, nError, "CSRF token mismatch", false)
+				_, _ = gin.DefaultWriter.Write([]byte("\033[31m[ERROR] CSRF token mismatch\033[0m\n"))
 				c.String(400, "CSRF token mismatch")
 				c.Abort()
 				return
