@@ -161,13 +161,16 @@ func profile(c *gin.Context) {
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
-	var ts []*model.Token
 	uid := u.(*model.User).ID
-	err := model.DB.Where("user_id = ?", uid).Find(&ts).Error
-	if err != nil {
-		setNotification(c, nError, err.Error(), false)
+	if c.Request.Method == "POST" {
+		var ts []*model.Token
+		err := model.DB.Where("user_id = ?", uid).Find(&ts).Error
+		if err != nil {
+			setNotification(c, nError, err.Error(), false)
+		}
+		tplData["AddonTokens"] = ts
+		tplData["DisplayTokens"] = true
 	}
-	tplData["AddonTokens"] = ts
 	var sSize int64
 	model.DB.
 		Model(&model.Snapshot{}).

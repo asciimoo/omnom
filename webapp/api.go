@@ -365,6 +365,14 @@ func init() {
 			Description:  "Displays the profile page",
 		},
 		&Endpoint{
+			Name:         "Profile page",
+			Path:         "/profile",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      profile,
+			Description:  "Displays the profile page with addon tokens",
+		},
+		&Endpoint{
 			Name:         "Generate addon token",
 			Path:         "/generate_addon_token",
 			Method:       GET,
