@@ -199,7 +199,6 @@ func generateAddonToken(c *gin.Context) {
 }
 
 func deleteAddonToken(c *gin.Context) {
-	session := sessions.Default(c)
 	id := c.PostForm("id")
 	u, _ := c.Get("user")
 	err := model.DB.Where("user_id = ? AND id = ?", u.(*model.User).ID, id).Delete(&model.Token{}).Error
@@ -208,8 +207,5 @@ func deleteAddonToken(c *gin.Context) {
 	} else {
 		setNotification(c, nInfo, "Token deleted", true)
 	}
-	defer func() {
-		_ = session.Save()
-	}()
 	c.Redirect(http.StatusFound, baseURL("/profile"))
 }
