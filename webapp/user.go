@@ -184,7 +184,6 @@ func profile(c *gin.Context) {
 }
 
 func generateAddonToken(c *gin.Context) {
-	session := sessions.Default(c)
 	u, _ := c.Get("user")
 	tok := &model.Token{
 		Text:   model.GenerateToken(),
@@ -192,13 +191,10 @@ func generateAddonToken(c *gin.Context) {
 	}
 	err := model.DB.Create(tok).Error
 	if err != nil {
-		session.Set("Error", err.Error())
+		setNotification(c, nError, err.Error(), true)
 	} else {
-		session.Set("Info", "Token created")
+		setNotification(c, nInfo, "Token created: "+tok.Text, true)
 	}
-	defer func() {
-		_ = session.Save()
-	}()
 	c.Redirect(http.StatusFound, baseURL("/profile"))
 }
 
