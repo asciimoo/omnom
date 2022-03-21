@@ -6,14 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type method string
-
 const (
-	GET   method = "GET"
-	POST  method = "POST"
-	PUT   method = "PUT"
-	PATCH method = "PATCH"
-	HEAD  method = "HEAD"
+	GET   string = "GET"
+	POST  string = "POST"
+	PUT   string = "PUT"
+	PATCH string = "PATCH"
+	HEAD  string = "HEAD"
 )
 
 type EndpointArg struct {
@@ -26,7 +24,7 @@ type EndpointArg struct {
 type Endpoint struct {
 	Name         string
 	Path         string
-	Method       method
+	Method       string
 	AuthRequired bool
 	Handler      func(*gin.Context)
 	Description  string

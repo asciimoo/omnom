@@ -162,7 +162,7 @@ func profile(c *gin.Context) {
 		return
 	}
 	uid := u.(*model.User).ID
-	if c.Request.Method == "POST" {
+	if c.Request.Method == POST {
 		var ts []*model.Token
 		err := model.DB.Where("user_id = ?", uid).Find(&ts).Error
 		if err != nil {

@@ -282,7 +282,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 		if err != nil {
 			_ = c.Error(fmt.Errorf("error saving context: %w", err))
 		}
-		if c.Request.Method != "POST" {
+		if c.Request.Method != POST {
 			c.Next()
 			return
 		}
