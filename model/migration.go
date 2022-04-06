@@ -10,7 +10,7 @@ var migrationFunctions = []func() error{
 	addSnapshotSizes, // db version 1
 }
 
-func migrate() {
+func migrate() error {
 	log.Println("Checking DB migrations")
 	var dbVer int64
 	err := DB.Model(&Database{}).
@@ -24,12 +24,13 @@ func migrate() {
 			log.Println("Migrating DB to version ", i+1)
 			err := m()
 			if err != nil {
-				panic(err)
+				return err
 			}
 			dbVer = int64(i) + 1
 			DB.Model(&Database{}).Where("id = 1").Update("version", dbVer)
 		}
 	}
+	return nil
 }
 
 func addSnapshotSizes() error {

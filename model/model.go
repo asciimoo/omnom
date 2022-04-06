@@ -39,7 +39,10 @@ func Init(c *config.Config) error {
 		//	panic(err)
 		//}
 	}
-	migrate()
+	err = migrate()
+	if err != nil {
+		return fmt.Errorf("custom migration of database '%s' has failed: %w", c.DB.Connection, err)
+	}
 	err = DB.AutoMigrate(
 		&User{},
 		&Bookmark{},
