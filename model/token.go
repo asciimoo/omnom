@@ -3,15 +3,12 @@ package model
 import (
 	"crypto/rand"
 	"fmt"
-
-	"gorm.io/gorm"
 )
 
 type Token struct {
-	gorm.Model
-	ID     uint `gorm:"primaryKey"`
-	UserID uint
-	Text   string
+	CommonFields
+	UserID uint   `json:"user_id"`
+	Text   string `json:"text"`
 }
 
 func GenerateToken() string {

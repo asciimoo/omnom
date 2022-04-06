@@ -1,19 +1,14 @@
 package model
 
-import (
-	"gorm.io/gorm"
-)
-
 type Bookmark struct {
-	gorm.Model
-	ID        uint `gorm:"primaryKey"`
-	URL       string
-	Title     string
-	Notes     string
-	Domain    string
-	Favicon   string
-	Tags      []Tag `gorm:"many2many:bookmark_tags;"`
-	Snapshots []Snapshot
-	Public    bool
-	UserID    uint
+	CommonFields
+	URL       string     `json:"url"`
+	Title     string     `json:"title"`
+	Notes     string     `json:"notes"`
+	Domain    string     `json:"domain"`
+	Favicon   string     `json:"favicon"`
+	Tags      []Tag      `gorm:"many2many:bookmark_tags;" json:"tags"`
+	Snapshots []Snapshot `json:"snapshots"`
+	Public    bool       `json:"public"`
+	UserID    uint       `json:"user_id"`
 }

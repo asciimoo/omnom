@@ -2,18 +2,15 @@ package model
 
 import (
 	"fmt"
-
-	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
-	ID               uint   `gorm:"primaryKey"`
-	Username         string `gorm:"unique"`
-	Email            string `gorm:"unique"`
-	LoginToken       string
-	SubmissionTokens []Token
-	Bookmarks        []Bookmark
+	CommonFields
+	Username         string     `gorm:"unique" json:"username"`
+	Email            string     `gorm:"unique" json:"email"`
+	LoginToken       string     `json:"-"`
+	SubmissionTokens []Token    `json:"-"`
+	Bookmarks        []Bookmark `json:"bookmarks"`
 }
 
 func GetUser(name string) *User {

@@ -1,14 +1,9 @@
 package model
 
-import (
-	"gorm.io/gorm"
-)
-
 type Tag struct {
-	gorm.Model
-	ID        uint       `gorm:"primaryKey"`
-	Text      string     `gorm:"unique"`
-	Bookmarks []Bookmark `gorm:"many2many:bookmark_tags;"`
+	CommonFields
+	Text      string     `gorm:"unique" json:"text"`
+	Bookmarks []Bookmark `gorm:"many2many:bookmark_tags;" json:"bookmarks"`
 }
 
 func GetOrCreateTag(tag string) Tag {

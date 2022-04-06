@@ -1,16 +1,11 @@
 package model
 
-import (
-	"gorm.io/gorm"
-)
-
 type Snapshot struct {
-	gorm.Model
-	ID         uint `gorm:"primaryKey"`
-	Title      string
-	Key        string
-	Text       string
-	BookmarkID uint
-	Size       uint
-	Resources  []Resource `gorm:"many2many:snapshot_resources;"`
+	CommonFields
+	Title      string     `json:"title"`
+	Key        string     `json:"key"`
+	Text       string     `json:"text"`
+	BookmarkID uint       `json:"bookmark_id"`
+	Size       uint       `json:"size"`
+	Resources  []Resource `gorm:"many2many:snapshot_resources;" json:"resources"`
 }
