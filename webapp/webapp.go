@@ -137,7 +137,25 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	for k, v := range vars {
 		tplVars[k] = v
 	}
+	switch c.Query("format") {
+	case "json":
+		renderJSON(c, status, tplVars)
+		return
+	case "rss":
+		renderRSS(c, status, tplVars)
+		return
+	}
 	c.HTML(status, page, tplVars)
+}
+
+func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
+	delete(vars, "CSRF")
+	delete(vars, "DisableSignup")
+	c.IndentedJSON(status, vars)
+}
+
+func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
+	// TODO
 }
 
 func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
