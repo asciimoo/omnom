@@ -27,7 +27,7 @@ func dashboard(c *gin.Context, u *model.User) {
 	model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ? and bookmarks.updated_at > ? and bookmarks.updated_at < ?", u.ID, today.AddDate(-1, 0, 0), now).Count(&yearlyBookmarkCount)
 	_ = model.DB.Limit(10).Model(u).Preload("Snapshots").Preload("Tags").Order("updated_at desc").Association("Bookmarks").Find(&bs)
 	model.DB.Limit(20).Table("tags").Select("tags.text as tag, count(bookmarks.user_id) as `count`").Joins("join bookmarks on bookmarks.id == tags.bookmark_id").Where("bookmarks.user_id = ?", u.ID).Group("tags.text").Order("`count` desc, tag asc").Find(&tags)
-	renderHTML(c, http.StatusOK, "dashboard", map[string]interface{}{
+	render(c, http.StatusOK, "dashboard", map[string]interface{}{
 		"WeeklyBookmarkCount":  weeklyBookmarkCount,
 		"MonthlyBookmarkCount": monthlyBookmarkCount,
 		"YearlyBookmarkCount":  yearlyBookmarkCount,

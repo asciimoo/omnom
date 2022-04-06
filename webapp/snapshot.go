@@ -71,7 +71,7 @@ func snapshotWrapper(c *gin.Context) {
 		setNotification(c, nError, err.Error(), false)
 		return
 	}
-	renderHTML(c, http.StatusOK, "snapshotWrapper", map[string]interface{}{
+	render(c, http.StatusOK, "snapshotWrapper", map[string]interface{}{
 		"Bookmark":       b,
 		"Snapshot":       s,
 		"hideFooter":     true,

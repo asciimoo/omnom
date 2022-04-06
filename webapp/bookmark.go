@@ -57,7 +57,7 @@ func bookmarks(c *gin.Context) {
 		q = q.Order("bookmarks.updated_at desc")
 	}
 	q.Find(&bs)
-	renderHTML(c, http.StatusOK, "bookmarks", map[string]interface{}{
+	render(c, http.StatusOK, "bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
@@ -109,7 +109,7 @@ func myBookmarks(c *gin.Context) {
 		q = q.Order("bookmarks.updated_at desc")
 	}
 	q.Find(&bs)
-	renderHTML(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
+	render(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
@@ -289,7 +289,7 @@ func viewBookmark(c *gin.Context) {
 	if !b.Public && (u == nil || u.(*model.User).ID != b.UserID) {
 		return
 	}
-	renderHTML(c, http.StatusOK, "view-bookmark", map[string]interface{}{
+	render(c, http.StatusOK, "view-bookmark", map[string]interface{}{
 		"Bookmark": b,
 	})
 }
@@ -308,7 +308,7 @@ func editBookmark(c *gin.Context) {
 	if u.(*model.User).ID != b.UserID {
 		return
 	}
-	renderHTML(c, http.StatusOK, "edit-bookmark", map[string]interface{}{
+	render(c, http.StatusOK, "edit-bookmark", map[string]interface{}{
 		"Bookmark": b,
 	})
 }

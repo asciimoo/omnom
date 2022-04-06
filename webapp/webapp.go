@@ -92,7 +92,7 @@ func createRenderer() multitemplate.Renderer {
 	return r
 }
 
-func renderHTML(c *gin.Context, status int, page string, vars map[string]interface{}) {
+func render(c *gin.Context, status int, page string, vars map[string]interface{}) {
 	session := sessions.Default(c)
 	u, _ := c.Get("user")
 	cfg, _ := c.Get("config")
@@ -202,7 +202,7 @@ func Run(cfg *config.Config) {
 }
 
 func notFoundView(c *gin.Context) {
-	renderHTML(c, http.StatusNotFound, "error", gin.H{
+	render(c, http.StatusNotFound, "error", gin.H{
 		"Title":   "Not found.",
 		"Message": "This page does not exist.",
 	})
@@ -213,7 +213,7 @@ func index(c *gin.Context) {
 		dashboard(c, u.(*model.User))
 		return
 	}
-	renderHTML(c, http.StatusOK, "index", nil)
+	render(c, http.StatusOK, "index", nil)
 }
 
 func getPageno(c *gin.Context) int64 {

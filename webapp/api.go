@@ -594,7 +594,7 @@ func init() {
 }
 
 func api(c *gin.Context) {
-	renderHTML(c, http.StatusOK, "api", map[string]interface{}{
+	render(c, http.StatusOK, "api", map[string]interface{}{
 		"Endpoints": Endpoints,
 	})
 }

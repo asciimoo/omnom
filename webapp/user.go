@@ -28,29 +28,29 @@ func signup(c *gin.Context) {
 		email := c.PostForm("email")
 		if username == "" || email == "" {
 			setNotification(c, nError, "Missing email", false)
-			renderHTML(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", nil)
 			return
 		}
 		if strings.ToLower(username) == "admin" {
 			setNotification(c, nError, "Reserved username", false)
-			renderHTML(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", nil)
 			return
 		}
 		if match := userRe.MatchString(username); !match {
 			setNotification(c, nError, "Invalid username. Use only letters, numbers and underscore", false)
-			renderHTML(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", nil)
 			return
 		}
 		u := model.GetUser(username)
 		if u != nil {
 			setNotification(c, nError, "Username already exists", false)
-			renderHTML(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", nil)
 			return
 		}
 		err := model.CreateUser(username, email)
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
-			renderHTML(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", nil)
 			return
 		}
 		u = model.GetUser(username)
@@ -66,13 +66,13 @@ func signup(c *gin.Context) {
 		)
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
-			renderHTML(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", nil)
 			return
 		}
-		renderHTML(c, http.StatusOK, "signup-confirm", nil)
+		render(c, http.StatusOK, "signup-confirm", nil)
 		return
 	}
-	renderHTML(c, http.StatusOK, "signup", nil)
+	render(c, http.StatusOK, "signup", nil)
 }
 
 func login(c *gin.Context) {
@@ -81,14 +81,14 @@ func login(c *gin.Context) {
 		u := model.GetUser(uname)
 		if u == nil {
 			setNotification(c, nError, "Unknown user", false)
-			renderHTML(c, http.StatusOK, "login", nil)
+			render(c, http.StatusOK, "login", nil)
 			return
 		}
 		u.LoginToken = model.GenerateToken()
 		err := model.DB.Save(u).Error
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
-			renderHTML(c, http.StatusOK, "login", nil)
+			render(c, http.StatusOK, "login", nil)
 			return
 		}
 		err = mail.Send(
@@ -103,11 +103,11 @@ func login(c *gin.Context) {
 		)
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
-			renderHTML(c, http.StatusOK, "login", nil)
+			render(c, http.StatusOK, "login", nil)
 			return
 		}
 		log.Println("New login token generated:", u.LoginToken)
-		renderHTML(c, http.StatusOK, "login-confirm", nil)
+		render(c, http.StatusOK, "login-confirm", nil)
 		return
 	}
 
@@ -116,14 +116,14 @@ func login(c *gin.Context) {
 		u := model.GetUserByLoginToken(tok)
 		if u == nil {
 			setNotification(c, nError, "Unknown user", false)
-			renderHTML(c, http.StatusOK, "login", nil)
+			render(c, http.StatusOK, "login", nil)
 			return
 		}
 		u.LoginToken = ""
 		err := model.DB.Save(u).Error
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
-			renderHTML(c, http.StatusOK, "login", nil)
+			render(c, http.StatusOK, "login", nil)
 			return
 		}
 		session := sessions.Default(c)
@@ -131,13 +131,13 @@ func login(c *gin.Context) {
 		err = session.Save()
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
-			renderHTML(c, http.StatusOK, "login", nil)
+			render(c, http.StatusOK, "login", nil)
 			return
 		}
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
-	renderHTML(c, http.StatusOK, "login", nil)
+	render(c, http.StatusOK, "login", nil)
 }
 
 func logout(c *gin.Context) {
@@ -180,7 +180,7 @@ func profile(c *gin.Context) {
 		Group("users.id").
 		Where("users.id = ?", uid).First(&sSize)
 	tplData["SnapshotsSize"] = uint(sSize)
-	renderHTML(c, http.StatusOK, "profile", tplData)
+	render(c, http.StatusOK, "profile", tplData)
 }
 
 func generateAddonToken(c *gin.Context) {
