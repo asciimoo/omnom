@@ -158,27 +158,27 @@ func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
 
 func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
 	k, ok := c.Get("RSS")
-	if ok {
-		c.Header("Content-Type", "application/rss+xml; charset=utf-8")
-		tplVars := map[string]interface{}{
-			"RSS": vars[k.(string)],
-		}
-		fullURLPrefix := ""
-		if strings.HasPrefix(baseURL("/"), "/") {
-			fullURLPrefix = "http://"
-			if c.Request.TLS != nil {
-				fullURLPrefix = "https://"
-			}
-			fullURLPrefix += c.Request.Host
-		}
-		tplVars["FullURLPrefix"] = fullURLPrefix
-		c.HTML(status, "rss", tplVars)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{
+			"Title":   "Not found.",
+			"Message": "This page does not exist.",
+		})
 		return
 	}
-	c.JSON(http.StatusNotFound, gin.H{
-		"Title":   "Not found.",
-		"Message": "This page does not exist.",
-	})
+	c.Header("Content-Type", "application/rss+xml; charset=utf-8")
+	tplVars := map[string]interface{}{
+		"RSS": vars[k.(string)],
+	}
+	fullURLPrefix := ""
+	if strings.HasPrefix(baseURL("/"), "/") {
+		fullURLPrefix = "http://"
+		if c.Request.TLS != nil {
+			fullURLPrefix = "https://"
+		}
+		fullURLPrefix += c.Request.Host
+	}
+	tplVars["FullURLPrefix"] = fullURLPrefix
+	c.HTML(status, "rss", tplVars)
 }
 
 func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
