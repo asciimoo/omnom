@@ -33,6 +33,17 @@ summary {
     display: block;
 }
 
+.bd-main-container {
+    background: $color-white !important;
+    padding: 1em;
+    padding-top: 3em;
+}
+
+.webapp__main-container {
+    padding-top: 0 !important;
+}
+
+
 a.navbar-item.is-active {
     background-color: $secondary-color !important;
     color: $color-white !important;
@@ -84,6 +95,8 @@ iframe {
 }
 
 .navbar {
+    position: sticky !important;
+    top: 0;
     &__logo {
         @extend %omnomTitle;
         margin-right: 3rem;
@@ -96,6 +109,7 @@ iframe {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        box-shadow: 0 0.5em 1em -0.125em #DDD, 0 0px 0 1px #DDD;
     }
 }
 

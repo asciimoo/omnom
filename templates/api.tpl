@@ -1,7 +1,6 @@
 {{ define "content" }}
 <h2 class="title">API documentation</h2>
-<h3 class="title is-size-3">Endpoints</h3>
-<h4 class="title is-size-5">Table of contents</h4>
+<h3 class="title is-size-4">Endpoints</h3>
 <div class="content">
     <ul>
         {{ range .Endpoints }}
