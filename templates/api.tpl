@@ -14,7 +14,7 @@
     <div class="media-content">
         <h3 class="title"><code class="has-background-danger-light">{{ .Method }}</code><code>{{ .Path }}</code></h3>
         <h4 class="title is-size-5">{{ .Name }}{{ if .AuthRequired }}<span class="tag is-warning is-light is-size-7 has-text-weight-normal">authentication required</span>{{ end }}</h4>
-        <p>{{ .Description }}</p>
+        <p>{{ .Description }}{{ if .RSS }}<br>Add <code>?format=rss</code> for RSS output{{ end }}</p>
         <hr />
         {{ if .Args }}
         <h5 class="title is-size-6">Arguments</h5>

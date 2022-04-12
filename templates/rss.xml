@@ -1,0 +1,14 @@
+<rss version="2.0">
+    <channel>
+        <title>Omnom</title>
+        <link>{{ .FullURLPrefix }}{{ BaseURL "/" }}</link>
+        <description>Bookmarking & snapshotting</description>
+        {{ range .RSS }}
+        <item>
+            <title>{{ .Title }}</title>
+            <link>{{ $.FullURLPrefix }}{{ BaseURL "/bookmark" }}?id={{ .ID }}</link>
+            <pubDate>{{ .UpdatedAt | ToDateTime }}</pubDate>
+            <description>{{ .Notes }}</description>
+        </item>{{ end }}
+    </channel>
+</rss>

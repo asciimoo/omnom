@@ -26,9 +26,10 @@ type Endpoint struct {
 	Path         string
 	Method       string
 	AuthRequired bool
-	Handler      func(*gin.Context)
+	Handler      gin.HandlerFunc
 	Description  string
 	Args         []*EndpointArg
+	RSS          string
 }
 
 var Endpoints []*Endpoint
@@ -162,6 +163,7 @@ func init() {
 					Description: "Query parameter also applied to bookmark notes. (Values: 0, 1)",
 				},
 			},
+			RSS: "Bookmarks",
 		},
 		&Endpoint{
 			Name:         "Snapshot view with details",
@@ -457,6 +459,7 @@ func init() {
 					Description: "Query parameter also applied to bookmark notes. (Values: 0, 1)",
 				},
 			},
+			RSS: "Bookmarks",
 		},
 		&Endpoint{
 			Name:         "Edit bookmark",

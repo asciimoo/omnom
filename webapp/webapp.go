@@ -35,15 +35,16 @@ var e *gin.Engine
 var baseURL func(string) string
 
 var tplFuncMap = template.FuncMap{
-	"HasPrefix": strings.HasPrefix,
-	"ToHTML":    func(s string) template.HTML { return template.HTML(s) },         // nolint: gosec // HTML is well formed.
-	"ToAttr":    func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, // nolint: gosec // HTML is well formed.
-	"ToURL":     func(s string) template.URL { return template.URL(s) },           // nolint: gosec // HTML is well formed.
-	"ToDate":    func(t time.Time) string { return t.Format("2006-01-02") },
-	"Replace":   strings.ReplaceAll,
-	"ToLower":   strings.ToLower,
-	"inc":       func(i int64) int64 { return i + 1 },
-	"dec":       func(i int64) int64 { return i - 1 },
+	"HasPrefix":  strings.HasPrefix,
+	"ToHTML":     func(s string) template.HTML { return template.HTML(s) },         // nolint: gosec // HTML is well formed.
+	"ToAttr":     func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, // nolint: gosec // HTML is well formed.
+	"ToURL":      func(s string) template.URL { return template.URL(s) },           // nolint: gosec // HTML is well formed.
+	"ToDate":     func(t time.Time) string { return t.Format("2006-01-02") },
+	"ToDateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+	"Replace":    strings.ReplaceAll,
+	"ToLower":    strings.ToLower,
+	"inc":        func(i int64) int64 { return i + 1 },
+	"dec":        func(i int64) int64 { return i - 1 },
 	"SnapshotURL": func(key string) string {
 		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
 	},
@@ -89,6 +90,7 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("edit-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/edit_bookmark.tpl")
 	r.AddFromFilesFuncs("api", tplFuncMap, "templates/layout/base.tpl", "templates/api.tpl")
 	r.AddFromFilesFuncs("error", tplFuncMap, "templates/layout/base.tpl", "templates/error.tpl")
+	r.AddFromFilesFuncs("rss", tplFuncMap, "templates/rss.xml")
 	return r
 }
 
@@ -155,21 +157,48 @@ func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
 }
 
 func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
-	// TODO
+	k, ok := c.Get("RSS")
+	if ok {
+		c.Header("Content-Type", "application/rss+xml; charset=utf-8")
+		tplVars := map[string]interface{}{
+			"RSS": vars[k.(string)],
+		}
+		fullURLPrefix := ""
+		if strings.HasPrefix(baseURL("/"), "/") {
+			fullURLPrefix = "http://"
+			if c.Request.TLS != nil {
+				fullURLPrefix = "https://"
+			}
+			fullURLPrefix += c.Request.Host
+		}
+		tplVars["FullURLPrefix"] = fullURLPrefix
+		c.HTML(http.StatusOK, "rss", tplVars)
+		return
+	}
+	c.JSON(http.StatusNotFound, gin.H{
+		"Title":   "Not found.",
+		"Message": "This page does not exist.",
+	})
 }
 
 func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
+	var h gin.HandlerFunc
+	if e.RSS != "" {
+		h = RSSEndpointWrapper(e.Handler, e.RSS)
+	} else {
+		h = e.Handler
+	}
 	switch e.Method {
 	case GET:
-		r.GET(e.Path, e.Handler)
+		r.GET(e.Path, h)
 	case POST:
-		r.POST(e.Path, e.Handler)
+		r.POST(e.Path, h)
 	case PUT:
-		r.PUT(e.Path, e.Handler)
+		r.PUT(e.Path, h)
 	case PATCH:
-		r.PATCH(e.Path, e.Handler)
+		r.PATCH(e.Path, h)
 	case HEAD:
-		r.HEAD(e.Path, e.Handler)
+		r.HEAD(e.Path, h)
 	}
 }
 
@@ -372,5 +401,12 @@ func setNotification(c *gin.Context, t NotificationType, n string, persist bool)
 		if persist {
 			session.Set("Error", n)
 		}
+	}
+}
+
+func RSSEndpointWrapper(f gin.HandlerFunc, rssVar string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("RSS", rssVar)
+		f(c)
 	}
 }
