@@ -172,7 +172,7 @@ func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
 			fullURLPrefix += c.Request.Host
 		}
 		tplVars["FullURLPrefix"] = fullURLPrefix
-		c.HTML(http.StatusOK, "rss", tplVars)
+		c.HTML(status, "rss", tplVars)
 		return
 	}
 	c.JSON(http.StatusNotFound, gin.H{
