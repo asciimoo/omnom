@@ -18,7 +18,7 @@ help                 - Display help
 
 Dependencies
 ------------------
-install_js_deps      - Install or install frontend dependencies
+install_js_deps      - Install or install frontend dependencies (required only for development)
 install_test_deps    - Install or install test dependencies
 
 Tests
@@ -41,34 +41,30 @@ install_js_deps() {
     cd ext
     npm i
     cd ..
-    exit 0
 }
 
 install_test_deps() {
     cd tests/e2e/extension
     npm i
     cd "$BASE_DIR"
-    exit 0
 }
 
 run_e2e_tests() {
     cd tests/e2e/extension
     nodejs test.js
-    exit 0
+    cd "$BASE_DIR"
 }
 
 build_css() {
     cd sass
     npm run build:css
     cd ..
-    exit 0
 }
 
 build_addon() {
     cd ext
     npm run build
     cd ..
-    exit 0
 }
 
 
