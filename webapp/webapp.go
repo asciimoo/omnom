@@ -301,7 +301,12 @@ func SessionMiddleware() gin.HandlerFunc {
 			u := model.GetUser(uname.(string))
 			c.Set("user", u)
 		} else {
-			c.Set("user", nil)
+			tok := c.PostForm("token")
+			if tok == "" {
+				tok = c.Query("token")
+			}
+			// can be nil in case of invalid token
+			c.Set("user", model.GetUserBySubmissionToken(tok))
 		}
 		c.Next()
 	}
