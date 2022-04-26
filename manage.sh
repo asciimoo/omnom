@@ -25,6 +25,7 @@ install_test_deps    - Install or install test dependencies
 
 Tests
 -----
+run_unit_tests       - Run unit tests
 run_e2e_tests        - Run browser tests
 start_test_server    - Launch test server
 
@@ -50,6 +51,10 @@ install_test_deps() {
     cd tests/e2e/extension
     npm i
     cd "$BASE_DIR"
+}
+
+run_unit_tests() {
+    go test ./...
 }
 
 run_e2e_tests() {
