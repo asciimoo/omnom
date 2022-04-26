@@ -336,10 +336,17 @@ func CSRFMiddleware() gin.HandlerFunc {
 		uname := session.Get(SID)
 		if uname != nil {
 			if t := c.Request.FormValue("_csrf"); t == "" || prevToken != t {
-				_, _ = gin.DefaultWriter.Write([]byte("\033[31m[ERROR] CSRF token mismatch\033[0m\n"))
-				c.String(400, "CSRF token mismatch")
-				c.Abort()
-				return
+				tok := c.PostForm("token")
+				if tok == "" {
+					tok = c.Query("token")
+				}
+				u := model.GetUserBySubmissionToken(tok)
+				if u == nil {
+					_, _ = gin.DefaultWriter.Write([]byte("\033[31m[ERROR] CSRF token mismatch\033[0m\n"))
+					c.String(400, "CSRF token mismatch")
+					c.Abort()
+					return
+				}
 			}
 		}
 	}
