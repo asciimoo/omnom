@@ -1,6 +1,8 @@
 #!/bin/sh
 
 BASE_DIR="$(dirname -- "`readlink -f -- "$0"`")"
+OMNOM_BASE_URL="http://127.0.0.1:7332/"
+CONFIG_PATH="$BASE_DIR/tests/test_config.yml"
 ACTION="$1"
 [ -z "$ACTION" ] || shift
 
@@ -24,6 +26,7 @@ install_test_deps    - Install or install test dependencies
 Tests
 -----
 run_e2e_tests        - Run browser tests
+start_test_server    - Launch test server
 
 Build
 -----
@@ -53,6 +56,10 @@ run_e2e_tests() {
     cd tests/e2e/extension
     nodejs test.js
     cd "$BASE_DIR"
+}
+
+start_test_server() {
+    go run omnom.go --config "$CONFIG_PATH" listen
 }
 
 build_css() {
