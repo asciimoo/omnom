@@ -33,6 +33,10 @@ Build
 -----
 build_css            - Build css files
 build_addon          - Build addon
+
+========
+
+Execute 'go run omnom.go' or 'go build && ./omnom' for application related actions
 "
 	[ -z "$1" ] && exit 0 || exit 1
 }
