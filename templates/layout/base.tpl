@@ -10,7 +10,7 @@
     {{ block "head" . }} {{ end }}
 </head>
 <body id="omnom-webapp">
-<nav class="navbar {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
+<nav class="navbar {{ block "content-class" . }}{{ end }}{{ if ne .Page "index" }} shadow-bottom{{ end }}" role="navigation" aria-label="main navigation">
   <div class="navbar__container">
     <div class="navbar-brand is-size-4">
       <a class="navbar__logo" href="{{ BaseURL "/" }}"><span>om</span><span class="text--primary">nom</span> </a>
