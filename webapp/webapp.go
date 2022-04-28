@@ -48,6 +48,12 @@ var tplFuncMap = template.FuncMap{
 	"SnapshotURL": func(key string) string {
 		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
 	},
+	"AddURLParam": func(base string, param string) string {
+		if strings.Contains(base, "?") {
+			return base + "&" + param
+		}
+		return base + "?" + param
+	},
 	"Truncate": func(s string, maxLen int) string {
 		if len(s) > maxLen {
 			return s[:maxLen] + "[..]"
@@ -136,6 +142,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 			_ = c.Error(fmt.Errorf("error saving context: %w", err))
 		}
 	}
+	tplVars["URL"] = baseURL(c.FullPath())
 	for k, v := range vars {
 		tplVars[k] = v
 	}

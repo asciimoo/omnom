@@ -3,6 +3,7 @@
     {{ if not .Bookmarks }}
     <h3 class="title">No public bookmarks found</h3>
     {{ else }}
+    <div class="is-pulled-right"><a href="{{ AddURLParam .URL "format=rss" }}">RSS<span class="icon"><i class="fas fa-rss"></i></span></a></div>
     <h3 class="title">Public bookmarks ({{ .BookmarkCount }})</h3>
     {{ end }}
     <div class="content">
