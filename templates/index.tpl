@@ -2,11 +2,14 @@
 <section id="home" class="landing-page">
     <div class="landing-page__hero">
         <div class="landing-page__headline">
-            <div class="landing-page__title">
-                <h1>Bookmarking and snapshotting websites made easy</h1>
-                <form method="get" action="{{ BaseURL "/signup" }}">
-                    <button class="button">Sign me up!</button>
-                </form>
+            <div class="columns is-desktop is-multiline is-centered is-vcentered">
+                <div class="landing-page__logo column"><img src="{{ BaseURL "/static/images/omnom_logo_1024_white.png" }}" /></div>
+                <div class="landing-page__title column">
+                    <h1>Bookmarking and snapshotting websites made easy</h1>
+                    <form method="get" action="{{ BaseURL "/signup" }}">
+                        <button class="button">Sign me up!</button>
+                    </form>
+                </div>
             </div>
         </div>
         <div class="landing-page__menu">

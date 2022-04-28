@@ -354,17 +354,24 @@ iframe {
         flex-direction: row;
         align-items: center;
     }
+    &__logo {
+        text-align: center;
+    }
+    &__logo img {
+        max-width: 50%;
+        padding: auto;
+    }
     &__headline {
+        height: 2rem !important;
         display: flex;
         align-items: center;
         justify-content: flex-end;
         flex:1;
         width: 70%;
-        padding-right: 7rem;
-        padding-top: 5rem;
+        padding: 5rem;
     }
     &__title {
-        width: 47%;
+        width: 50%;
         h1{
             font-size: 2.6rem;
             line-height: 3rem;
