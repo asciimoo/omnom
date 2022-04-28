@@ -11,4 +11,5 @@ type Bookmark struct {
 	Snapshots []Snapshot `json:"snapshots"`
 	Public    bool       `json:"public"`
 	UserID    uint       `json:"user_id"`
+	User      User       `json:"-"`
 }

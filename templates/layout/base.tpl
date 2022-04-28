@@ -128,6 +128,7 @@
               <p class="is-size-7 has-text-grey has-text-weight-normal">
                   {{ Truncate .Bookmark.URL 100 }}<br />
                   <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
+                <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?user={{ .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
               </p>
           </h4>
       </div>

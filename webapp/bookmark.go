@@ -28,7 +28,7 @@ func bookmarks(c *gin.Context) {
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
-	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags")
+	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User")
 	sp := &searchParams{}
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
@@ -75,7 +75,7 @@ func myBookmarks(c *gin.Context) {
 	offset := (pageno - 1) * bookmarksPerPage
 	var bookmarkCount int64
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID)
-	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Preload("Snapshots").Preload("Tags")
+	q := model.DB.Limit(int(bookmarksPerPage)).Offset(int(offset)).Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Preload("Snapshots").Preload("Tags").Preload("User")
 	sp := &searchParams{}
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
