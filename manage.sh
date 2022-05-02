@@ -64,7 +64,7 @@ run_unit_tests() {
 
 run_e2e_tests() {
     cd tests/e2e/extension
-    nodejs test.js
+    node test.js
     cd "$BASE_DIR"
 }
 
