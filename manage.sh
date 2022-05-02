@@ -47,6 +47,7 @@ install_js_deps() {
     npm i --unsafe-perm -g
     cd ..
     cd ext
+    npm install cross-env
     npm i
     cd ..
 }
