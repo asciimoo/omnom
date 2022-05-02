@@ -21,6 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
+        with:
+          node-version: 12
       - run: ./manage.sh install_js_deps
       - run: ./manage.sh install_test_deps
       - run: ./manage.sh build_addon
