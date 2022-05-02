@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
       - run: ./manage.sh install_js_deps
       - run: ./manage.sh install_test_deps
       - run: ./manage.sh build_addon
