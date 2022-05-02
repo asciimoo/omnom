@@ -44,7 +44,7 @@ Execute 'go run omnom.go' or 'go build && ./omnom' for application related actio
 
 install_js_deps() {
     cd sass
-    npm i
+    npm i --unsafe-perm
     cd ..
     cd ext
     npm i
