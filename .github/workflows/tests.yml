@@ -1,0 +1,26 @@
+name: tests
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v2
+      - run: ./manage.sh run_unit_tests
+  end2end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: ./manage.sh install_js_deps
+      - run: ./manage.sh install_test_deps
+      - run: ./manage.sh build_addon
+      - run: xvfb-run --auto-servernum ./manage.sh run_e2e_tests
