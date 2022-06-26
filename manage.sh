@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2021-2022 Adam Tauber, <asciimoo@gmail.com> et al.
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 BASE_DIR="$(dirname -- "`readlink -f -- "$0"`")"
 OMNOM_BASE_URL="http://127.0.0.1:7332/"
 CONFIG_PATH="$BASE_DIR/tests/test_config.yml"
