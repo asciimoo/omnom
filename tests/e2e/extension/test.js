@@ -50,13 +50,15 @@ const tests = [
 ];
 
 async function runTests(page) {
-    for (let testFn of tests) {
+    for (let i in tests) {
+        let testFn = tests[i];
         try {
             await testFn(page);
         } catch(e) {
             console.error("TEST '"+testFn.name+"' FAIL: \n", e.stack);
             process.exit(1);
         }
+        console.log(String(((i+1) / tests.length * 100).toFixed()).padStart(3, '0') + "% TEST PASSED: " + testFn.name);
     }
 }
 
