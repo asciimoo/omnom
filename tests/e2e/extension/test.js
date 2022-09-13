@@ -1,6 +1,12 @@
 const puppeteer = require('puppeteer');
 const assert = require('assert');
+console.log(process.argv);
+if(process.argv.length != 3) {
+    console.log("[E] Invalud number of arguments. Server address required");
+    process.exit(1);
+}
 
+let serverAddr = process.argv[2];
 let extId = '';
 let extBaseUrl = '';
 
@@ -27,7 +33,7 @@ async function fillSettings(browser) {
     const tokenInput = await page.$("#token");
     await tokenInput.type("test");
     const serverInput = await page.$("#url");
-    await serverInput.type("http://127.0.0.1:7331/");
+    await serverInput.type(serverAddr);
     page.evaluate((btnSelector) => {
         document.querySelector(btnSelector).click();
     }, 'input[type="submit"]');
