@@ -64,7 +64,7 @@ run_unit_tests() {
 
 run_e2e_tests() {
     cd tests/e2e/extension
-    node test.js
+    node test.js "$OMNOM_BASE_URL"
     cd "$BASE_DIR"
 }
 
