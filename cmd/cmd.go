@@ -110,44 +110,63 @@ var createUserCmd = &cobra.Command{
 
 var createTokenCmd = &cobra.Command{
 	Use:    "create-token [username] [token type (login/addon)]",
-	Short:  "create new login token for a user",
+	Short:  "create new login/addon token for a user",
 	Long:   `create-token [username] [token type (login/addon)]`,
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, args []string) {
-		if args[1] != loginCmd && args[1] != addonCmd {
-			log.Println("Invalid token type. Allowed values are 'login' or 'addon'")
+	Run:    createToken,
+}
+
+var setTokenCmd = &cobra.Command{
+	Use:    "set-token [username] [token type (login/addon)] [token]",
+	Short:  "set new login/addon token for a user",
+	Long:   `set-token [username] [token type (login/addon)] [token]`,
+	Args:   cobra.ExactArgs(3),
+	PreRun: initDB,
+	Run:    setToken,
+}
+
+func createToken(cmd *cobra.Command, args []string) {
+	tok := model.GenerateToken()
+	changeToken(cmd, args, tok)
+}
+
+func setToken(cmd *cobra.Command, args []string) {
+	changeToken(cmd, args, args[2])
+}
+
+func changeToken(cmd *cobra.Command, args []string, tok string) {
+	if args[1] != loginCmd && args[1] != addonCmd {
+		log.Println("Invalid token type. Allowed values are 'login' or 'addon'")
+		os.Exit(1)
+	}
+	u := model.GetUser(args[0])
+	if u == nil {
+		log.Println("User not found")
+		os.Exit(1)
+	}
+	if args[1] == loginCmd {
+		u.LoginToken = tok
+		err := model.DB.Save(u).Error
+		if err != nil {
+			log.Println("Failed to set token:", err)
 			os.Exit(1)
 		}
-		u := model.GetUser(args[0])
-		if u == nil {
-			log.Println("User not found")
+	} else {
+		t := &model.Token{
+			UserID: u.ID,
+			Text:   tok,
+		}
+		err := model.DB.Save(t).Error
+		if err != nil {
+			log.Println("Failed to set token:", err)
 			os.Exit(1)
 		}
-		tok := model.GenerateToken()
-		if args[1] == loginCmd {
-			u.LoginToken = tok
-			err := model.DB.Save(u).Error
-			if err != nil {
-				log.Println("Failed to set token:", err)
-				os.Exit(1)
-			}
-		} else {
-			t := &model.Token{
-				UserID: u.ID,
-				Text:   tok,
-			}
-			err := model.DB.Save(t).Error
-			if err != nil {
-				log.Println("Failed to set token:", err)
-				os.Exit(1)
-			}
-		}
-		log.Printf("Token %s created\n", tok)
-		if args[1] == loginCmd {
-			log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
-		}
-	},
+	}
+	log.Printf("Token %s created\n", tok)
+	if args[1] == loginCmd {
+		log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -165,6 +184,7 @@ func init() {
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createUserCmd)
 	rootCmd.AddCommand(createTokenCmd)
+	rootCmd.AddCommand(setTokenCmd)
 	rootCmd.AddCommand(showUserCmd)
 }
 
