@@ -1,0 +1,26 @@
+app:
+  debug: true
+  bookmarks_per_page: 20
+  disable_signup:  false # set to true to restrict user creation to command line
+server:
+  address: "127.0.0.1:7332"
+  # e.g. https://mydomain.tld/xy/
+  # leave blank if you don't have custom base URL
+  base_url: ""
+db:
+  type: "sqlite"
+  connection: "./tests/test_db.sqlite3"
+storage:
+  type: "fs"
+  # it should be in the static/ folder
+  root: "./static/data"
+smtp:
+  host: "" # leave it blank to disable sending mails
+  port: 25
+  username: ""
+  password: ""
+  sender: "Omnom <omnom@127.0.0.1>"
+  tls: false
+  tls_allow_insecure: false
+  send_timeout: 10 # seconds
+  connection_timeout: 5 # seconds
