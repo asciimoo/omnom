@@ -10,6 +10,8 @@ let serverAddr = process.argv[2];
 let extId = '';
 let extBaseUrl = '';
 
+let addonPage, omnomPage;
+
 function sleep(time) {
     return new Promise(function(resolve) {
         setTimeout(resolve, time)
@@ -17,7 +19,7 @@ function sleep(time) {
 }
 
 async function getExtensionID(browser) {
-    const page = await browser.newPage();
+    let page = await browser.newPage();
     await page.goto('chrome://extensions', { waitUntil: 'load' });
     return await page.evaluate(async function() {
         return await new Promise(resolve => {
@@ -27,7 +29,8 @@ async function getExtensionID(browser) {
 }
 
 async function fillSettings(browser) {
-    let page = await browser.newPage();
+    addonPage = await browser.newPage();
+    let page = addonPage;
     await page.goto(extBaseUrl+'popup.html', {waitUntil: 'load'});
     await page.waitForSelector("#token");
     const tokenInput = await page.$("#token");
@@ -45,8 +48,28 @@ async function fillSettings(browser) {
     await page.screenshot({path: 'extension.png'});
 }
 
+async function openIndex(browser) {
+    omnomPage = await browser.newPage();
+    let page = omnomPage;
+    await page.goto(serverAddr, {waitUntil: 'load'});
+    const titleEl = await page.waitForSelector('title');
+    const title = await titleEl.evaluate(el => el.textContent);
+    assert(title == 'Omnom');
+}
+
+async function login(browser) {
+    let page = omnomPage;
+    await page.goto(serverAddr+'login?token=0000000000000000000000000000000000000000000000000000000000000000', {waitUntil: 'load'});
+    const userEl = await page.waitForSelector('a[href="/profile"]');
+    const user = await userEl.evaluate(el => el.textContent);
+    assert(user.endsWith('test'));
+}
+
+
 const tests = [
     fillSettings,
+    openIndex,
+    login
 ];
 
 async function runTests(page) {
@@ -58,7 +81,7 @@ async function runTests(page) {
             console.error("TEST '"+testFn.name+"' FAIL: \n", e.stack);
             process.exit(1);
         }
-        console.log(String(((i+1) / tests.length * 100).toFixed()).padStart(3, '0') + "% TEST PASSED: " + testFn.name);
+        console.log(String(((parseInt(i)+1) / tests.length * 100).toFixed()).padStart(3, ' ') + "% TEST PASSED: " + testFn.name);
     }
 }
 
