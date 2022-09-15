@@ -15,7 +15,7 @@ import (
 )
 
 var DB *gorm.DB
-var debug = false // nolint: unused // it is used in Init
+var debug = false //nolint: unused // it is used in Init
 
 func Init(c *config.Config) error {
 	dbCfg := &gorm.Config{}

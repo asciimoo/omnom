@@ -128,14 +128,14 @@ var setTokenCmd = &cobra.Command{
 
 func createToken(cmd *cobra.Command, args []string) {
 	tok := model.GenerateToken()
-	changeToken(cmd, args, tok)
+	changeToken(args, tok)
 }
 
 func setToken(cmd *cobra.Command, args []string) {
-	changeToken(cmd, args, args[2])
+	changeToken(args, args[2])
 }
 
-func changeToken(cmd *cobra.Command, args []string, tok string) {
+func changeToken(args []string, tok string) {
 	if args[1] != loginCmd && args[1] != addonCmd {
 		log.Println("Invalid token type. Allowed values are 'login' or 'addon'")
 		os.Exit(1)

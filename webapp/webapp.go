@@ -36,9 +36,9 @@ var baseURL func(string) string
 
 var tplFuncMap = template.FuncMap{
 	"HasPrefix":  strings.HasPrefix,
-	"ToHTML":     func(s string) template.HTML { return template.HTML(s) },         // nolint: gosec // HTML is well formed.
-	"ToAttr":     func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, // nolint: gosec // HTML is well formed.
-	"ToURL":      func(s string) template.URL { return template.URL(s) },           // nolint: gosec // HTML is well formed.
+	"ToHTML":     func(s string) template.HTML { return template.HTML(s) },         //nolint: gosec // HTML is well formed.
+	"ToAttr":     func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, //nolint: gosec // HTML is well formed.
+	"ToURL":      func(s string) template.URL { return template.URL(s) },           //nolint: gosec // HTML is well formed.
 	"ToDate":     func(t time.Time) string { return t.Format("2006-01-02") },
 	"ToDateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
 	"Replace":    strings.ReplaceAll,

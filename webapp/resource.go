@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/asciimoo/omnom/model"
@@ -64,7 +64,7 @@ func addResource(c *gin.Context) {
 			})
 			return
 		}
-		resource, err := ioutil.ReadAll(resourceFile)
+		resource, err := io.ReadAll(resourceFile)
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{

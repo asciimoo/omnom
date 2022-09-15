@@ -3,7 +3,7 @@ package webapp
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -196,7 +196,7 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	snapshot, err := ioutil.ReadAll(snapshotFile)
+	snapshot, err := io.ReadAll(snapshotFile)
 	if err != nil {
 		setNotification(c, nError, err.Error(), false)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{

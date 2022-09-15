@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -49,7 +49,7 @@ type SMTP struct {
 
 func Load(filename string) (*Config, error) {
 	var c *Config
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return c, err
 	}
