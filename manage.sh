@@ -63,15 +63,15 @@ run_unit_tests() {
 }
 
 run_e2e_tests() {
+    go run omnom.go --config "$CONFIG_PATH" create-user test test@127.0.0.1 || :
+    go run omnom.go --config "$CONFIG_PATH" set-token test login 0000000000000000000000000000000000000000000000000000000000000000
+    go run omnom.go --config "$CONFIG_PATH" set-token test addon 0000000000000000000000000000000000000000000000000000000000000000
     cd tests/e2e/extension
     node test.js "$OMNOM_BASE_URL"
     cd "$BASE_DIR"
 }
 
 start_test_server() {
-    go run omnom.go --config "$CONFIG_PATH" create-user test
-    go run omnom.go --config "$CONFIG_PATH" set-token test login 0000000000000000000000000000000000000000000000000000000000000000
-    go run omnom.go --config "$CONFIG_PATH" set-token test addon 0000000000000000000000000000000000000000000000000000000000000000
     go run omnom.go --config "$CONFIG_PATH" listen
 }
 
