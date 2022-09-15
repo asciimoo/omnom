@@ -23,6 +23,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 12
+      - run: go get -u
       - run: ./manage.sh start_test_server&
       - run: ./manage.sh install_js_deps
       - run: ./manage.sh install_test_deps
