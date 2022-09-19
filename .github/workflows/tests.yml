@@ -27,5 +27,5 @@ jobs:
       - run: ./manage.sh start_test_server&
       - run: ./manage.sh install_js_deps
       - run: ./manage.sh install_test_deps
-      - run: ./manage.sh build_addon
+      - run: ./manage.sh build_test_addon
       - run: xvfb-run --auto-servernum ./manage.sh run_e2e_tests
