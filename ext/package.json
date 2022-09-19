@@ -4,6 +4,7 @@
   "description": "Omnom extension",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --stats-error-details",
+    "build-test": "cross-env TEST=1 NODE_ENV=development webpack --stats-error-details",
     "start": "cross-env NODE_ENV=development webpack --stats-error-details --watch"
   },
   "devDependencies": {

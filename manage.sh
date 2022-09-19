@@ -33,6 +33,7 @@ Build
 -----
 build_css            - Build css files
 build_addon          - Build addon
+build_test_addon     - Build test addon
 
 ========
 
@@ -84,6 +85,12 @@ build_css() {
 build_addon() {
     cd ext
     npm run build
+    cd ..
+}
+
+build_test_addon() {
+    cd ext
+    npm run build-test
     cd ..
 }
 

@@ -22,6 +22,22 @@ function checkStatus(res) {
 }
 
 function executeScriptToPromise(functionToExecute) {
+    // This is only for test purposes, see https://github.com/puppeteer/puppeteer/issues/2486
+    if(window.location.hash) {
+        return new Promise(resolve => {
+            browser.tabs.getCurrent(tab => {
+                chrome.tabs.query({ currentWindow: true, active: false }, tabs => {
+                    const tabId = tabs[tabs.length-1].id;
+                    browser.tabs.executeScript(tabId, {
+                        code: `(${functionToExecute})()`
+                    },
+                    (data) => {
+                        resolve(data);
+                    });
+                });
+            });
+        });
+    }
     return new Promise(resolve => {
         browser.tabs.executeScript({
             code: `(${functionToExecute})()`
@@ -50,7 +66,7 @@ function renderError(errorMessage, error) {
     if (error) {
         error.json().then(data => console.log({ error, data }));
     }
-    document.getElementById('omnom-content').innerHTML = `<h1>${errorMessage}</h1>`;
+    document.getElementById('omnom-content').innerHTML = `<h1 id="status" class="error">${errorMessage}</h1>`;
 }
 
 async function renderSuccess(successMessage, bookmarkInfo) {
@@ -58,7 +74,7 @@ async function renderSuccess(successMessage, bookmarkInfo) {
     const burl = absoluteURL(omnomData.omnom_url, bookmarkInfo.bookmark_url);
     const surl = absoluteURL(omnomData.omnom_url, bookmarkInfo.snapshot_url);
     document.getElementById('omnom-content').innerHTML = `
-<h1>${successMessage}</h1>
+<h1 id="status" class="success">${successMessage}</h1>
 <a href="${burl}">view bookmark</a><br />
 <a href="${surl}">view snapshot</a>
     `;

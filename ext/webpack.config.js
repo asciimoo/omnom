@@ -12,6 +12,12 @@ WriteFilePlugin = require("write-file-webpack-plugin");
 // load the secrets
 let alias = {};
 
+let test = false;
+
+if(env.TEST) {
+    test = true;
+}
+
 const secretsPath = path.join(__dirname, ("secrets." + env.NODE_ENV + ".js"));
 
 if (fileSystem.existsSync(secretsPath)) {
@@ -88,11 +94,16 @@ module.exports = {
                     from: "src/manifest.json",
                     transform: function (content, path) {
                         // generates the manifest file using the package.json informations
-                        return Buffer.from(JSON.stringify({
+                        content = {
                             description: process.env.npm_package_description,
                             version: process.env.npm_package_version,
                             ...JSON.parse(content.toString())
-                        }))
+                        }
+                        // this is a workaround, required because https://github.com/puppeteer/puppeteer/issues/2486
+                        if(test) {
+                            content.permissions.push('tabs');
+                        }
+                        return Buffer.from(JSON.stringify(content));
                     }
                 },
                 {
