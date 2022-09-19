@@ -9,8 +9,7 @@ if(process.argv.length != 3) {
 let serverAddr = process.argv[2];
 let extId = '';
 let extBaseUrl = '';
-
-let addonPage, omnomPage;
+let testPageUrl = 'static/data/snapshots/dc/dc4d4d46c5b4d73b510a05ab2208b133d36c60de00ccaa1591ed5bce8dc37813.gz';
 
 function sleep(time) {
     return new Promise(function(resolve) {
@@ -29,12 +28,11 @@ async function getExtensionID(browser) {
 }
 
 async function fillSettings(browser) {
-    addonPage = await browser.newPage();
-    let page = addonPage;
+    let page = await browser.newPage();
     await page.goto(extBaseUrl+'popup.html', {waitUntil: 'load'});
     await page.waitForSelector("#token");
     const tokenInput = await page.$("#token");
-    await tokenInput.type("test");
+    await tokenInput.type("0000000000000000000000000000000000000000000000000000000000000000");
     const serverInput = await page.$("#url");
     await serverInput.type(serverAddr);
     page.evaluate((btnSelector) => {
@@ -45,31 +43,52 @@ async function fillSettings(browser) {
     await page.goto(extBaseUrl+'popup.html', {waitUntil: 'load'});
     const titleInput = await page.$("#title");
     assert(titleInput && titleInput != null && titleInput != undefined);
-    await page.screenshot({path: 'extension.png'});
+    await page.close();
 }
 
 async function openIndex(browser) {
-    omnomPage = await browser.newPage();
-    let page = omnomPage;
+    let page = await browser.newPage();
     await page.goto(serverAddr, {waitUntil: 'load'});
     const titleEl = await page.waitForSelector('title');
     const title = await titleEl.evaluate(el => el.textContent);
     assert(title == 'Omnom');
+    await page.close();
 }
 
 async function login(browser) {
-    let page = omnomPage;
+    let page = await browser.newPage();
     await page.goto(serverAddr+'login?token=0000000000000000000000000000000000000000000000000000000000000000', {waitUntil: 'load'});
     const userEl = await page.waitForSelector('a[href="/profile"]');
     const user = await userEl.evaluate(el => el.textContent);
     assert(user.endsWith('test'));
+    await page.close();
+}
+
+async function testPageSnapshot(browser) {
+    let page = await browser.newPage();
+    await page.goto(serverAddr+'static/test/index.html', {waitUntil: 'load'});
+    let addonPage = await browser.newPage();
+    await addonPage.goto(extBaseUrl+'popup.html#test', {waitUntil: 'load'});
+    await addonPage.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
+    const title = await addonPage.$("#title");
+    addonPage.evaluate((btnSelector) => {
+        document.querySelector(btnSelector).click();
+    }, 'input[type="submit"]');
+    const status = await addonPage.waitForSelector("#status");
+    const result = await status.evaluate(el => el.getAttribute('class'));
+    assert(result == 'success');
+    addonPage.close();
+    const resp = await page.goto(serverAddr+testPageUrl, {waitUntil: 'load'});
+    assert(resp.status() == 200);
+    page.close();
 }
 
 
 const tests = [
     fillSettings,
     openIndex,
-    login
+    login,
+    testPageSnapshot
 ];
 
 async function runTests(page) {
