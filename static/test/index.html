@@ -1,0 +1,41 @@
+<html>
+    <head>
+    <title>testpage</title>
+<style>
+@import url("/static/test/test.css");
+@font-face {
+      font-family: myfont;
+      src: url(/static/webfonts/roboto-v29-latin-regular.woff);
+}
+body {
+    background: pink;
+    background-image: url('/static/omnom.svg');
+}
+ul {
+    list-style: square inside url('/static/icons/omnom-logo-v1.svg');
+}
+li {
+    font-family: myfont;
+}
+</style>
+<link rel="shortcut icon" href="/static/omnom.svg" />
+    </head>
+<body>
+    <h1 id="a">testtitle</h1>
+    <script>
+        let x = document.createElement("img");
+        x.setAttribute("src", "/static/placeholder-image.png");
+        x.setAttribute("height", "100px");
+        document.body.appendChild(x);
+        let h1 = document.getElementById("a");
+        h1.innerHTML = "<i>hai</i>";
+    </script>
+    <h1>Ohi</h1>
+    <a href="/">testlink</a>
+    <ul>
+        <li>testlistitem1</li>
+        <li>testlistitem2</li>
+    </ul>
+    <img src="/static/placeholder-image.png" />
+</body>
+</html>
