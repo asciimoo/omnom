@@ -9,7 +9,7 @@ if(process.argv.length != 3) {
 let serverAddr = process.argv[2];
 let extId = '';
 let extBaseUrl = '';
-let testPageUrl = 'static/data/snapshots/dc/dc4d4d46c5b4d73b510a05ab2208b133d36c60de00ccaa1591ed5bce8dc37813.gz';
+let testPageUrl = 'static/data/snapshots/b8/b82c0e7f98ea55913212b0a168018deafcb692d9296e4e6bbd36254aa25abf91.gz';
 
 function sleep(time) {
     return new Promise(function(resolve) {
@@ -76,11 +76,11 @@ async function testPageSnapshot(browser) {
     }, 'input[type="submit"]');
     const status = await addonPage.waitForSelector("#status");
     const result = await status.evaluate(el => el.getAttribute('class'));
+    await page.waitForTimeout(50*1000);
     assert(result == 'success');
     addonPage.close();
     const resp = await page.goto(serverAddr+testPageUrl, {waitUntil: 'load'});
     assert(resp.status() == 200);
-    page.close();
 }
 
 
