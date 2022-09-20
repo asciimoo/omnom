@@ -26,8 +26,7 @@ async function sanitizeImportRule(rule, baseURL) {
     let href = absoluteURL(baseURL, rule.href);
     let res = await resources.create(href);
     await res.updateContent(await sanitizeCSS(res.content, href));
-    rule.href = res.src;
-    return rule.cssText;
+    return `@import url("${res.src}") ${rule.media};`;
 }
 
 async function sanitizeMediaRule(rule, baseURL) {
