@@ -76,7 +76,7 @@ async function testPageSnapshot(browser) {
     }, 'input[type="submit"]');
     const status = await addonPage.waitForSelector("#status");
     const result = await status.evaluate(el => el.getAttribute('class'));
-    await page.waitForTimeout(50*1000);
+    //await page.waitForTimeout(50*1000);
     assert(result == 'success');
     addonPage.close();
     const resp = await page.goto(serverAddr+testPageUrl, {waitUntil: 'load'});
