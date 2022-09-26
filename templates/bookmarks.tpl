@@ -43,6 +43,7 @@
                 <div class="my-bookmarks__query">
                 <p class="my-bookmarks__h3">Query</p>
                 {{ block "domainFilter" .}}{{ end }}
+                {{ block "ownerFilter" .}}{{ end }}
                 {{ block "tagFilter" .}}{{ end }}
                 {{ block "dateFilter" .}}{{ end }}
                 </div>
