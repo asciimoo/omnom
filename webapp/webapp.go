@@ -142,7 +142,11 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 			_ = c.Error(fmt.Errorf("error saving context: %w", err))
 		}
 	}
-	tplVars["URL"] = baseURL(c.FullPath())
+	fullURL := baseURL(c.FullPath())
+	if c.Request.URL.RawQuery != "" {
+		fullURL += "?" + c.Request.URL.RawQuery
+	}
+	tplVars["URL"] = fullURL
 	for k, v := range vars {
 		tplVars[k] = v
 	}
