@@ -70,7 +70,9 @@
           &#8226; <a href="https://github.com/asciimoo/omnom">GitHub</a>
           &#8226; <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
           &#8226; <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
-          &#8226; <a href="{{ AddURLParam .URL "format=json" }}">View as JSON</a>
+          &#8226; <a href="https://github.com/asciimoo/omnom/wiki">Wiki</a>
+          <br />
+          <a href="{{ AddURLParam .URL "format=json" }}">View as JSON</a>
       </span>
     </div>
   </div>
