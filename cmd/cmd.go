@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/mail"
@@ -126,6 +127,46 @@ var setTokenCmd = &cobra.Command{
 	Run:    setToken,
 }
 
+var generateAPIDocsMD = &cobra.Command{
+	Use:   "generate-api-docs-md",
+	Short: "Generate Markdown API documentation",
+	Long:  `generate-api-docs-md`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("# API documentation\n")
+		fmt.Println("## Endpoints\n")
+		for _, e := range webapp.Endpoints {
+			fmt.Printf(
+				"- [%s `%s`](#%s-%s)\n",
+				e.Name,
+				e.Method,
+				strings.ReplaceAll(strings.ToLower(e.Name), " ", "-"),
+				strings.ToLower(e.Method),
+			)
+		}
+		fmt.Println()
+		for _, e := range webapp.Endpoints {
+			fmt.Printf("### %s `%s`\n\n", e.Name, e.Method)
+			fmt.Printf("`%s %s`\n\n", e.Method, e.Path)
+			fmt.Println(e.Description)
+			fmt.Println()
+			if e.AuthRequired {
+				fmt.Println("#### Authentication required\n")
+			}
+			if len(e.Args) > 0 {
+				fmt.Println(`#### Arguments
+
+|Name|Type|Required|Description|
+|----|----|--------|-----------|`)
+				for _, a := range e.Args {
+					fmt.Printf("|**%s**|`%s`|`%t`|%s|\n", a.Name, a.Type, a.Required, a.Description)
+				}
+				fmt.Println()
+			}
+			fmt.Println("---\n")
+		}
+	},
+}
+
 func createToken(cmd *cobra.Command, args []string) {
 	tok := model.GenerateToken()
 	changeToken(args, tok)
@@ -186,6 +227,7 @@ func init() {
 	rootCmd.AddCommand(createTokenCmd)
 	rootCmd.AddCommand(setTokenCmd)
 	rootCmd.AddCommand(showUserCmd)
+	rootCmd.AddCommand(generateAPIDocsMD)
 }
 
 func initConfig() {
