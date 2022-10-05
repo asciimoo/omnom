@@ -51,7 +51,7 @@ var rootCmd = &cobra.Command{
 	Use:     "omnom",
 	Short:   "webpage bookmarking and snapshotting service.",
 	Long:    `A webpage bookmarking and snapshotting service.`,
-	Version: "v0.1.0",
+	Version: "v0.2.0",
 }
 
 var listenCmd = &cobra.Command{
