@@ -132,8 +132,8 @@ var generateAPIDocsMD = &cobra.Command{
 	Short: "Generate Markdown API documentation",
 	Long:  `generate-api-docs-md`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("# API documentation\n")
-		fmt.Println("## Endpoints\n")
+		fmt.Printf("# API documentation\n\n")
+		fmt.Printf("## Endpoints\n\n")
 		for _, e := range webapp.Endpoints {
 			fmt.Printf(
 				"- [%s `%s`](#%s-%s)\n",
@@ -150,7 +150,7 @@ var generateAPIDocsMD = &cobra.Command{
 			fmt.Println(e.Description)
 			fmt.Println()
 			if e.AuthRequired {
-				fmt.Println("#### Authentication required\n")
+				fmt.Printf("#### Authentication required\n\n")
 			}
 			if len(e.Args) > 0 {
 				fmt.Println(`#### Arguments
@@ -162,7 +162,7 @@ var generateAPIDocsMD = &cobra.Command{
 				}
 				fmt.Println()
 			}
-			fmt.Println("---\n")
+			fmt.Printf("---\n\n")
 		}
 	},
 }
