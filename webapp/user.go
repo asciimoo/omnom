@@ -148,9 +148,7 @@ func logout(c *gin.Context) {
 		return
 	}
 	session.Delete(SID)
-	defer func() {
-		_ = session.Save()
-	}()
+	_ = session.Save()
 	c.Redirect(http.StatusFound, baseURL("/"))
 }
 
