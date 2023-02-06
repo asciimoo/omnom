@@ -2,7 +2,7 @@
     <channel>
         <title>Omnom</title>
         <link>{{ .FullURLPrefix }}{{ BaseURL "/" }}</link>
-        <description>Bookmarking & snapshotting</description>
+        <description>Bookmarking &amp; snapshotting</description>
         {{ range .RSS }}
         <item>
             <title>{{ .Title }}</title>
