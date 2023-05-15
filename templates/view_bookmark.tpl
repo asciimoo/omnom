@@ -25,7 +25,7 @@
     {{ .Bookmark.CreatedAt | ToDate }} {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}
     {{ if .User }}
       {{ if eq .User.ID .Bookmark.UserID }}
-        <a href="{{ BaseURL "/edit-bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
+        <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
       {{ end }}
     {{ end }}
 </div>
