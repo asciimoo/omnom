@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021-2022 Adam Tauber, <asciimoo@gmail.com> et al.
+//
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { downloadFile } from './file-download';
 import { resources } from './resources';
 import { sanitizeCSS } from './sanitize';
