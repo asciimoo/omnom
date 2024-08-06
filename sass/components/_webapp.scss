@@ -323,122 +323,6 @@ iframe {
     }
 }
 
-.landing-page {
-    width: 100%;    
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: $color-white;
-    &__hero{
-        background-color: $alternative-color;
-        min-height: 33rem;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-    }
-    &__content {
-        background-color: $primary-color-dark;
-        flex: 3;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    &__menu{
-        background-color: $alternative-color-light;
-        height: 4.8rem;
-        width: 70%;
-        justify-self: flex-end;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-    }
-    &__logo {
-        text-align: center;
-    }
-    &__logo img {
-        max-width: 50%;
-        padding: auto;
-    }
-    &__headline {
-        height: 2rem !important;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex:1;
-        width: 70%;
-        padding: 5rem;
-    }
-    &__title {
-        width: 50%;
-        h1{
-            font-size: 2.6rem;
-            line-height: 3rem;
-            font-weight: 700;
-            font-family: 'Dosis';
-            margin-bottom: 1.5rem;
-        }
-        .button, .button:hover {            
-            border-radius: 0;
-            background-color: $color-red;
-            color: $color-white;
-            border: none;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            padding: 1.7rem 4.4rem;
-            font-weight: 800;
-        }
-    }
-    &__menu-item {
-        margin: 0 3rem;
-        font-size: 1.8rem;
-        font-weight: 300;
-        font-family: 'Dosis';
-        cursor: pointer;
-    }
-    &__section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: $color-white;
-        width: 70%;
-    }
-    &__article {
-        height: 30rem;        
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;        
-        padding: 3rem;
-    }
-    &__pic{
-        flex:1;
-    }
-    &__text {
-        flex:1;
-        font-family: 'Dosis';
-        h2{
-            font-size: 2.6rem;
-            text-transform: uppercase;
-            font-weight: 700;
-        }
-        h3{
-            margin: 1rem 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        p{
-            font-size: 1.2rem;
-        }
-        color: $color-black;
-    }
-    a, a:hover{
-        text-decoration: none;
-        color: $color-white;
-    }
-}
 
 .next-section {
     font-size: 2rem;
@@ -455,20 +339,34 @@ iframe {
     margin-bottom: 2rem
 }
 
+.hero-body {
+    background-color: $alternative-color;
+    h1, h2, h3, h4, p {
+        color: $color-white;
+    }
+    p.big {
+        font-size: 2em;
+    }
+    img.logo {
+        max-height: 10em;
+    }
+}
+
 .extension-button, .extension-button:hover {
     i{
         display: block;
         font-size: 2.5rem;
         margin-bottom: 0.5rem;
     }
+    margin: 2em;
     border-radius: 12px;
     cursor: pointer;
     background-color: $color-red;
     color: $color-white;
-    border: none;        
+    border: none;
     font-weight: 400;
-    padding: 1rem;
-    width:6rem;
+    padding: 0rem;
+    width: 10rem;
     height: 6rem;
 }
 

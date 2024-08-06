@@ -29,6 +29,6 @@
     "postcss-cli": "^7.1.1"
   },
   "devDependencies": {
-    "node-sass": "^4.14.1"
+    "node-sass": "^9.0.0"
   }
 }
