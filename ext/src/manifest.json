@@ -1,7 +1,7 @@
 {
 	"name": "omnom",
 	"version": "0.10.0",
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"description": "A bookmarking extension for omnom services.",
 	"content_scripts": [
 		{
@@ -16,7 +16,7 @@
 			]
 		}
 	],
-	"browser_action": {
+	"action": {
 		"default_icon": "icons/omnom.png",
 		"default_popup": "popup.html"
 	},
@@ -28,12 +28,15 @@
 	},
 	"options_ui": {
 		"page": "options.html",
-		"open_in_tab": true,
-		"chrome_style": true
+		"open_in_tab": true
 	},
+    "host_permissions": [
+        "*://*/*"
+	],
 	"permissions": [
+        "tabs",
 		"activeTab",
-		"<all_urls>",
-		"storage"
-	]
+		"storage",
+        "scripting"
+    ]
 }

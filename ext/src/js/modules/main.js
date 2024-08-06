@@ -74,7 +74,7 @@ async function handleDomDataMessage(msg) {
     if (!doc) {
         let data = await executeScriptToPromise(getDomData, br);
         if (data) {
-            data = data[0];
+            data = data[0].result;
             doc = new Document(data.html, data.url, data.doctype, data.attributes);
         } else {
             // TODO display error to user
@@ -144,13 +144,13 @@ async function fillFormFields() {
     // fill title input field
     const title = await executeScriptToPromise(() => document.title);
     if (title && title[0]) {
-        document.getElementById('title').value = title[0];
+        document.getElementById('title').value = title[0].result;
     }
 
     // fill notes input field
     const selection = await executeScriptToPromise(() => window.getSelection().toString());
     if (selection && selection[0]) {
-        document.getElementById('notes').value = selection[0];
+        document.getElementById('notes').value = selection[0].result;
     }
 
     //fill tags
@@ -205,7 +205,7 @@ async function createBookmark(e) {
             saveBookmark();
             return;
         }
-        data = data[0];
+        data = data[0].result;
         doc = new Document(data.html, data.url, data.doctype, data.attributes);
         saveBookmark();
         return;

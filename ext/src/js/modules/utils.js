@@ -28,7 +28,7 @@ function executeScriptToPromise(functionToExecute) {
             browser.tabs.getCurrent(tab => {
                 chrome.tabs.query({ currentWindow: true, active: false }, tabs => {
                     const tabId = tabs[tabs.length-1].id;
-                    browser.tabs.executeScript(tabId, {
+                    browser.scripting.executeScript(tabId, {
                         code: `(${functionToExecute})()`
                     },
                     (data) => {
@@ -38,13 +38,17 @@ function executeScriptToPromise(functionToExecute) {
             });
         });
     }
+    //let [tab] = await chrome.tabs.query({ active: true, currentWindow: true }
     return new Promise(resolve => {
-        browser.tabs.executeScript({
-            code: `(${functionToExecute})()`
-        },
+        browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
+            browser.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                func: functionToExecute
+            },
             (data) => {
                 resolve(data);
             });
+        });
     });
 }
 
