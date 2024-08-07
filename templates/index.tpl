@@ -1,5 +1,5 @@
 {{ define "full-content" }}
-<div class="hero">
+<div class="hero is-medium">
     <div class="hero-body">
         <div class="columns">
             <div class="column is-2 has-text-right">

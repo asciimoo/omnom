@@ -187,6 +187,22 @@ func init() {
 				},
 			},
 		},
+		&Endpoint{
+			Name:         "Download snapshot",
+			Path:         "/download_snapshot",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      downloadSnapshot,
+			Description:  "Download a self contained single file version of a snapshot",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "sid",
+					Type:        "string",
+					Required:    true,
+					Description: "Snapshot key",
+				},
+			},
+		},
 		//&Endpoint{
 		//	Name:         "Self-contained snapshot view",
 		//	Path:         "/self_contained_snapshot",

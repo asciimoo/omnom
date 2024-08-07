@@ -1,16 +1,16 @@
 package webapp
 
 import (
-	//"bytes"
-	//"compress/gzip"
-	//"encoding/base64"
-	//"fmt"
-	//"io"
-	//"mime"
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"fmt"
+	"golang.org/x/net/html"
+	"io"
+	"mime"
 	"net/http"
-	//"path/filepath"
-	//"strings"
-	//"golang.org/x/net/html"
+	"path/filepath"
+	"strings"
 
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
@@ -79,74 +79,98 @@ func snapshotWrapper(c *gin.Context) {
 	})
 }
 
-//func selfContainedSnapshot(c *gin.Context) {
-//	id, ok := c.GetQuery("sid")
-//	if !ok {
-//		return
-//	}
-//	r, err := storage.GetSnapshot(id)
-//	if err != nil {
-//		return
-//	}
-//	defer r.Close()
-//	gr, err := gzip.NewReader(r)
-//	if err != nil {
-//		return
-//	}
-//	c.Header("Content-Type", "text/html; charset=utf-8")
-//	c.Status(http.StatusOK)
-//	doc := html.NewTokenizer(gr)
-//	for {
-//		tt := doc.Next()
-//		switch tt {
-//		case html.ErrorToken:
-//			err := doc.Err()
-//			if err == io.EOF {
-//				return
-//			}
-//			// TODO error handling
-//			return
-//		case html.SelfClosingTagToken:
-//		case html.StartTagToken:
-//			c.Writer.Write([]byte("<"))
-//			tn, hasAttr := doc.TagName()
-//			c.Writer.Write(tn)
-//			if hasAttr {
-//				for {
-//					aName, aVal, moreAttr := doc.TagAttr()
-//					c.Writer.Write([]byte(fmt.Sprintf(` %s="`, aName)))
-//					if bytes.HasPrefix(aVal, []byte("../../resources/")) && false {
-//						href := string(aVal)
-//						res, err := storage.GetResource(filepath.Base(href))
-//						if err == nil {
-//							gres, err := gzip.NewReader(r)
-//							if err == nil {
-//								ext := filepath.Ext(href)
-//								c.Writer.Write([]byte(fmt.Sprintf("data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])))
-//								bw := base64.NewEncoder(base64.StdEncoding, c.Writer)
-//								io.Copy(bw, gres)
-//								bw.Close()
-//								res.Close()
-//							}
-//						}
-//					} else {
-//						c.Writer.Write([]byte(html.EscapeString(string(aVal))))
-//					}
-//					c.Writer.Write([]byte(`"`))
-//					if !moreAttr {
-//						break
-//					}
-//				}
-//			}
-//			c.Writer.Write([]byte(">"))
-//		case html.TextToken:
-//			c.Writer.Write(doc.Text())
-//		case html.EndTagToken:
-//			tn, _ := doc.TagName()
-//			c.Writer.Write([]byte(fmt.Sprintf(`</%s>`, tn)))
-//		}
-//	}
-//}
+func downloadSnapshot(c *gin.Context) {
+	id, ok := c.GetQuery("sid")
+	if !ok {
+		return
+	}
+	r, err := storage.GetSnapshot(id)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+	gr, err := gzip.NewReader(r)
+	if err != nil {
+		return
+	}
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=omnom_snapshot_%s.html;", id))
+	c.Status(http.StatusOK)
+	doc := html.NewTokenizer(gr)
+	for {
+		tt := doc.Next()
+		switch tt {
+		case html.ErrorToken:
+			err := doc.Err()
+			if err == io.EOF {
+				return
+			}
+			// TODO error handling
+			return
+		case html.SelfClosingTagToken:
+		case html.StartTagToken:
+			c.Writer.Write([]byte("<"))
+			tn, hasAttr := doc.TagName()
+			c.Writer.Write(tn)
+			if hasAttr {
+				generateTagAttributes(tn, doc, c.Writer)
+			}
+			c.Writer.Write([]byte(">"))
+		case html.TextToken:
+			c.Writer.Write(doc.Text())
+		case html.EndTagToken:
+			tn, _ := doc.TagName()
+			c.Writer.Write([]byte(fmt.Sprintf(`</%s>`, tn)))
+		}
+	}
+}
+
+func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
+	for {
+		aName, aVal, moreAttr := doc.TagAttr()
+		out.Write([]byte(fmt.Sprintf(` %s="`, aName)))
+		if attributeHasResource(aName, aVal) {
+			href := string(aVal)
+			res, err := storage.GetResource(filepath.Base(href))
+			if err == nil {
+				gres, err := gzip.NewReader(res)
+				if err == nil {
+					ext := filepath.Ext(href)
+					out.Write([]byte(fmt.Sprintf("data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])))
+					bw := base64.NewEncoder(base64.StdEncoding, out)
+					io.Copy(bw, gres)
+					bw.Close()
+					res.Close()
+				}
+			} else {
+				out.Write(aVal)
+			}
+		} else {
+			out.Write(aVal)
+		}
+		out.Write([]byte(`"`))
+		if !moreAttr {
+			break
+		}
+	}
+}
+
+func attributeHasResource(name, val []byte) bool {
+	match := false
+	if bytes.Equal(name, []byte("img")) && bytes.Equal(name, []byte("src")) {
+		match = true
+	}
+	if bytes.Equal(name, []byte("link")) && bytes.Equal(name, []byte("href")) {
+		match = true
+	}
+	if bytes.Equal(name, []byte("iframe")) && bytes.Equal(name, []byte("src")) {
+		match = true
+	}
+	if match && bytes.HasPrefix(val, []byte("../../resources/")) {
+		return true
+	}
+	return false
+}
 
 func deleteSnapshot(c *gin.Context) {
 	u, _ := c.Get("user")
