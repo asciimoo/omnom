@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"errors"
 	"fmt"
-	"golang.org/x/net/html"
 	"io"
+	"log"
 	"mime"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/net/html"
 
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
@@ -19,6 +22,12 @@ import (
 
 	"github.com/gin-gonic/contrib/sessions"
 )
+
+var resourceAttributes map[string]string = map[string]string{
+	"img":    "src",
+	"link":   "href",
+	"iframe": "src",
+}
 
 func snapshotWrapper(c *gin.Context) {
 	sid, ok := c.GetQuery("sid")
@@ -102,25 +111,35 @@ func downloadSnapshot(c *gin.Context) {
 		switch tt {
 		case html.ErrorToken:
 			err := doc.Err()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return
 			}
-			// TODO error handling
+			log.Println("Error: unexpected error while parsing")
 			return
 		case html.SelfClosingTagToken:
 		case html.StartTagToken:
-			c.Writer.Write([]byte("<"))
+			if !writeBytes(c.Writer, []byte("<")) {
+				return
+			}
 			tn, hasAttr := doc.TagName()
-			c.Writer.Write(tn)
+			if !writeBytes(c.Writer, tn) {
+				return
+			}
 			if hasAttr {
 				generateTagAttributes(tn, doc, c.Writer)
 			}
-			c.Writer.Write([]byte(">"))
+			if !writeBytes(c.Writer, []byte(">")) {
+				return
+			}
 		case html.TextToken:
-			c.Writer.Write(doc.Text())
+			if !writeBytes(c.Writer, doc.Text()) {
+				return
+			}
 		case html.EndTagToken:
 			tn, _ := doc.TagName()
-			c.Writer.Write([]byte(fmt.Sprintf(`</%s>`, tn)))
+			if !writeBytes(c.Writer, []byte(fmt.Sprintf(`</%s>`, tn))) {
+				return
+			}
 		}
 	}
 }
@@ -128,48 +147,60 @@ func downloadSnapshot(c *gin.Context) {
 func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 	for {
 		aName, aVal, moreAttr := doc.TagAttr()
-		out.Write([]byte(fmt.Sprintf(` %s="`, aName)))
-		if attributeHasResource(aName, aVal) {
+		if !writeBytes(out, []byte(fmt.Sprintf(` %s="`, aName))) {
+			return
+		}
+		if attributeHasResource(tagName, aName, aVal) {
 			href := string(aVal)
 			res, err := storage.GetResource(filepath.Base(href))
 			if err == nil {
 				gres, err := gzip.NewReader(res)
 				if err == nil {
 					ext := filepath.Ext(href)
-					out.Write([]byte(fmt.Sprintf("data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])))
+					if !writeBytes(out, []byte(fmt.Sprintf("data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0]))) {
+						return
+					}
 					bw := base64.NewEncoder(base64.StdEncoding, out)
-					io.Copy(bw, gres)
+					// TODO configure file size
+					if _, err := io.CopyN(bw, gres, 1024*1024); err != nil && !errors.Is(err, io.EOF) {
+						log.Println("Error: IO copy error", href, err)
+						return
+					}
 					bw.Close()
 					res.Close()
 				}
 			} else {
-				out.Write(aVal)
+				if !writeBytes(out, aVal) {
+					return
+				}
 			}
 		} else {
-			out.Write(aVal)
+			if !writeBytes(out, aVal) {
+				return
+			}
 		}
-		out.Write([]byte(`"`))
+		if !writeBytes(out, []byte(`"`)) {
+			return
+		}
 		if !moreAttr {
 			break
 		}
 	}
 }
 
-func attributeHasResource(name, val []byte) bool {
-	match := false
-	if bytes.Equal(name, []byte("img")) && bytes.Equal(name, []byte("src")) {
-		match = true
-	}
-	if bytes.Equal(name, []byte("link")) && bytes.Equal(name, []byte("href")) {
-		match = true
-	}
-	if bytes.Equal(name, []byte("iframe")) && bytes.Equal(name, []byte("src")) {
-		match = true
-	}
-	if match && bytes.HasPrefix(val, []byte("../../resources/")) {
+func attributeHasResource(tag, name, val []byte) bool {
+	if resourceAttributes[string(tag)] == string(name) && bytes.HasPrefix(val, []byte("../../resources/")) {
 		return true
 	}
 	return false
+}
+
+func writeBytes(w io.Writer, data []byte) bool {
+	if l, err := w.Write(data); err != nil || l != len(data) {
+		log.Println("Error: IO error")
+		return false
+	}
+	return true
 }
 
 func deleteSnapshot(c *gin.Context) {
