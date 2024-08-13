@@ -33,7 +33,7 @@ module.exports = {
         omnom: [path.join(__dirname, "src", "js", "omnom.js"), path.join(__dirname, "src", "css", "style.css")],
         options: path.join(__dirname, "src", "js", "options.js"),
         site: path.join(__dirname, "src", "js", "site.js"),
-        // background: path.join(__dirname, "src", "js", "background.js")
+        background: path.join(__dirname, "src", "js", "background.js")
     },
     output: {
         path: path.join(__dirname, "build"),

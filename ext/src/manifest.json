@@ -19,7 +19,10 @@
 	"action": {
 		"default_icon": "icons/omnom.png",
 		"default_popup": "popup.html"
-	},
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
 	"icons": {
 		"256": "icons/omnom256.png",
 		"128": "icons/omnom128.png",
