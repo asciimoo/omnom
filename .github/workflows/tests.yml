@@ -19,10 +19,10 @@ jobs:
   end2end:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@latest
+      - uses: actions/setup-node@latest
         with:
-          node-version: 12
+          node-version: 20
       - run: go get -u
       - run: ./manage.sh start_test_server&
       - run: ./manage.sh install_js_deps
