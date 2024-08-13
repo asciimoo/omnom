@@ -67,18 +67,25 @@ async function login(browser) {
 async function testPageSnapshot(browser) {
     let page = await browser.newPage();
     await page.goto(serverAddr+'static/test/index.html', {waitUntil: 'load'});
-    let addonPage = await browser.newPage();
-    await addonPage.goto(extBaseUrl+'popup.html#test', {waitUntil: 'load'});
-    await addonPage.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
-    const title = await addonPage.$("#title");
-    addonPage.evaluate((btnSelector) => {
+    const workerTarget = await browser.waitForTarget(
+        target => target.type() == "service_worker"
+    );
+    const worker = await workerTarget.worker();
+    await worker.evaluate("chrome.action.openPopup();");
+    const popup = await browser.waitForTarget(
+        (target) =>
+        target.type() === "page" &&
+        target.url() === extBaseUrl+'popup.html'
+    );
+    const addonPopup = await popup.asPage();
+    addonPopup.evaluate((btnSelector) => {
         document.querySelector(btnSelector).click();
     }, 'input[type="submit"]');
-    const status = await addonPage.waitForSelector("#status");
+    const status = await addonPopup.waitForSelector("#status");
     const result = await status.evaluate(el => el.getAttribute('class'));
     //await page.waitForTimeout(50*1000);
     assert(result == 'success');
-    addonPage.close();
+    addonPopup.close();
     const resp = await page.goto(serverAddr+testPageUrl, {waitUntil: 'load'});
     assert(resp.status() == 200);
 }

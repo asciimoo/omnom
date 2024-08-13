@@ -22,22 +22,6 @@ function checkStatus(res) {
 }
 
 function executeScriptToPromise(functionToExecute) {
-    // This is only for test purposes, see https://github.com/puppeteer/puppeteer/issues/2486
-    if(window.location.hash) {
-        return new Promise(resolve => {
-            browser.tabs.getCurrent(tab => {
-                chrome.tabs.query({ currentWindow: true, active: false }, tabs => {
-                    const tabId = tabs[tabs.length-1].id;
-                    browser.scripting.executeScript(tabId, {
-                        code: `(${functionToExecute})()`
-                    },
-                    (data) => {
-                        resolve(data);
-                    });
-                });
-            });
-        });
-    }
     //let [tab] = await chrome.tabs.query({ active: true, currentWindow: true }
     return new Promise(resolve => {
         browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
