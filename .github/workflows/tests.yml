@@ -13,14 +13,14 @@ jobs:
   go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v2
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
       - run: ./manage.sh run_unit_tests
   end2end:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@latest
-      - uses: actions/setup-node@latest
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: go get -u
