@@ -27,7 +27,6 @@ linters:
   enable:
     - asciicheck # simple linter to check that your code does not contain non-ASCII identifiers
     - bodyclose # checks whether HTTP response body is closed successfully
-    - deadcode # finds unused code
     - dupl # tool for code clone detection
     - durationcheck # check for two durations multiplied together
     - errcheck # checking for unchecked errors in go programs
@@ -49,13 +48,11 @@ linters:
     - nolintlint # reports ill-formed or insufficient nolint directives
     - prealloc # finds slice declarations that could potentially be preallocated
     - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks
-    - structcheck # finds unused struct fields
     - stylecheck # a replacement for golint
     - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
     - unconvert # Remove unnecessary type conversions
     - unparam # reports unused function parameters
     - unused # checks Go code for unused constants, variables, functions and types
-    - varcheck # Finds unused global variables and constants
     - wastedassign # wastedassign finds wasted assignment statements.
     - whitespace # find trailing whitespaces
 
@@ -88,10 +85,6 @@ linters-settings:
     # Allow local `replace` directives. Default is false.
     replace-local: false
 
-  gosimple:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.17.6"
-
   misspell:
     # Correct spellings using locale preferences for US or UK.
     # Default is to use a neutral variety of English.
@@ -122,14 +115,6 @@ linters-settings:
     require-explanation: true
     # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
     require-specific: true
-
-  staticcheck:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.17.6"
-
-  stylecheck:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.17.6"
 
   unparam:
     # Inspect exported functions, default is false. Set to true if no external program/library imports your code.
