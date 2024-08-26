@@ -1,8 +1,8 @@
 {
 	"name": "omnom",
-	"version": "0.10.0",
+	"version": "0.11.0",
 	"manifest_version": 3,
-	"description": "A bookmarking extension for omnom services.",
+	"description": "Bookmarking & snapshotting extension for omnom services.",
 	"content_scripts": [
 		{
 			"js": [
@@ -21,7 +21,8 @@
 		"default_popup": "popup.html"
     },
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "background.js",
+        "scripts": ["background.js"]
     },
 	"icons": {
 		"256": "icons/omnom256.png",
@@ -37,9 +38,18 @@
         "*://*/*"
 	],
 	"permissions": [
-        "tabs",
 		"activeTab",
 		"storage",
         "scripting"
-    ]
+    ],
+	"browser_specific_settings": {
+	  "gecko": {
+		"id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",
+		"strict_min_version": "110.0"
+	  },
+	  "gecko_android": {
+		"id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",
+		"strict_min_version": "110.0"
+	  }
+	}
 }
