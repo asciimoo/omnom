@@ -8,6 +8,10 @@ const messageHandlers = new Map([
 function initComms() {
     chrome.runtime.onConnect.addListener(port => {
         port.onMessage.addListener((msg, commChan) => {
+            // TODO generate static extension id and check the full ID, not just the schema
+            if(!commChan.sender.origin.startsWith('chrome-extension://')) {
+                return;
+            }
             const msgHandler = messageHandlers.get(msg.type);
             if (msgHandler) {
                 msgHandler(msg, commChan);
@@ -20,6 +24,9 @@ function initComms() {
 
 async function handlePingMessage(msg, commChan) {
     commChan.postMessage({type: 'pong'});
+    if(chrome.runtime.lastError) {
+        console.log("Failed to deliver pong message", chrome.runtime.lastError);
+    }
 }
 
 async function handleGetDomMessage(msg, commChan) {
@@ -29,6 +36,9 @@ async function handleGetDomMessage(msg, commChan) {
         isIframe: self != top
         //isIframe: self != top || document.location.ancestorOrigins.length
     });
+    if(chrome.runtime.lastError) {
+        console.log("Failed to deliver domData message", chrome.runtime.lastError);
+    }
 }
 
 export default function () {

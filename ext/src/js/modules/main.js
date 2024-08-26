@@ -51,7 +51,10 @@ function setupComms(msg) {
             tab.id,
             {name: "omnom"}
         );
-        commChan.onMessage.addListener((msg) => {
+        commChan.onMessage.addListener((msg, sender) => {
+            if(sender.name != "omnom") {
+                return;
+            }
             const msgHandler = messageHandlers.get(msg.type);
             if(msgHandler) {
                 msgHandler(msg);
@@ -62,6 +65,9 @@ function setupComms(msg) {
         });
         if (msg) {
             commChan.postMessage(msg);
+            if(chrome.runtime.lastError) {
+                console.log(`Failed to deliver ${msg.type} message`, chrome.runtime.lastError);
+            }
         }
     });
 }
@@ -211,6 +217,9 @@ async function createBookmark(e) {
         return;
     } else {
         commChan.postMessage({type: "getDom"});
+        if(chrome.runtime.lastError) {
+            console.log(`Failed to deliver getDom message`, chrome.runtime.lastError);
+        }
     }
 }
 async function saveBookmark() {
