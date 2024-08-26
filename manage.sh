@@ -6,6 +6,9 @@ CONFIG_PATH="$BASE_DIR/tests/test_config.yml"
 ACTION="$1"
 [ -z "$ACTION" ] || shift
 
+EXT_ZIP='omnom_ext.zip'
+EXT_SRC_ZIP='omnom_ext_src.zip'
+
 cd -- "$BASE_DIR"
 set -e
 
@@ -34,6 +37,7 @@ Build
 build_css            - Build css files
 build_addon          - Build addon
 build_test_addon     - Build test addon
+build_addon_artifact - Build addon artifacts to distribute to addon stores
 
 ========
 
@@ -94,6 +98,16 @@ build_test_addon() {
     cd ..
 }
 
+build_addon_artifact() {
+    build_addon
+    [ -e "$EXT_SRC_ZIP" ] && rm "$EXT_SRC_ZIP" || :
+    [ -e "$EXT_ZIP" ] && rm "$EXT_ZIP" || :
+    cd ext
+    zip -r "../$EXT_SRC_ZIP" README.md src utils package* webpack.config.js
+    cd build
+    zip "../../$EXT_ZIP" ./* icons/*
+    cd ../../
+}
 
 [ "$(command -V "$ACTION" | grep ' function$')" = "" ] \
 	&& help "action not found" \
