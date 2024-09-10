@@ -1,3 +1,7 @@
+// SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
+//
+// SPDX-License-Identifier: AGPLv3+
+
 import { getDomData } from "./get-dom-data";
 
 const messageHandlers = new Map([

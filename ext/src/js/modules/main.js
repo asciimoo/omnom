@@ -1,3 +1,7 @@
+// SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
+//
+// SPDX-License-Identifier: AGPLv3+
+
 import { Document } from "./document";
 import { renderProgressBar, destroyProgressBar } from './file-download';
 import { getDomData } from "./get-dom-data";

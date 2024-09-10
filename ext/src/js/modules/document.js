@@ -1,3 +1,7 @@
+// SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
+//
+// SPDX-License-Identifier: AGPLv3+
+
 import { downloadFile } from './file-download';
 import { resources } from './resources';
 import { sanitizeCSS } from './sanitize';

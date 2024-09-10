@@ -1,3 +1,7 @@
+// SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
+//
+// SPDX-License-Identifier: AGPLv3+
+
 function getDomData() {
     const html = document.documentElement;
     const styleElements = html.querySelectorAll('style');

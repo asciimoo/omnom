@@ -1,3 +1,7 @@
+// SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
+//
+// SPDX-License-Identifier: AGPLv3+
+
 import { Subject } from 'rxjs';
 import { arrayBufferToBase64, checkStatus, fullURL, isDebug } from './utils';
 

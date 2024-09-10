@@ -1,3 +1,7 @@
+// SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
+//
+// SPDX-License-Identifier: AGPLv3+
+
 function addTag(value, tagChipContainer, tags) {
     renderTag(value, tagChipContainer, tags);
     tags.push(value);
