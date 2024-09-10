@@ -108,8 +108,10 @@ build_addon_artifact() {
     zip -r "../$EXT_SRC_ZIP" README.md src utils package* webpack.config.js
     cd build
     zip "../../$CHROME_EXT_ZIP" ./* icons/* -x manifest_ff.json
+    cp manifest.json /tmp
     cp manifest_ff.json manifest.json
     zip "../../$FF_EXT_ZIP" ./* icons/* -x manifest_ff.json
+    mv /tmp/manifest.json manifest.json
     cd ../../
 }
 
