@@ -90,6 +90,7 @@ module.exports = {
         new webpack.EnvironmentPlugin(["NODE_ENV"]),
         new CopyWebpackPlugin({
             patterns: [
+                // create chrome manifest.json
                 {
                     from: "src/manifest.json",
                     transform: function (content, path) {
@@ -98,13 +99,36 @@ module.exports = {
                             description: process.env.npm_package_description,
                             version: process.env.npm_package_version,
                             ...JSON.parse(content.toString())
-                        }
-                        // this is a workaround, required because https://github.com/puppeteer/puppeteer/issues/2486
-                        if(test) {
-                            content.permissions.push('tabs');
-                        }
+                        };
+                        content['background']['service_worker'] = 'background.js';
                         return Buffer.from(JSON.stringify(content));
-                    }
+                    },
+                    to: "manifest.json"
+                },
+                // create firefox manifest.json
+                {
+                    from: "src/manifest.json",
+                    transform: function (content, path) {
+                        // generates the manifest file using the package.json informations
+                        content = {
+                            description: process.env.npm_package_description,
+                            version: process.env.npm_package_version,
+                            ...JSON.parse(content.toString())
+                        };
+                        content['background']['scripts'] = 'background.js';
+                        content['browser_specific_settings'] = {
+                            "gecko": {
+                                "id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",
+                                "strict_min_version": "110.0"
+                            },
+                            "gecko_android": {
+                                "id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",
+                                "strict_min_version": "110.0"
+                            }
+                        };
+                        return Buffer.from(JSON.stringify(content));
+                    },
+                    to: "manifest_ff.json"
                 },
                 {
                     from: "src/icons",

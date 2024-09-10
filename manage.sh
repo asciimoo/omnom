@@ -6,7 +6,8 @@ CONFIG_PATH="$BASE_DIR/tests/test_config.yml"
 ACTION="$1"
 [ -z "$ACTION" ] || shift
 
-EXT_ZIP='omnom_ext.zip'
+CHROME_EXT_ZIP='omnom_ext_chrome.zip'
+FF_EXT_ZIP='omnom_ext_firefox.zip'
 EXT_SRC_ZIP='omnom_ext_src.zip'
 
 cd -- "$BASE_DIR"
@@ -87,6 +88,7 @@ build_css() {
 }
 
 build_addon() {
+    echo "[!] Warning: The default manifest.json is for chrome browsers, overwrite it with manifest_ff.json for firefox"
     cd ext
     npm run build
     cd ..
@@ -105,7 +107,9 @@ build_addon_artifact() {
     cd ext
     zip -r "../$EXT_SRC_ZIP" README.md src utils package* webpack.config.js
     cd build
-    zip "../../$EXT_ZIP" ./* icons/*
+    zip "../../$CHROME_EXT_ZIP" ./* icons/* -x manifest_ff.json
+    cp manifest_ff.json manifest.json
+    zip "../../$FF_EXT_ZIP" ./* icons/* -x manifest_ff.json
     cd ../../
 }
 

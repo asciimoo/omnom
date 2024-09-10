@@ -21,8 +21,6 @@
 		"default_popup": "popup.html"
     },
     "background": {
-        "service_worker": "background.js",
-        "scripts": ["background.js"]
     },
 	"icons": {
 		"256": "icons/omnom256.png",
@@ -41,15 +39,5 @@
 		"activeTab",
 		"storage",
         "scripting"
-    ],
-	"browser_specific_settings": {
-	  "gecko": {
-		"id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",
-		"strict_min_version": "110.0"
-	  },
-	  "gecko_android": {
-		"id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",
-		"strict_min_version": "110.0"
-	  }
-	}
+    ]
 }
