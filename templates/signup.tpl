@@ -1,5 +1,5 @@
 {{ define "content" }}
-<form method="post" action="{{ BaseURL "/signup" }}">
+<form method="post" action="{{ URLFor "Signup" }}">
 <div class="columns">
 <div class="column is-half is-offset-one-quarter">
 <div class="card"><div class="card-content">

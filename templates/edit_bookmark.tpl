@@ -11,7 +11,7 @@
         </span>
     </h2>
 
-    <form method="post" action="{{ BaseURL "/save_bookmark" }}">
+    <form method="post" action="{{ URLFor "Save bookmark" }}">
         <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
         <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
         <div class="field">
@@ -41,7 +41,7 @@
         </div>
     </form>
     <div class="field is-grouped is-grouped-right">
-        <form method="post" action="{{ BaseURL "/delete_bookmark" }}">
+        <form method="post" action="{{ URLFor "Delete bookmark" }}">
             <input class="button is-danger" type="submit" value="Delete this bookmark" />
             <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
             <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
@@ -52,7 +52,7 @@
         {{ if .Bookmark.Tags }}
           {{ range .Bookmark.Tags }}
             <span class="tag is-info">{{ .Text }}
-                <form method="post" action="{{ BaseURL "/delete_tag" }}">
+                <form method="post" action="{{ URLFor "Delete tag" }}">
                     <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                     <input type="hidden" name="tid" value="{{ .ID }}"/>
                     <input type="hidden" name="bid" value="{{ $.Bookmark.ID}}"/>
@@ -62,7 +62,7 @@
           {{ end }}
         {{ end }}
     </div>
-    <form method="post" action="{{ BaseURL "/add_tag" }}">
+    <form method="post" action="{{ URLFor "Add tag" }}">
         <label class="label">Add tag</label>
         <div class="field has-addons">
             <div class="control">
@@ -85,7 +85,7 @@
                     {{ range .Bookmark.Snapshots }}
                     <div class="list-item">
                         <li class="pure-list">
-                            <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
+                            <form method="post" action="{{ URLFor "Delete snapshot" }}">
                                 <h4 class="has-text-dark"><a href="{{ BaseURL "/snapshot" }}?sid={{ .Key }}&bid={{ $.Bookmark.ID }}">{{ .Title }} {{ .CreatedAt | ToDate }}</a>
                                     <input type="hidden" name="bid" value="{{ $.Bookmark.ID }}" />
                                     <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Omnom</title>    
+    <title>Omnom</title>
     <link rel="stylesheet" href="{{ BaseURL "/static/css/style.css" }}" />
     <link rel="icon" type="image/png" href="{{ BaseURL "/static/icons/omnom.png" }}" sizes="128x128">
 
@@ -13,7 +13,7 @@
 <nav class="navbar {{ block "content-class" . }}{{ end }}{{ if ne .Page "index" }} shadow-bottom{{ end }}" role="navigation" aria-label="main navigation">
   <div class="navbar__container">
     <div class="navbar-brand is-size-4">
-      <a class="navbar__logo" href="{{ BaseURL "/" }}"><span>om</span><span class="text--primary">nom</span> </a>
+      <a class="navbar__logo" href="{{ URLFor "Index" }}"><span>om</span><span class="text--primary">nom</span> </a>
       <label for="nav-toggle-state" role="button" class="navbar-burger burger has-text-black" aria-label="menu" aria-expanded="false">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -24,19 +24,19 @@
 
     <div id="navbar-menu" class="navbar-menu is-size-5">
       <div class="navbar-start">
-        <a href="{{ BaseURL "/" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">Home</a>
+        <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">Home</a>
         {{ if .User }}
-          <a href="{{ BaseURL "/my_bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
+          <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
-        <a href="{{ BaseURL "/bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
+        <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
       </div>
       <div class="navbar-end">
         {{ if .User }}
-            <a href="{{ BaseURL "/profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
-            <div class="navbar-item"><a href="{{ BaseURL "/logout" }}" class="button is-outlined is-info">Logout</a></div>
+            <a href="{{ URLFor "Profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
+            <div class="navbar-item"><a href="{{ URLFor "Logout" }}" class="button is-outlined is-info">Logout</a></div>
         {{ else }}
-            <div class="navbar-item"><a href="{{ BaseURL "/login" }}" class="button is-outlined is-info">Login</a></div>
-            {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ BaseURL "/signup" }}" class="button is-outlined is-info">Signup</a></div>{{ end }}
+            <div class="navbar-item"><a href="{{ URLFor "Login" }}" class="button is-outlined is-info">Login</a></div>
+            {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ URLFor "Signup" }}" class="button is-outlined is-info">Signup</a></div>{{ end }}
         {{ end }}
       </div>
     </div>
@@ -57,7 +57,7 @@
 <div class="section webapp__main-container">
     <div class="bd-main-container container">
         {{ block "content" . }}{{ end }}
-    </div>  
+    </div>
 </div>
 {{ end }}
 {{ if (not .hideFooter) }}
@@ -66,7 +66,7 @@
     <div class="content has-text-centered py-4">
       <p>Omnom © 2022</p>
       <span>
-          <a href="{{ BaseURL "/api" }}">API</a>
+          <a href="{{ URLFor "API" }}">API</a>
           &#8226; <a href="https://github.com/asciimoo/omnom">GitHub</a>
           &#8226; <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
           &#8226; <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
@@ -131,20 +131,20 @@
               <p class="is-size-7 has-text-grey has-text-weight-normal">
                   {{ Truncate .Bookmark.URL 100 }}<br />
                   <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
-                <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?user={{ .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
+                <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?user={{ .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
               </p>
           </h4>
       </div>
       <div class="bookmark__actions">
           <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end}}</span> 
-          <a href="{{ BaseURL "/bookmark" }}?id={{ .Bookmark.ID }}">
+          <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-eye"></i>
           </a>
           {{ if eq .UID .Bookmark.UserID }}
-          <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">
+          <a href="{{ URLFor "Edit bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-pencil-alt"></i>
           </a>
-          <form method="post" action="{{ BaseURL "/delete_bookmark" }}">
+          <form method="post" action="{{ URLFor "Delete bookmark" }}">
               <button class="button is-white" type="submit" value="Delete this bookmark" >
                   <span class="icon is-small"><i class="fas fa-trash"></i></span>
               </button>
@@ -159,7 +159,7 @@
     <div class="bookmark__tags">
         {{ if .Bookmark.Tags }}
           {{ range .Bookmark.Tags }}
-            <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+            <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
           {{ end }}
         {{ end }}
     </div>
@@ -188,7 +188,7 @@
     {{ range $i,$s := .Snapshots }}
     <div class="snapshot__link">
       <div>
-        <a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
+        <a href="{{ URLFor "Snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
           <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span> 
           <span class="snapshot__title">
           {{if $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
@@ -198,7 +198,7 @@
       <div class="bookmark__actions">
           {{ if $.IsOwn }}
           <i class="fas fa-pencil-alt"></i>
-          <form method="post" action="{{ BaseURL "/delete_snapshot" }}">
+          <form method="post" action="{{ URLFor "Delete snapshot" }}">
               <input type="hidden" name="bid" value="{{ $s.BookmarkID }}" />
               <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
               <input type="hidden" name="sid" value="{{ $s.ID }}" />

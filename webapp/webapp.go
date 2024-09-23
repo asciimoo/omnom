@@ -37,6 +37,7 @@ const (
 
 var e *gin.Engine
 var baseURL func(string) string
+var URLFor func(string) string
 
 var tplFuncMap = template.FuncMap{
 	"HasPrefix":  strings.HasPrefix,
@@ -246,7 +247,18 @@ func Run(cfg *config.Config) {
 		}
 		return bu + u
 	}
+	// TODO handle GET arguments as well
+	URLFor = func(e string) string {
+		for _, ep := range Endpoints {
+			if ep.Name == e {
+				return baseURL(ep.Path)
+			}
+		}
+		log.Printf("Error: Endpoint '%s' not found", e)
+		return "/"
+	}
 	tplFuncMap["BaseURL"] = baseURL
+	tplFuncMap["URLFor"] = URLFor
 	e.HTMLRender = createRenderer()
 
 	// ROUTES

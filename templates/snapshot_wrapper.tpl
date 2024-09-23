@@ -5,7 +5,7 @@
         <p>
             <strong>{{ .Snapshot.CreatedAt | ToDate }}</strong>
             <span class="tag is-info is-light">{{ .Snapshot.Size | FormatSize }}</span> <a href="{{ SnapshotURL .Snapshot.Key }}"><small>Fullscreen</small></a>
-            - <a href="{{ BaseURL "/download_snapshot" }}?sid={{ .Snapshot.Key }}"><small>Download</small></a>
+            - <a href="{{ URLFor "Download snapshot" }}?sid={{ .Snapshot.Key }}"><small>Download</small></a>
         </p>
     </div>
     {{ if .OtherSnapshots }}
@@ -22,7 +22,7 @@
             </label>
             <div class="accordion-tab-content">
                 {{ range $i,$s := .OtherSnapshots }}
-                <span class="tag"><a href="{{ BaseURL "/snapshot" }}?sid={{ $s.Sid }}&bid={{ $s.Bid }}">{{ if $s.Title }}{{ $s.Title }}{{ else }}#{{ $i }}{{ end }}</a></span>
+                <span class="tag"><a href="{{ URLFor "Snapshot" }}?sid={{ $s.Sid }}&bid={{ $s.Bid }}">{{ if $s.Title }}{{ $s.Title }}{{ else }}#{{ $i }}{{ end }}</a></span>
                 {{ end }}
             </div>
         </div>

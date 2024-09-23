@@ -26,7 +26,7 @@
     <div class="field is-grouped is-grouped-multiline">
         {{ range .Tags }}
         <div class="control">
-            <a class="tags has-addons" href="{{ BaseURL "/my_bookmarks" }}?tag={{ .Tag }}">
+            <a class="tags has-addons" href="{{ URLFor "My bookmarks" }}?tag={{ .Tag }}">
                 <span class="tag is-primary is-medium">{{ .Tag }}</span>
                 <span class="tag is-dark is-medium">{{ .Count }}</span>
             </a>

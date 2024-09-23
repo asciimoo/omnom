@@ -12,7 +12,7 @@
                 {{ range .AddonTokens }}
                 <div class="list-item">
                     <li class="pure-list">
-                        <form method="post" action="{{ BaseURL "/delete_addon_token" }}">
+                        <form method="post" action="{{ URLFor "Delete addon token" }}">
                                 <code class="has-text-dark">{{ .Text }}</code>
                                 <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                                 <input type="hidden" name="id" value="{{ .ID }}" />
@@ -32,6 +32,6 @@
             </form>
         </div></div>
     {{ end }}
-    <a href="{{ BaseURL "/generate_addon_token" }}" class="button is-primary">Generate new addon token</a>
+    <a href="{{ URLFor "Generate addon token" }}" class="button is-primary">Generate new addon token</a>
 </div>
 {{ end }}

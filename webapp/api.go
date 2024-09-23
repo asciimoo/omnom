@@ -49,7 +49,7 @@ func init() {
 			Description:  "Landing page",
 		},
 		&Endpoint{
-			Name:         "Signup form",
+			Name:         "Signup",
 			Path:         "/signup",
 			Method:       GET,
 			AuthRequired: false,
@@ -79,7 +79,7 @@ func init() {
 			},
 		},
 		&Endpoint{
-			Name:         "Login form",
+			Name:         "Login",
 			Path:         "/login",
 			Method:       GET,
 			AuthRequired: false,
@@ -103,7 +103,7 @@ func init() {
 			},
 		},
 		&Endpoint{
-			Name:         "Logout page",
+			Name:         "Logout",
 			Path:         "/logout",
 			Method:       GET,
 			AuthRequired: false,
@@ -111,12 +111,12 @@ func init() {
 			Description:  "Destroys user session",
 		},
 		&Endpoint{
-			Name:         "Public bookmark listing",
+			Name:         "Public bookmarks",
 			Path:         "/bookmarks",
 			Method:       GET,
 			AuthRequired: false,
 			Handler:      bookmarks,
-			Description:  "Displays public bookmarks with optional filters",
+			Description:  "List public bookmarks with optional filters",
 			Args: []*EndpointArg{
 				&EndpointArg{
 					Name:        "query",
@@ -170,12 +170,12 @@ func init() {
 			RSS: "Bookmarks",
 		},
 		&Endpoint{
-			Name:         "Snapshot view with details",
+			Name:         "Snapshot",
 			Path:         "/snapshot",
 			Method:       GET,
 			AuthRequired: false,
 			Handler:      snapshotWrapper,
-			Description:  "Displays bookmark snapshots with additional bookmark properties",
+			Description:  "Displays snapshots details with additional bookmark properties",
 			Args: []*EndpointArg{
 				&EndpointArg{
 					Name:        "sid",
@@ -350,7 +350,7 @@ func init() {
 			},
 		},
 		&Endpoint{
-			Name:         "View bookmark",
+			Name:         "Bookmark",
 			Path:         "/bookmark",
 			Method:       GET,
 			AuthRequired: false,
@@ -366,7 +366,7 @@ func init() {
 			},
 		},
 		&Endpoint{
-			Name:         "API documentation",
+			Name:         "API",
 			Path:         "/api",
 			Method:       GET,
 			AuthRequired: false,
@@ -377,12 +377,12 @@ func init() {
 		| LOGIN REQUIRED FOR THE ENDPOINTS BELOW |
 		\****************************************/
 		&Endpoint{
-			Name:         "Profile page",
+			Name:         "Profile",
 			Path:         "/profile",
 			Method:       GET,
 			AuthRequired: true,
 			Handler:      profile,
-			Description:  "Displays the profile page",
+			Description:  "Displays the user profile page",
 		},
 		&Endpoint{
 			Name:         "Profile page",
@@ -417,7 +417,7 @@ func init() {
 			},
 		},
 		&Endpoint{
-			Name:         "View personal bookmarks",
+			Name:         "My bookmarks",
 			Path:         "/my_bookmarks",
 			Method:       GET,
 			AuthRequired: true,
