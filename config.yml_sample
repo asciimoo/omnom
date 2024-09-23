@@ -7,6 +7,7 @@ server:
   # e.g. https://mydomain.tld/xy/
   # leave blank if you don't have custom base URL
   base_url: ""
+  secure_cookie: true
 db:
   type: "sqlite"
   connection: "./db.sqlite3"

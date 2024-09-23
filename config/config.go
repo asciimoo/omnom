@@ -25,8 +25,9 @@ type App struct {
 }
 
 type Server struct {
-	Address string `yaml:"address"`
-	BaseURL string `yaml:"base_url"`
+	Address      string `yaml:"address"`
+	BaseURL      string `yaml:"base_url"`
+	SecureCookie bool   `yaml:"secure_cookie"`
 }
 
 type DB struct {
