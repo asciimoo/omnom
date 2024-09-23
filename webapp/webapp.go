@@ -226,7 +226,11 @@ func Run(cfg *config.Config) {
 		bookmarksPerPage = cfg.App.BookmarksPerPage
 	}
 	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
-	e.Use(sessions.Sessions("SID", sessions.NewCookieStore([]byte("secret"))))
+	sess := sessions.NewCookieStore([]byte("secret"))
+	sess.Options(sessions.Options{
+		Secure: cfg.Server.SecureCookie,
+	})
+	e.Use(sessions.Sessions("SID", sess))
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
@@ -320,8 +324,10 @@ func SessionMiddleware() gin.HandlerFunc {
 			if tok == "" {
 				tok = c.Query("token")
 			}
-			// can be nil in case of invalid token
-			c.Set("user", model.GetUserBySubmissionToken(tok))
+			if tok != "" {
+				// can be nil in case of invalid token
+				c.Set("user", model.GetUserBySubmissionToken(tok))
+			}
 		}
 		c.Next()
 	}
