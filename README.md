@@ -14,9 +14,11 @@ go >= 1.14
 
 ## Setup & run
 
-Checkout the repo and execute `go get -u` then `go run omnom.go listen` in the repo root.
+ - Checkout the repo and execute `go get -u`
+ - Copy `config.yml_sample` to `config.yml`
+ - Execute `go run omnom.go listen` in the repo root
 
-Settings can be configured in `config.yml` config file - restart webapp after updating.
+Settings can be configured in `config.yml` config file - don't forget to restart webapp after updating.
 
 ### Command line tool
 
