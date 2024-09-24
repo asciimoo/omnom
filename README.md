@@ -26,12 +26,14 @@ Basic management actions are available using the command line tool (`go run omno
 
 #### Available Commands
 ```
-  create-token create new login token for a user
-  create-user  create new user
-  listen       start server
-  show-user    show user details
-  help         Help about any command
-  completion   generate the autocompletion script for the specified shell
+  create-token         create new login/addon token for a user
+  create-user          create new user
+  generate-api-docs-md Generate Markdown API documentation
+  help                 Help about any command
+  listen               start server
+  set-token            set new login/addon token for a user
+  show-user            show user details
+  completion           Generate the autocompletion script for the specified shell
 ```
 
 ### Browser addon
