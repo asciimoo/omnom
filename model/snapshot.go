@@ -10,6 +10,7 @@ type Snapshot struct {
 	Key        string     `json:"key"`
 	Text       string     `json:"text"`
 	BookmarkID uint       `json:"bookmark_id"`
+	Bookmark   Bookmark   `json:"bookmark"`
 	Size       uint       `json:"size"`
 	Resources  []Resource `gorm:"many2many:snapshot_resources;" json:"resources"`
 }

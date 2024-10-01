@@ -1,0 +1,32 @@
+{{ define "content" }}
+<div class="content">
+    <div class="is-pulled-right"><a href="{{ AddURLParam .URL "format=rss" }}">RSS<span class="icon"><i class="fas fa-rss"></i></span></a></div>
+    <h3 class="title">Snapshot search</h3>
+    <form action="" method="get">
+    <div class="columns">
+        <div class="column">
+        {{ block "textFilter" .}}{{ end }}
+        {{ block "submit" . }}{{ end }}
+        </div>
+    </div>
+    </form>
+    {{ if .SearchParams.Q }}
+        {{ if eq .SnapshotCount 0 }}
+            <h3 class="title">No snapshots found</h3>
+        {{ else }}
+            <h3 class="title">Results for "{{ .SearchParams.Q }}" ({{ .SnapshotCount }})</h3>
+            {{ range .Snapshots }}
+            <div class="box">
+                <h4 class="title"><a href="{{ URLFor "Snapshot" }}?sid={{ .Key }}&bid={{ .BookmarkID }}">{{ .Bookmark.Title }}</a></h4>
+                <p>
+                    Original URL: <a href="{{ .Bookmark.URL }}" target="_blank">{{ Truncate .Bookmark.URL 100 }}</a><br />
+                    {{ .UpdatedAt | ToDateTime }} - {{ .Size | FormatSize }}
+                </p>
+            </div>
+            {{ end }}
+        {{ end }}
+    {{ block "paging" .}}{{ end }}
+    {{ end }}
+    </div>
+</div>
+{{ end }}

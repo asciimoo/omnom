@@ -9,12 +9,21 @@ SPDX-License-Identifier: AGPLv3+
         <title>Omnom</title>
         <link>{{ .FullURLPrefix }}{{ URLFor "Index" }}</link>
         <description>Bookmarking &amp; snapshotting</description>
+        {{ $type := .Type }}
         {{ range .RSS }}
         <item>
-            <title>{{ .Title }}</title>
-            <link>{{ $.FullURLPrefix }}{{ URLFor "Public bookmark" }}?id={{ .ID }}</link>
-            <pubDate>{{ .UpdatedAt | ToDateTime }}</pubDate>
-            <description>{{ .Notes }}</description>
+            {{- if eq $type "Bookmarks" }}
+                <title>{{ .Title }}</title>
+                <link>{{ $.FullURLPrefix }}{{ URLFor "Bookmark" }}?id={{ .ID }}</link>
+                <pubDate>{{ .UpdatedAt | ToDateTime }}</pubDate>
+                <description>{{ .Notes }}</description>
+            {{- end }}
+            {{ if eq $type "Snapshots" -}}
+                <title>{{ .Bookmark.Title }} (Size: {{ .Size | FormatSize }})</title>
+                <link>{{ $.FullURLPrefix }}{{ URLFor "Snapshot" }}?sid={{ .Key }}&bid={{ .Bookmark.ID }}</link>
+                <pubDate>{{ .UpdatedAt | ToDateTime }}</pubDate>
+                <description>{{ .Bookmark.Notes }}</description>
+            {{- end }}
         </item>{{ end }}
     </channel>
 </rss>

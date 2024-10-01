@@ -1,6 +1,6 @@
 app:
   debug: true
-  bookmarks_per_page: 20
+  results_per_page: 20
   disable_signup:  false # set to true to restrict user creation to command line
 server:
   address: "127.0.0.1:7331"

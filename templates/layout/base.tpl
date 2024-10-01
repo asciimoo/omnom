@@ -29,6 +29,7 @@
           <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
         <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
+        <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">Snapshots</a>
       </div>
       <div class="navbar-end">
         {{ if .User }}
@@ -215,7 +216,7 @@
 {{ define "paging" }}
 <div class="columns is-centered">
     <div class="column is-narrow">
-        {{ if gt .Pageno 1 }}
+        {{ if and .Pageno (gt .Pageno 1) }}
         <a href="?pageno={{ dec .Pageno }}" class="button is-primary is-medium is-outlined"><span class="icon"><i class="fas fa-angle-left"></i></span><span>Previous page</span></a>
         {{ end }}
         {{ if .HasNextPage }}

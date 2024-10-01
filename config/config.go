@@ -19,9 +19,9 @@ type Config struct {
 }
 
 type App struct {
-	Debug            bool  `yaml:"debug"`
-	BookmarksPerPage int64 `yaml:"bookmarks_per_page"`
-	DisableSignup    bool  `yaml:"disable_signup"`
+	Debug          bool  `yaml:"debug"`
+	ResultsPerPage int64 `yaml:"results_per_page"`
+	DisableSignup  bool  `yaml:"disable_signup"`
 }
 
 type Server struct {

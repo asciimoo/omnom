@@ -83,7 +83,7 @@ var tplFuncMap = template.FuncMap{
 	"FormatSize": formatSize,
 }
 
-var bookmarksPerPage int64 = 20
+var resultsPerPage int64 = 20
 
 func createRenderer() multitemplate.Renderer {
 	r := multitemplate.DynamicRender{}
@@ -94,6 +94,7 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFilesFuncs("login", tplFuncMap, "templates/layout/base.tpl", "templates/login.tpl")
 	r.AddFromFilesFuncs("login-confirm", tplFuncMap, "templates/layout/base.tpl", "templates/login_confirm.tpl")
 	r.AddFromFilesFuncs("bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/bookmarks.tpl")
+	r.AddFromFilesFuncs("snapshots", tplFuncMap, "templates/layout/base.tpl", "templates/snapshots.tpl")
 	r.AddFromFilesFuncs("my-bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/my_bookmarks.tpl")
 	r.AddFromFilesFuncs("profile", tplFuncMap, "templates/layout/base.tpl", "templates/profile.tpl")
 	r.AddFromFilesFuncs("snapshotWrapper", tplFuncMap, "templates/layout/base.tpl", "templates/snapshot_wrapper.tpl")
@@ -183,7 +184,8 @@ func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
 	}
 	c.Header("Content-Type", "application/rss+xml; charset=utf-8")
 	tplVars := map[string]interface{}{
-		"RSS": vars[k.(string)],
+		"RSS":  vars[k.(string)],
+		"Type": k.(string),
 	}
 	fullURLPrefix := ""
 	if strings.HasPrefix(baseURL("/"), "/") {
@@ -223,8 +225,8 @@ func Run(cfg *config.Config) {
 	if !cfg.App.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	if cfg.App.BookmarksPerPage > 0 {
-		bookmarksPerPage = cfg.App.BookmarksPerPage
+	if cfg.App.ResultsPerPage > 0 {
+		resultsPerPage = cfg.App.ResultsPerPage
 	}
 	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
 	sess := sessions.NewCookieStore([]byte("secret"))

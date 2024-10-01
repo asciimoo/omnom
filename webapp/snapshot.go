@@ -236,3 +236,33 @@ func deleteSnapshot(c *gin.Context) {
 	}
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
+
+func snapshots(c *gin.Context) {
+	qs, ok := c.GetQuery("query")
+	if !ok {
+		render(c, http.StatusOK, "snapshots", nil)
+		return
+	}
+	var uid uint = 0
+	u, ok := c.Get("user")
+	if ok && u != nil {
+		uid = u.(*model.User).ID
+	}
+	var ss []*model.Snapshot
+	pageno := getPageno(c)
+	offset := (pageno - 1) * resultsPerPage
+	var sc int64
+	//cq := model.DB.Model(&model.Snapshot{}).Where("s.public = 1")
+	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Joins("left join bookmarks on bookmarks.id = snapshots.bookmark_id").Where("bookmarks.url like ?", "%"+qs+"%").Where("bookmarks.public == true or bookmarks.user_id == ?", uid).Preload("Bookmark")
+	cq := model.DB.Model(&model.Snapshot{}).Joins("left join bookmarks on bookmarks.id = snapshots.bookmark_id").Where("bookmarks.url like ?", "%"+qs+"%").Where("bookmarks.public == true or bookmarks.user_id == ?", uid)
+	cq.Count(&sc)
+	q.Order("snapshots.created_at").Find(&ss)
+	render(c, http.StatusOK, "snapshots", map[string]interface{}{
+		"Snapshots":     ss,
+		"SnapshotCount": sc,
+		"Pageno":        pageno,
+		"SearchParams": searchParams{
+			Q: qs,
+		},
+	})
+}
