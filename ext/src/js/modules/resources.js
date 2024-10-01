@@ -14,7 +14,10 @@ class Resource {
         this.content = content;
         this.mimetype = mimetype;
         this.filename = filename;
-        this.extension = mimetype.split(" ")[0].split("/").pop().toLowerCase().split("+")[0].split(";")[0];
+        this.extension = 'unknown';
+        if (mimetype) {
+            this.extension = mimetype.split(" ")[0].split("/").pop().toLowerCase().split("+")[0].split(";")[0];
+        }
         if (extMap.has(this.extension)) {
             this.extension = extMap.get(this.extension);
         }

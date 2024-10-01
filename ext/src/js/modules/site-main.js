@@ -14,6 +14,7 @@ function initComms() {
         port.onMessage.addListener((msg, commChan) => {
             // TODO generate static extension id and check the full ID, not just the schema
             if(!commChan.sender.origin.startsWith('chrome-extension://')) {
+                console.log("invalid origin");
                 return;
             }
             const msgHandler = messageHandlers.get(msg.type);

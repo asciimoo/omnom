@@ -4,7 +4,7 @@
 
 import { downloadFile } from './file-download';
 import { resources } from './resources';
-import { sanitizeCSS } from './sanitize';
+import { sanitizeCSS, sanitizeAttributes } from './sanitize';
 import {
     UrlResolver,
     base64Decode,
@@ -25,6 +25,7 @@ class Document {
         }
         this.nodeTransformFunctons = new Map([
             ['SCRIPT', (node) => node.remove()],
+            ['TEMPLATE', (node) => node.remove()],
             ['LINK', this.transformLink],
             ['STYLE', this.transformStyle],
             ['IMG', this.transformImg],
@@ -66,6 +67,7 @@ class Document {
         if (node.nodeType !== Node.ELEMENT_NODE) {
             return;
         }
+        sanitizeAttributes(node);
         await this.rewriteAttributes(node);
         const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
         if (transformFunction) {

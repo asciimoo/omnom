@@ -222,4 +222,18 @@ async function sanitizeCSS(rules, baseURL) {
     return result;
 }
 
-export { sanitizeCSS };
+function sanitizeAttributes(el) {
+    let attrs = [...el.attributes];
+    for(let i in attrs) {
+        let key = attrs[i].nodeName;
+        let val = attrs[i].nodeValue;
+        if(key.toLowerCase().startsWith("on")) {
+            el.removeAttribute(key);
+        }
+    }
+}
+
+export {
+    sanitizeCSS,
+    sanitizeAttributes,
+};
