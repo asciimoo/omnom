@@ -115,7 +115,7 @@ module.exports = {
                             version: process.env.npm_package_version,
                             ...JSON.parse(content.toString())
                         };
-                        content['background']['scripts'] = 'background.js';
+                        content['background']['scripts'] = ['background.js'];
                         content['browser_specific_settings'] = {
                             "gecko": {
                                 "id": "{f0bca7ce-0cda-41dc-9ea8-126a50fed280}",

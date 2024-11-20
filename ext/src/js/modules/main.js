@@ -293,8 +293,7 @@ async function saveBookmark() {
             renderSuccess('Snapshot successfully saved!', msg);
         }, async function(err) {
             destroyProgressBar();
-            const msg = await err.json();
-            renderError(`Failed to save bookmark! Error: ${err.statusText}: ${msg.error}`);
+            renderError(`Failed to save bookmark! ${err}`);
         });
 }
 
