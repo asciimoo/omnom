@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -31,19 +32,17 @@ var sender = "Omnom <omnom@127.0.0.1>"
 var disabled = false
 var templates = &Templates{}
 
-func init() {
-	var err error
-	templates.HTML, err = html.New("mail").ParseGlob("templates/mail/*html.tpl")
-	if err != nil {
-		panic(err)
-	}
-	templates.Text, err = text.New("mail").ParseGlob("templates/mail/*txt.tpl")
-	if err != nil {
-		panic(err)
-	}
-}
-
 func Init(c *config.Config) error {
+	var err error
+	templates.HTML, err = html.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*html.tpl"))
+	if err != nil {
+		return errors.New("Failed to parse mail templates. Check your template path.")
+	}
+	templates.Text, err = text.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*txt.tpl"))
+	if err != nil {
+		return errors.New("Failed to parse mail templates. Set a valid template path in your config file.")
+	}
+
 	sc := c.SMTP
 
 	if sc.Host == "" {
@@ -68,7 +67,6 @@ func Init(c *config.Config) error {
 	server.SendTimeout = time.Duration(sc.SendTimeout) * time.Second
 	server.KeepAlive = true
 
-	var err error
 	client, err = server.Connect()
 	if err != nil {
 		return err

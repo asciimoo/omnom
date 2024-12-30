@@ -314,7 +314,7 @@ function evaluateTemplates() {
         if (templateData.length) {
             const shouldShow = templateData.some(attribute => {
                 const attributeValue = (template.dataset[attribute] === 'true');
-                return boundVars.hasOwnProperty(attribute) && boundVars[attribute] === attributeValue
+                return boundVars.hasOwnProperty(attribute) && boundVars[attribute] === attributeValue;
             });
             const templateNode = parent ?
                 [...parent.children]?.find(child => child.id === template.content.children[0].id) :
@@ -327,7 +327,7 @@ function evaluateTemplates() {
                 parent.appendChild(template.content.cloneNode(true));
             }
         }
-    })
+    });
 }
 
 function updateBoundVar(keys) {

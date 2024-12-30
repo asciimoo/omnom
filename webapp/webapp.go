@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -85,24 +86,32 @@ var tplFuncMap = template.FuncMap{
 
 var resultsPerPage int64 = 20
 
-func createRenderer() multitemplate.Renderer {
+func addTemplate(r multitemplate.DynamicRender, rootDir string, hasBase bool, name, filename string) {
+	if hasBase {
+		r.AddFromFilesFuncs(name, tplFuncMap, filepath.Join(rootDir, "layout/base.tpl"), filepath.Join(rootDir, filename))
+	} else {
+		r.AddFromFilesFuncs(name, tplFuncMap, filepath.Join(rootDir, filename))
+	}
+}
+
+func createRenderer(rootDir string) multitemplate.Renderer {
 	r := multitemplate.DynamicRender{}
-	r.AddFromFilesFuncs("index", tplFuncMap, "templates/layout/base.tpl", "templates/index.tpl")
-	r.AddFromFilesFuncs("dashboard", tplFuncMap, "templates/layout/base.tpl", "templates/dashboard.tpl")
-	r.AddFromFilesFuncs("signup", tplFuncMap, "templates/layout/base.tpl", "templates/signup.tpl")
-	r.AddFromFilesFuncs("signup-confirm", tplFuncMap, "templates/layout/base.tpl", "templates/signup_confirm.tpl")
-	r.AddFromFilesFuncs("login", tplFuncMap, "templates/layout/base.tpl", "templates/login.tpl")
-	r.AddFromFilesFuncs("login-confirm", tplFuncMap, "templates/layout/base.tpl", "templates/login_confirm.tpl")
-	r.AddFromFilesFuncs("bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/bookmarks.tpl")
-	r.AddFromFilesFuncs("snapshots", tplFuncMap, "templates/layout/base.tpl", "templates/snapshots.tpl")
-	r.AddFromFilesFuncs("my-bookmarks", tplFuncMap, "templates/layout/base.tpl", "templates/my_bookmarks.tpl")
-	r.AddFromFilesFuncs("profile", tplFuncMap, "templates/layout/base.tpl", "templates/profile.tpl")
-	r.AddFromFilesFuncs("snapshotWrapper", tplFuncMap, "templates/layout/base.tpl", "templates/snapshot_wrapper.tpl")
-	r.AddFromFilesFuncs("view-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/view_bookmark.tpl")
-	r.AddFromFilesFuncs("edit-bookmark", tplFuncMap, "templates/layout/base.tpl", "templates/edit_bookmark.tpl")
-	r.AddFromFilesFuncs("api", tplFuncMap, "templates/layout/base.tpl", "templates/api.tpl")
-	r.AddFromFilesFuncs("error", tplFuncMap, "templates/layout/base.tpl", "templates/error.tpl")
-	r.AddFromFilesFuncs("rss", tplFuncMap, "templates/rss.xml")
+	addTemplate(r, rootDir, true, "index", "index.tpl")
+	addTemplate(r, rootDir, true, "dashboard", "dashboard.tpl")
+	addTemplate(r, rootDir, true, "signup", "signup.tpl")
+	addTemplate(r, rootDir, true, "signup-confirm", "signup_confirm.tpl")
+	addTemplate(r, rootDir, true, "login", "login.tpl")
+	addTemplate(r, rootDir, true, "login-confirm", "login_confirm.tpl")
+	addTemplate(r, rootDir, true, "bookmarks", "bookmarks.tpl")
+	addTemplate(r, rootDir, true, "snapshots", "snapshots.tpl")
+	addTemplate(r, rootDir, true, "my-bookmarks", "my_bookmarks.tpl")
+	addTemplate(r, rootDir, true, "profile", "profile.tpl")
+	addTemplate(r, rootDir, true, "snapshotWrapper", "snapshot_wrapper.tpl")
+	addTemplate(r, rootDir, true, "view-bookmark", "view_bookmark.tpl")
+	addTemplate(r, rootDir, true, "edit-bookmark", "edit_bookmark.tpl")
+	addTemplate(r, rootDir, true, "api", "api.tpl")
+	addTemplate(r, rootDir, true, "error", "error.tpl")
+	addTemplate(r, rootDir, false, "rss", "rss.xml")
 	return r
 }
 
@@ -261,10 +270,10 @@ func Run(cfg *config.Config) {
 	}
 	tplFuncMap["BaseURL"] = baseURL
 	tplFuncMap["URLFor"] = URLFor
-	e.HTMLRender = createRenderer()
+	e.HTMLRender = createRenderer(cfg.App.TemplateDir)
 
 	// ROUTES
-	e.Static("/static", "./static")
+	e.Static("/static", cfg.App.StaticDir)
 	for _, ep := range Endpoints {
 		if ep.AuthRequired {
 			registerEndpoint(authorized, ep)

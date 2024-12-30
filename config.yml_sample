@@ -2,6 +2,8 @@ app:
   debug: true
   results_per_page: 20
   disable_signup:  false # set to true to restrict user creation to command line
+  template_dir: "./templates"
+  static_dir: "./static"
 server:
   address: "127.0.0.1:7331"
   # e.g. https://mydomain.tld/xy/
@@ -13,7 +15,7 @@ db:
   connection: "./db.sqlite3"
 storage:
   type: "fs"
-  # it should be in the static/ folder
+  # it should be under the "app.static_dir" folder
   root: "./static/data"
 smtp:
   host: "" # leave it blank to disable sending mails

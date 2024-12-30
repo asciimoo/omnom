@@ -43,11 +43,8 @@ func initStorage() {
 	}
 }
 
-func initMail() {
-	err := mail.Init(cfg)
-	if err != nil {
-		panic(err)
-	}
+func initMail() error {
+	return mail.Init(cfg)
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -64,7 +61,11 @@ var listenCmd = &cobra.Command{
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
-		initMail()
+		err := initMail()
+		if err != nil {
+			log.Println("Failed to initialize mailing:", err)
+			os.Exit(1)
+		}
 		webapp.Run(cfg)
 	},
 }
@@ -223,7 +224,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yml", "config file (default is config.yml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yml", "config file (default paths: ./config.yml or $HOME/.omnomrc or $HOME/.config/omnom/config.yml)")
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "turn on debug mode")
 	rootCmd.AddCommand(listenCmd)
