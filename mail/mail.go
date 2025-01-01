@@ -36,11 +36,11 @@ func Init(c *config.Config) error {
 	var err error
 	templates.HTML, err = html.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*html.tpl"))
 	if err != nil {
-		return errors.New("Failed to parse mail templates. Check your template path.")
+		return errors.New("failed to parse mail templates. Check your template path")
 	}
 	templates.Text, err = text.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*txt.tpl"))
 	if err != nil {
-		return errors.New("Failed to parse mail templates. Set a valid template path in your config file.")
+		return errors.New("failed to parse mail templates. Set a valid template path in your config file")
 	}
 
 	sc := c.SMTP

@@ -87,7 +87,7 @@ func readConfigFile(filename string) ([]byte, error) {
 	if err == nil {
 		return b, nil
 	}
-	return b, errors.New("Configuration file not found. Use --config to specify a custom config file")
+	return b, errors.New("configuration file not found. Use --config to specify a custom config file")
 }
 
 func Load(filename string) (*Config, error) {
