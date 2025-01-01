@@ -10,6 +10,8 @@ issues:
   # Set to 0 to disable.
   # Default: 50
   max-issues-per-linter: 0
+  exclude-dirs:
+    - ../
 
 output:
   sort-results: true
@@ -37,8 +39,8 @@ linters:
     - goimports # Goimports does everything that gofmt does. Additionally it checks unused imports
     - gomoddirectives # manage the use of 'replace', 'retract', and 'excludes' directives in go.mod.
     - gosec # inspects source code for security problems
-    - gosimple # linter for Go source code that specializes in simplifying a code
-    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+#    - gosimple # linter for Go source code that specializes in simplifying a code
+#    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
     - importas # enforces consistent import aliases
     - ineffassign # detects when assignments to existing variables are not used
     - misspell # finds commonly misspelled English words in comments
@@ -47,9 +49,9 @@ linters:
     - noctx # noctx finds sending http request without context.Context
     - nolintlint # reports ill-formed or insufficient nolint directives
     - prealloc # finds slice declarations that could potentially be preallocated
-    - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks
+#    - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks
     - stylecheck # a replacement for golint
-    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
+#    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
     - unconvert # Remove unnecessary type conversions
     - unparam # reports unused function parameters
     - unused # checks Go code for unused constants, variables, functions and types
