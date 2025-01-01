@@ -65,7 +65,7 @@
 <footer class="footer">
   <div class="container">
     <div class="content has-text-centered py-4">
-      <p>Omnom © 2022</p>
+      <p>Omnom © 2025</p>
       <span>
           <a href="{{ URLFor "API" }}">API</a>
           &#8226; <a href="https://github.com/asciimoo/omnom">GitHub</a>
