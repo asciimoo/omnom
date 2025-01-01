@@ -27,3 +27,18 @@ smtp:
   tls_allow_insecure: false
   send_timeout: 10 # seconds
   connection_timeout: 5 # seconds
+oauth:
+#  github:
+#    client_id: ""
+#    client_secret: ""
+#    auth_url: "https://github.com/login/oauth/authorize"
+#    token_url: "https://github.com/login/oauth/access_token"
+#    icon: "fab fa-github"
+#    scopes: ["read:user"]
+#  google:
+#    client_id: ""
+#    client_secret: ""
+#    auth_url: "https://accounts.google.com/o/oauth2/auth"
+#    token_url: "https://oauth2.googleapis.com/token"
+#    icon: "fab fa-google"
+#    scopes: [""]
