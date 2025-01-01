@@ -84,13 +84,13 @@
 </html>
 
 {{ define "error" }}
-<article class="message is-danger">
+<article class="message is-danger container is-size-3">
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
 
 {{ define "warning" }}
-<article class="message is-warning">
+<article class="message is-warning container is-size-3">
   <div class="message-header">
     <p>Warning</p>
   </div>
@@ -99,14 +99,14 @@
 {{ end }}
 
 {{ define "info" }}
-<article class="message is-info">
+<article class="message is-info container is-size-3">
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
 
 
 {{ define "note" }}
-<article class="message is-info">
+<article class="message is-info container is-size-3">
   <div class="message-header">
     <p>Note</p>
   </div>
