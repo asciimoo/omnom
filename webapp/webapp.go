@@ -86,6 +86,18 @@ var tplFuncMap = template.FuncMap{
 
 var resultsPerPage int64 = 20
 
+func getFullURLPrefix(c *gin.Context) string {
+	fullURLPrefix := ""
+	if strings.HasPrefix(baseURL("/"), "/") {
+		fullURLPrefix = "http://"
+		if c.Request.TLS != nil {
+			fullURLPrefix = "https://"
+		}
+		fullURLPrefix += c.Request.Host
+	}
+	return fullURLPrefix
+}
+
 func addTemplate(r multitemplate.DynamicRender, rootDir string, hasBase bool, name, filename string) {
 	if hasBase {
 		r.AddFromFilesFuncs(name, tplFuncMap, filepath.Join(rootDir, "layout/base.tpl"), filepath.Join(rootDir, filename))
@@ -125,6 +137,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 		"User":          u,
 		"DisableSignup": cfg.(*config.Config).App.DisableSignup,
 		"CSRF":          csrf,
+		"OAuth":         cfg.(*config.Config).OAuth,
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {
@@ -196,15 +209,7 @@ func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
 		"RSS":  vars[k.(string)],
 		"Type": k.(string),
 	}
-	fullURLPrefix := ""
-	if strings.HasPrefix(baseURL("/"), "/") {
-		fullURLPrefix = "http://"
-		if c.Request.TLS != nil {
-			fullURLPrefix = "https://"
-		}
-		fullURLPrefix += c.Request.Host
-	}
-	tplVars["FullURLPrefix"] = fullURLPrefix
+	tplVars["FullURLPrefix"] = getFullURLPrefix(c)
 	c.HTML(status, "rss", tplVars)
 }
 

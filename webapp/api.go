@@ -390,6 +390,30 @@ func init() {
 			Handler:      api,
 			Description:  "Displays API documentation (this page)",
 		},
+		&Endpoint{
+			Name:         "Oauth",
+			Path:         "/oauth",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      oauthHandler,
+			Description:  "Creates OAuth requests",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "provider",
+					Type:        "string",
+					Required:    true,
+					Description: "Oauth provider name",
+				},
+			},
+		},
+		&Endpoint{
+			Name:         "Oauth verification",
+			Path:         "/oauth_redirect_handler",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      oauthRedirectHandler,
+			Description:  "Verifies OAuth requests",
+		},
 		/****************************************\
 		| LOGIN REQUIRED FOR THE ENDPOINTS BELOW |
 		\****************************************/
