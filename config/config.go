@@ -18,6 +18,7 @@ type Config struct {
 	DB      DB      `yaml:"db"`
 	Storage Storage `yaml:"storage"`
 	SMTP    SMTP    `yaml:"smtp"`
+	OAuth   OAuth   `yaml:"oauth"`
 }
 
 type App struct {
@@ -54,6 +55,17 @@ type SMTP struct {
 	TLSAllowInsecure  bool   `yaml:"tls_allow_insecure"`
 	SendTimeout       int    `yaml:"send_timeout"`
 	ConnectionTimeout int    `yaml:"connection_timeout"`
+}
+
+type OAuth map[string]OAuthEntry
+
+type OAuthEntry struct {
+	ClientID     string   `yaml:"client_id"`
+	ClientSecret string   `yaml:"client_secret"`
+	AuthURL      string   `yaml:"auth_url"`
+	TokenURL     string   `yaml:"token_url"`
+	Icon         string   `yaml:"icon"`
+	Scopes       []string `yaml:"scopes"`
 }
 
 func readConfigFile(filename string) ([]byte, error) {
