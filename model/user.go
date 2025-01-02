@@ -12,6 +12,7 @@ type User struct {
 	CommonFields
 	Username         string     `gorm:"unique" json:"username"`
 	Email            string     `gorm:"unique" json:"email"`
+	OAuthID          string     `gorm:"unique" json:"-"`
 	LoginToken       string     `json:"-"`
 	SubmissionTokens []Token    `json:"-"`
 	Bookmarks        []Bookmark `json:"bookmarks"`
@@ -29,6 +30,15 @@ func GetUser(name string) *User {
 func GetUserByLoginToken(tok string) *User {
 	var u User
 	err := DB.Where(&User{LoginToken: tok}).First(&u).Error
+	if err != nil {
+		return nil
+	}
+	return &u
+}
+
+func GetUserByOAuthID(id string) *User {
+	var u User
+	err := DB.Where(&User{OAuthID: id}).First(&u).Error
 	if err != nil {
 		return nil
 	}

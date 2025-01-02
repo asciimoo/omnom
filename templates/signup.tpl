@@ -3,7 +3,12 @@
 <div class="columns">
 <div class="column is-half is-offset-one-quarter">
 <div class="card"><div class="card-content">
-  <h3 class="title">Sign up</h3>
+  {{ if .OAuthID }}
+    <h3 class="title">Successful authentication</h3>
+    <h3>Assign username and e-mail address to your account</h3>
+  {{ else }}
+    <h4 class="title">Sign up</h4>
+  {{ end }}
   <div class="content">
     <div class="field">
       <label class="label">Username</label>
@@ -28,7 +33,7 @@
     </div>
   </div>
 </div></div>
-{{ if .OAuth }}
+{{ if (and .OAuth (not .OAuthID))}}
 <div class="card"><div class="card-content has-text-centered">
     <h3 class="title">or sign up with</h3>
     {{ range $name, $attrs := .OAuth }}

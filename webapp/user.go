@@ -5,6 +5,7 @@
 package webapp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,61 +23,90 @@ import (
 
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 
+func validateUsername(username string) error {
+	if strings.ToLower(username) == "admin" {
+		return errors.New("reserverd username")
+	}
+	if match := userRe.MatchString(username); !match {
+		return errors.New("invalid username. Use only letters, numbers and underscore")
+	}
+	u := model.GetUser(username)
+	if u != nil {
+		return errors.New("username already exists")
+	}
+	return nil
+}
+
 func signup(c *gin.Context) {
 	cfg, _ := c.Get("config")
 	if cfg.(*config.Config).App.DisableSignup {
 		return
+	}
+	session := sessions.Default(c)
+	tplVars := map[string]interface{}{
+		"OAuthID": session.Get("oauth_id"),
 	}
 	if c.Request.Method == http.MethodPost {
 		username := c.PostForm("username")
 		email := c.PostForm("email")
 		if username == "" || email == "" {
 			setNotification(c, nError, "Missing email", false)
-			render(c, http.StatusOK, "signup", nil)
+			render(c, http.StatusOK, "signup", tplVars)
 			return
 		}
-		if strings.ToLower(username) == "admin" {
-			setNotification(c, nError, "Reserved username", false)
-			render(c, http.StatusOK, "signup", nil)
+		err := validateUsername(username)
+		if err != nil {
+			setNotification(c, nError, err.Error(), false)
+			render(c, http.StatusOK, "signup", tplVars)
 			return
 		}
-		if match := userRe.MatchString(username); !match {
-			setNotification(c, nError, "Invalid username. Use only letters, numbers and underscore", false)
-			render(c, http.StatusOK, "signup", nil)
+		err = model.CreateUser(username, email)
+		if err != nil {
+			setNotification(c, nError, err.Error(), false)
+			render(c, http.StatusOK, "signup", tplVars)
 			return
 		}
 		u := model.GetUser(username)
-		if u != nil {
-			setNotification(c, nError, "Username already exists", false)
-			render(c, http.StatusOK, "signup", nil)
+		if session.Get("oauth_id") != nil {
+			oauthID, _ := session.Get("oauth_id").(string)
+			u.OAuthID = oauthID
+			err = model.DB.Save(u).Error
+			if err != nil {
+				setNotification(c, nError, err.Error(), false)
+				render(c, http.StatusOK, "signup", tplVars)
+				return
+			}
+			session.Delete("oauth_id")
+			err = session.Save()
+			if err != nil {
+				setNotification(c, nError, err.Error(), false)
+				render(c, http.StatusOK, "signup", tplVars)
+				return
+			}
+			setNotification(c, nInfo, "Successful registration", false)
+			c.Redirect(http.StatusFound, baseURL("/"))
 			return
-		}
-		err := model.CreateUser(username, email)
-		if err != nil {
-			setNotification(c, nError, err.Error(), false)
-			render(c, http.StatusOK, "signup", nil)
-			return
-		}
-		u = model.GetUser(username)
-		err = mail.Send(
-			u.Email,
-			"Successful registration to Omnom",
-			"login",
-			map[string]interface{}{
-				"Token":    u.LoginToken,
-				"Username": u.Username,
-				"BaseURL":  baseURL("/login"),
-			},
-		)
-		if err != nil {
-			setNotification(c, nError, err.Error(), false)
-			render(c, http.StatusOK, "signup", nil)
-			return
+		} else {
+			err = mail.Send(
+				u.Email,
+				"Successful registration to Omnom",
+				"login",
+				map[string]interface{}{
+					"Token":    u.LoginToken,
+					"Username": u.Username,
+					"BaseURL":  baseURL("/login"),
+				},
+			)
+			if err != nil {
+				setNotification(c, nError, err.Error(), false)
+				render(c, http.StatusOK, "signup", tplVars)
+				return
+			}
 		}
 		render(c, http.StatusOK, "signup-confirm", nil)
 		return
 	}
-	render(c, http.StatusOK, "signup", nil)
+	render(c, http.StatusOK, "signup", tplVars)
 }
 
 func login(c *gin.Context) {
