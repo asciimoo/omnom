@@ -25,7 +25,7 @@ var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 
 func validateUsername(username string) error {
 	if strings.ToLower(username) == "admin" {
-		return errors.New("reserverd username")
+		return errors.New("reserved username")
 	}
 	if match := userRe.MatchString(username); !match {
 		return errors.New("invalid username. Use only letters, numbers and underscore")

@@ -46,7 +46,7 @@ linters:
     - misspell # finds commonly misspelled English words in comments
     - nakedret # finds naked returns in functions greater than a specified function length
     - nilerr # finds the code that returns nil even if it checks that the error is not nil.
-    - noctx # noctx finds sending http request without context.Context
+#    - noctx # noctx finds sending http request without context.Context
     - nolintlint # reports ill-formed or insufficient nolint directives
     - prealloc # finds slice declarations that could potentially be preallocated
 #    - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks

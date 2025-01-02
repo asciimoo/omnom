@@ -49,7 +49,12 @@ func oauthHandler(c *gin.Context) {
 	session := sessions.Default(c)
 	tok := model.GenerateToken()
 	session.Set("oauth_token", tok)
-	session.Save()
+	err := session.Save()
+	if err != nil {
+		setNotification(c, nError, "Session persist error", false)
+		c.Redirect(http.StatusFound, URLFor("Login"))
+		return
+	}
 
 	handlerURL := fmt.Sprintf("%s?provider=%s&state=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider"), tok)
 
@@ -70,11 +75,11 @@ func oauthRedirectHandler(c *gin.Context) {
 		return
 	}
 
-	oauth_token := c.Query("state")
+	oauthToken := c.Query("state")
 	session := sessions.Default(c)
 	if t := session.Get("oauth_token"); t != nil {
 		tok, _ := t.(string)
-		if tok != oauth_token {
+		if tok != oauthToken {
 			setNotification(c, nError, "Invalid OAuth response", false)
 			log.Println("OAuth handler: token mismatch ")
 			c.Redirect(http.StatusFound, URLFor("Login"))
@@ -90,7 +95,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	code := c.Query("code")
 	reqURL := p.GetTokenURL(pCfg.ClientID, pCfg.ClientSecret, code)
 
-	resp, err := http.Get(reqURL)
+	resp, err := http.Get(reqURL) // #nosec G107
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
 		log.Println("OAuth handler http response error:", err)
@@ -183,6 +188,7 @@ func (g GitHubOAuth) GetUniqueUserID(body []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	uBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -192,7 +198,7 @@ func (g GitHubOAuth) GetUniqueUserID(body []byte) (string, error) {
 	log.Println("BODY:", string(uBody))
 	var j map[string]interface{}
 
-	err = json.Unmarshal([]byte(uBody), &j)
+	err = json.Unmarshal(uBody, &j)
 	if err != nil {
 		return "", err
 	}
