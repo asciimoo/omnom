@@ -172,17 +172,22 @@ class Document {
             }
         }
         if (node.getAttribute('srcset')) {
-            let val = node.getAttribute('srcset');
-            let newParts = [];
-            for (let s of val.split(',')) {
-                let srcParts = s.trim().split(' ');
-                const res = await resources.create(this.absoluteUrl(srcParts[0]));
-                if (res) {
-                    srcParts[0] = res.src;
-                    newParts.push(srcParts.join(' '));
+            // ignore srcest if we have src
+            if (node.getAttribute('src')) {
+                node.removeAttribute('src');
+            } else {
+                let val = node.getAttribute('srcset');
+                let newParts = [];
+                for (let s of val.split(',')) {
+                    let srcParts = s.trim().split(' ');
+                    const res = await resources.create(this.absoluteUrl(srcParts[0]));
+                    if (res) {
+                        srcParts[0] = res.src;
+                        newParts.push(srcParts.join(' '));
+                    }
                 }
+                node.setAttribute('srcset', newParts.join(', '));
             }
-            node.setAttribute('srcset', newParts.join(', '));
         }
     }
 
