@@ -6,7 +6,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -63,7 +62,7 @@ var listenCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := initMail()
 		if err != nil {
-			log.Println("Failed to initialize mailing:", err)
+			fmt.Println("Failed to initialize mailing:", err)
 			os.Exit(1)
 		}
 		webapp.Run(cfg)
@@ -79,8 +78,8 @@ var showUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		u := model.GetUser(args[0])
 		if u == nil {
-			log.Println("Cannot find user:")
-			os.Exit(1)
+			fmt.Println("Cannot find user:")
+			os.Exit(3)
 		}
 		s := reflect.ValueOf(u).Elem()
 		typeOfT := s.Type()
@@ -105,12 +104,12 @@ var createUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := model.CreateUser(args[0], args[1])
 		if err != nil {
-			log.Println("Cannot create new user:", err)
-			os.Exit(1)
+			fmt.Println("Cannot create new user:", err)
+			os.Exit(4)
 		}
 		u := model.GetUser(args[0])
-		log.Println("User", args[0], "successfully created")
-		log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, u.LoginToken)
+		fmt.Println("User", args[0], "successfully created")
+		fmt.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, u.LoginToken)
 	},
 }
 
@@ -183,20 +182,20 @@ func setToken(cmd *cobra.Command, args []string) {
 
 func changeToken(args []string, tok string) {
 	if args[1] != loginCmd && args[1] != addonCmd {
-		log.Println("Invalid token type. Allowed values are 'login' or 'addon'")
-		os.Exit(1)
+		fmt.Println("Invalid token type. Allowed values are 'login' or 'addon'")
+		os.Exit(5)
 	}
 	u := model.GetUser(args[0])
 	if u == nil {
-		log.Println("User not found")
-		os.Exit(1)
+		fmt.Println("User not found")
+		os.Exit(5)
 	}
 	if args[1] == loginCmd {
 		u.LoginToken = tok
 		err := model.DB.Save(u).Error
 		if err != nil {
-			log.Println("Failed to set token:", err)
-			os.Exit(1)
+			fmt.Println("Failed to set token:", err)
+			os.Exit(6)
 		}
 	} else {
 		t := &model.Token{
@@ -205,13 +204,13 @@ func changeToken(args []string, tok string) {
 		}
 		err := model.DB.Save(t).Error
 		if err != nil {
-			log.Println("Failed to set token:", err)
-			os.Exit(1)
+			fmt.Println("Failed to set token:", err)
+			os.Exit(7)
 		}
 	}
-	log.Printf("Token %s created\n", tok)
+	fmt.Printf("Token %s created\n", tok)
 	if args[1] == loginCmd {
-		log.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
+		fmt.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
 	}
 }
 
@@ -238,10 +237,11 @@ func init() {
 func initConfig() {
 	var err error
 	cfg, err = config.Load(cfgFile)
+	if err != nil {
+		fmt.Println("Failed to initialize config:", err)
+		os.Exit(2)
+	}
 	if b, _ := rootCmd.PersistentFlags().GetBool("debug"); b {
 		cfg.App.Debug = true
-	}
-	if err != nil {
-		panic(err)
 	}
 }

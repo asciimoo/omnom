@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/asciimoo/omnom/oauth"
+
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -91,12 +93,24 @@ func readConfigFile(filename string) ([]byte, error) {
 }
 
 func Load(filename string) (*Config, error) {
-	var c *Config
 	b, err := readConfigFile(filename)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
-	err = yaml.Unmarshal(b, &c)
-	// TODO validate config
+	c, err := parseConfig(b)
 	return c, err
+}
+
+func parseConfig(rawConfig []byte) (*Config, error) {
+	var c *Config
+	err := yaml.Unmarshal(rawConfig, &c)
+	if err != nil {
+		return nil, err
+	}
+	for pn, _ := range c.OAuth {
+		if _, ok := oauth.Providers[pn]; !ok {
+			return nil, errors.New("invalid oauth provider: " + pn)
+		}
+	}
+	return c, nil
 }
