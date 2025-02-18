@@ -41,9 +41,11 @@ func oauthHandler(c *gin.Context) {
 		return
 	}
 
-	handlerURL := fmt.Sprintf("%s?provider=%s&state=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider"), tok)
+	handlerURL := fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider"))
 
-	reqURL := p.GetRedirectURL(pCfg.ClientID, handlerURL)
+	sname, sval := p.GetScope()
+
+	reqURL := fmt.Sprintf("%s&%s=%s&state=%s", p.GetRedirectURL(pCfg.ClientID, handlerURL), sname, sval, tok)
 
 	c.Redirect(http.StatusFound, reqURL)
 }
@@ -77,10 +79,20 @@ func oauthRedirectHandler(c *gin.Context) {
 		return
 	}
 
-	code := c.Query("code")
-	reqURL := p.GetTokenURL(pCfg.ClientID, pCfg.ClientSecret, code)
+	handlerURL := fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider"))
 
-	resp, err := http.Get(reqURL) // #nosec G107
+	code := c.Query("code")
+	req, err := p.GetTokenRequest(pCfg.ClientID, pCfg.ClientSecret, code, handlerURL)
+	if err != nil {
+		setNotification(c, nError, "Invalid OAuth response", false)
+		log.Println("OAuth handler http request error:", err)
+		c.Redirect(http.StatusFound, URLFor("Login"))
+		return
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
 		log.Println("OAuth handler http response error:", err)

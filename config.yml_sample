@@ -32,3 +32,8 @@ oauth:
 #    client_id: ""
 #    client_secret: ""
 #    icon: "fab fa-github"
+#  google:
+#    # be sure to set redirect url in google oauth settings to https://youromnom/oauth_redirect_handler?provider=google
+#    client_id: ""
+#    client_secret: ""
+#    icon: "fab fa-google"

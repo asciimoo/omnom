@@ -24,12 +24,18 @@ func (g GitHubOAuth) GetRedirectURL(clientID, handlerURL string) string {
 	return fmt.Sprintf("%s?%s", g.AuthURL, params.Encode())
 }
 
-func (g GitHubOAuth) GetTokenURL(clientID, clientSecret, code string) string {
+func (g GitHubOAuth) GetScope() (string, string) {
+	return "scope", "read:user"
+}
+
+func (g GitHubOAuth) GetTokenRequest(clientID, clientSecret, code, handlerURL string) (*http.Request, error) {
 	params := url.Values{}
 	params.Add("client_id", clientID)
 	params.Add("client_secret", clientSecret)
 	params.Add("code", code)
-	return fmt.Sprintf("%s?%s", g.TokenURL, params.Encode())
+	params.Add("redirect_uri", handlerURL)
+	u := fmt.Sprintf("%s?%s", g.TokenURL, params.Encode())
+	return http.NewRequest("GET", u, nil)
 }
 
 func (g GitHubOAuth) GetUniqueUserID(body []byte) (string, error) {
