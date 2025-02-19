@@ -1,3 +1,7 @@
+html {
+  overflow-y: hidden;
+}
+
 #omnom-webapp {
     height: 100% !important;
     display: flex;
@@ -390,4 +394,10 @@ iframe {
         top: 3.5rem;
         left:13rem;
     }
+}
+.resources {
+  word-break: break-all;
+}
+.resources .tag {
+  margin: 0 1em;
 }
