@@ -49,6 +49,7 @@ var tplFuncMap = template.FuncMap{
 	"ToDateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
 	"Replace":    strings.ReplaceAll,
 	"ToLower":    strings.ToLower,
+	"Capitalize": strings.Title,
 	"inc":        func(i int64) int64 { return i + 1 },
 	"dec":        func(i int64) int64 { return i - 1 },
 	"SnapshotURL": func(key string) string {
@@ -118,7 +119,8 @@ func createRenderer(rootDir string) multitemplate.Renderer {
 	addTemplate(r, rootDir, true, "snapshots", "snapshots.tpl")
 	addTemplate(r, rootDir, true, "my-bookmarks", "my_bookmarks.tpl")
 	addTemplate(r, rootDir, true, "profile", "profile.tpl")
-	addTemplate(r, rootDir, true, "snapshotWrapper", "snapshot_wrapper.tpl")
+	addTemplate(r, rootDir, true, "snapshot-wrapper", "snapshot_wrapper.tpl")
+	addTemplate(r, rootDir, true, "snapshot-details", "snapshot_details.tpl")
 	addTemplate(r, rootDir, true, "view-bookmark", "view_bookmark.tpl")
 	addTemplate(r, rootDir, true, "edit-bookmark", "edit_bookmark.tpl")
 	addTemplate(r, rootDir, true, "api", "api.tpl")

@@ -224,6 +224,22 @@ func init() {
 				},
 			},
 		},
+		&Endpoint{
+			Name:         "Snapshot details",
+			Path:         "/snapshot_details",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      snapshotDetails,
+			Description:  "View snapshot details and resources",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "sid",
+					Type:        "string",
+					Required:    true,
+					Description: "Snapshot key",
+				},
+			},
+		},
 		//&Endpoint{
 		//	Name:         "Self-contained snapshot view",
 		//	Path:         "/self_contained_snapshot",

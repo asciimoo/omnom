@@ -88,7 +88,7 @@ func addResource(c *gin.Context) {
 			}
 			size := storage.GetResourceSize(key)
 			s.Size += size
-			s.Resources = append(s.Resources, model.GetOrCreateResource(key, m.Filename, m.Mimetype, size))
+			s.Resources = append(s.Resources, model.GetOrCreateResource(key, m.Mimetype, m.Filename, size))
 		}
 	}
 	model.DB.Save(s)

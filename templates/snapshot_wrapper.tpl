@@ -6,6 +6,7 @@
             <strong>{{ .Snapshot.CreatedAt | ToDate }}</strong>
             <span class="tag is-info is-light">{{ .Snapshot.Size | FormatSize }}</span> <a href="{{ SnapshotURL .Snapshot.Key }}"><small>Fullscreen</small></a>
             - <a href="{{ URLFor "Download snapshot" }}?sid={{ .Snapshot.Key }}"><small>Download</small></a>
+            - <a href="{{ URLFor "Snapshot details" }}?sid={{ .Snapshot.Key }}"><small>Details</small></a>
         </p>
     </div>
     {{ if .OtherSnapshots }}

@@ -84,7 +84,7 @@ func snapshotWrapper(c *gin.Context) {
 		setNotification(c, nError, err.Error(), false)
 		return
 	}
-	render(c, http.StatusOK, "snapshotWrapper", map[string]interface{}{
+	render(c, http.StatusOK, "snapshot-wrapper", map[string]interface{}{
 		"Bookmark":       b,
 		"Snapshot":       s,
 		"hideFooter":     true,
@@ -264,5 +264,59 @@ func snapshots(c *gin.Context) {
 		"SearchParams": searchParams{
 			Q: qs,
 		},
+	})
+}
+
+func snapshotDetails(c *gin.Context) {
+	sid, ok := c.GetQuery("sid")
+	if !ok {
+		return
+	}
+	var s *model.Snapshot
+	err := model.DB.Where("key = ?", sid).First(&s).Error
+	if err != nil {
+		return
+	}
+	var b *model.Bookmark
+	err = model.DB.Where("id = ?", s.BookmarkID).First(&b).Error
+	if err != nil {
+		return
+	}
+	var res []*model.Resource
+	err = model.DB.Model(&model.Resource{}).
+		Joins("join snapshot_resources as sr on sr.resource_id == resources.id").
+		Joins("join snapshots on sr.snapshot_id == snapshots.id").
+		Where("snapshots.key = ?", sid).Find(&res).Error
+	if err != nil {
+		return
+	}
+	rs := make(map[string]map[string][]*model.Resource)
+	for _, v := range res {
+		if strings.TrimSpace(v.OriginalFilename) == "" {
+			continue
+		}
+		m, _, err := mime.ParseMediaType(v.MimeType)
+		if err != nil {
+			continue
+		}
+		mParts := strings.Split(m, "/")
+		mType := mParts[0]
+		mSubtype := "unknown"
+		if len(mParts) > 1 {
+			mSubtype = mParts[1]
+		}
+		if _, ok := rs[mType]; !ok {
+			rs[mType] = make(map[string][]*model.Resource)
+		}
+		if _, ok := rs[mType][mSubtype]; !ok {
+			rs[mType][mSubtype] = make([]*model.Resource, 0, 4)
+		}
+		rs[mType][mSubtype] = append(rs[mType][mSubtype], v)
+	}
+	render(c, http.StatusOK, "snapshot-details", map[string]interface{}{
+		"Snapshot":      s,
+		"Resources":     rs,
+		"ResourceCount": len(res),
+		"URL":           b.URL,
 	})
 }
