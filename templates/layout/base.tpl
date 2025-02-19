@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Omnom</title>
+    <link rel="stylesheet" href="{{ BaseURL "/static/css/bulma.css" }}" />
     <link rel="stylesheet" href="{{ BaseURL "/static/css/style.css" }}" />
     <link rel="icon" type="image/png" href="{{ BaseURL "/static/icons/omnom.png" }}" sizes="128x128">
 
