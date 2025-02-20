@@ -17,8 +17,8 @@
     <h4 class="title">
         Resource List
     </h4>
-    {{ range $k, $t := .Resources }}
     <div class="grid is-col-min-18 resources">
+    {{ range $k, $t := .Resources }}
         <div class="cell">
             <nav class="panel">
                 <p class="panel-heading">{{ $k | Capitalize }}</p>
@@ -28,7 +28,7 @@
                 {{ end }}
             </nav>
         </div>
-        {{ end }}
+    {{ end }}
     </div>
 </div>
 {{ end }}
