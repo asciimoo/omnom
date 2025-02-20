@@ -19,7 +19,7 @@
                     <option value="date_asc"{{ if eq .OrderBy "date_asc" }} selected="selected"{{ end }}>Date asc</option>
                 </select>
             </span>
-            <input type="submit" value="sort" class="button is-primary" />
+            <input type="submit" value="sort" class="button" />
         </div>
     </div>
     <div class="accordion-tabs">
@@ -46,7 +46,7 @@
                 {{ block "tagFilter" .}}{{ end }}
                 {{ block "dateFilter" .}}{{ end }}
                 </div>
-            </div>                                
+            </div>
                 {{ block "submit" . }}{{ end }}
           </div>
           </div>
