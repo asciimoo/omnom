@@ -17,14 +17,14 @@
     <h4 class="title">
         Resource List
     </h4>
+    {{ range $k, $t := .Resources }}
     <div class="grid is-col-min-18 resources">
-        {{ range $k, $t := .Resources }}
         <div class="cell">
             <nav class="panel">
                 <p class="panel-heading">{{ $k | Capitalize }}</p>
                 {{ range $sk, $l := $t }}
                 <h5 class="m-4">{{ $sk }} ({{ len $l }})</h5>
-                {{ range $l }}<label class="panel-block">{{ .OriginalFilename }} <span class="tag">{{ .Size | FormatSize }}</span></label>{{ end }}
+                {{ range $l }}<a href="{{ .Key | ResourceURL }}" class="panel-block">{{ .OriginalFilename }} <span class="tag">{{ .Size | FormatSize }}</span></a>{{ end }}
                 {{ end }}
             </nav>
         </div>

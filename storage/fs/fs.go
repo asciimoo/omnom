@@ -20,9 +20,9 @@ func New() *FSStorage {
 	return &FSStorage{}
 }
 
-func (s *FSStorage) Init(dir string) error {
+func (s *FSStorage) Init(cfg map[string]string) error {
 	var err error
-	s.baseDir, err = filepath.Abs(dir)
+	s.baseDir, err = filepath.Abs(cfg["staticDir"] + "/data/")
 	if err != nil {
 		return err
 	}
@@ -63,6 +63,10 @@ func (s *FSStorage) GetResourceSize(key string) uint {
 		return 0
 	}
 	return uint(fi.Size())
+}
+
+func (s *FSStorage) GetResourceURL(key string) (string, bool) {
+	return filepath.Join("/static/data/resources/", getPrefix(key), key), false
 }
 
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {

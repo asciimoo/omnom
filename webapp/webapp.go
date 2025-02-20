@@ -17,6 +17,7 @@ import (
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
 
@@ -83,6 +84,13 @@ var tplFuncMap = template.FuncMap{
 		return dict, nil
 	},
 	"FormatSize": formatSize,
+	"ResourceURL": func(s string) string {
+		u, full := storage.GetResourceURL(s)
+		if full {
+			return u
+		}
+		return baseURL(u)
+	},
 }
 
 var resultsPerPage int64 = 20

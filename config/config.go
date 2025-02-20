@@ -44,7 +44,6 @@ type DB struct {
 
 type Storage struct {
 	Type string `yaml:"type"`
-	Root string `yaml:"root"`
 }
 
 type SMTP struct {
@@ -83,11 +82,11 @@ func readConfigFile(filename string) ([]byte, error) {
 		if err == nil {
 			return b, nil
 		}
-	}
-	// try $HOME/.config/omnom/config.yml
-	b, err = os.ReadFile(filepath.Join(homeDir, ".config/omnom/config.yml"))
-	if err == nil {
-		return b, nil
+		// try $HOME/.config/omnom/config.yml
+		b, err = os.ReadFile(filepath.Join(homeDir, ".config/omnom/config.yml"))
+		if err == nil {
+			return b, nil
+		}
 	}
 	return b, errors.New("configuration file not found. Use --config to specify a custom config file")
 }

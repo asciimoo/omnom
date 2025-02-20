@@ -15,8 +15,6 @@ db:
   connection: "./db.sqlite3"
 storage:
   type: "fs"
-  # it should be under the "app.static_dir" folder
-  root: "./static/data"
 smtp:
   host: "" # leave it blank to disable sending mails
   port: 25

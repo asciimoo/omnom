@@ -14,13 +14,15 @@ import (
 )
 
 type Storage interface {
-	Init(string) error
+	Init(map[string]string) error
 	GetSnapshot(string) io.ReadCloser
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
 	SaveResource(string, []byte) error
 	GetResource(string) io.ReadCloser
 	GetResourceSize(string) uint
+	// return values: URL, isFullURL (true/false)
+	GetResourceURL(string) (string, bool)
 }
 
 var ErrUninitialized = errors.New("uninitialized storage")
@@ -34,9 +36,9 @@ var storages = map[string]Storage{
 	"fs": fs.New(),
 }
 
-func Init(sType string, sParams string) error {
+func Init(sType string, sCfg map[string]string) error {
 	if s, ok := storages[sType]; ok {
-		if err := s.Init(sParams); err != nil {
+		if err := s.Init(sCfg); err != nil {
 			return err
 		}
 		store = s
@@ -93,6 +95,13 @@ func GetResourceSize(key string) uint {
 		panic("Uninitialized storage")
 	}
 	return store.GetResourceSize(key)
+}
+
+func GetResourceURL(key string) (string, bool) {
+	if store == nil {
+		panic("Uninitialized storage")
+	}
+	return store.GetResourceURL(key)
 }
 
 func Hash(x []byte) string {
