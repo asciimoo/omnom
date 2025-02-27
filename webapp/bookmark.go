@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/asciimoo/omnom/model"
@@ -240,7 +239,7 @@ func addBookmark(c *gin.Context) {
 	}
 	c.JSON(200, map[string]interface{}{
 		"success":       true,
-		"bookmark_url":  baseURL("/bookmark?id=" + strconv.Itoa(int(b.ID))),
+		"bookmark_url":  baseURL(fmt.Sprintf("/bookmark?id=%d", b.ID)),
 		"snapshot_url":  baseURL(fmt.Sprintf("/static/data/snapshots/%s/%s.gz", sKey[:2], sKey)),
 		"snapshot_size": formatSize(sSize),
 		"snapshot_key":  sKey,

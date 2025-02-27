@@ -203,7 +203,7 @@ func profile(c *gin.Context) {
 		tplData["AddonTokens"] = ts
 		tplData["DisplayTokens"] = true
 	}
-	var sSize int64
+	var sSize uint
 	model.DB.
 		Model(&model.Snapshot{}).
 		Select("sum(snapshots.size)").
@@ -211,7 +211,7 @@ func profile(c *gin.Context) {
 		Joins("join users on bookmarks.user_id = users.id").
 		Group("users.id").
 		Where("users.id = ?", uid).First(&sSize)
-	tplData["SnapshotsSize"] = uint(sSize)
+	tplData["SnapshotsSize"] = sSize
 	render(c, http.StatusOK, "profile", tplData)
 }
 

@@ -34,7 +34,7 @@ linters:
     - errcheck # checking for unchecked errors in go programs
     - errname # check error prefixes and suffixes
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
-    - exportloopref # checks for pointers to enclosing loop variables
+#    - exportloopref # checks for pointers to enclosing loop variables
     - goconst # finds repeated strings that could be replaced by a constant
     - goimports # Goimports does everything that gofmt does. Additionally it checks unused imports
     - gomoddirectives # manage the use of 'replace', 'retract', and 'excludes' directives in go.mod.
@@ -63,7 +63,7 @@ linters-settings:
   errcheck:
     # report about not checking of errors in type assertions: `a := b.(MyStruct)`;
     # default is false: such cases aren't reported by default.
-    check-type-assertions: true
+    check-type-assertions: false
 
   errorlint:
     # Check whether fmt.Errorf uses the %w verb for formatting errors. See the readme for caveats

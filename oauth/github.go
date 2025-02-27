@@ -15,6 +15,9 @@ type GitHubOAuth struct {
 	TokenURL string
 }
 
+const scopeName = "scope"
+const scopeVal = "read:user"
+
 func (g GitHubOAuth) GetRedirectURL(clientID, handlerURL string) string {
 	params := url.Values{}
 	params.Add("client_id", clientID)
@@ -25,7 +28,7 @@ func (g GitHubOAuth) GetRedirectURL(clientID, handlerURL string) string {
 }
 
 func (g GitHubOAuth) GetScope() (string, string) {
-	return "scope", "read:user"
+	return scopeName, scopeVal
 }
 
 func (g GitHubOAuth) GetTokenRequest(clientID, clientSecret, code, handlerURL string) (*http.Request, error) {
