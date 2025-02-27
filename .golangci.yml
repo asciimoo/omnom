@@ -87,7 +87,7 @@ linters-settings:
     # Allow local `replace` directives. Default is false.
     replace-local: false
 
-  misspell:
+#  misspell:
     # Correct spellings using locale preferences for US or UK.
     # Default is to use a neutral variety of English.
     # Setting locale to US will correct the British spelling of 'colour' to 'color'.
@@ -109,8 +109,6 @@ linters-settings:
   nolintlint:
     # Enable to ensure that nolint directives are all used. Default is true.
     allow-unused: false
-    # Disable to ensure that nolint directives don't have a leading space. Default is true.
-    allow-leading-space: true
     # Exclude following linters from requiring an explanation.  Default is [].
     allow-no-explanation: []
     # Enable to require an explanation of nonzero length after each nolint directive. Default is false.
@@ -124,7 +122,7 @@ linters-settings:
     # if it's called for subdir of a project it can't find external interfaces. All text editor integrations
     # with golangci-lint call it on a directory with the changed file.
     check-exported: false
-
-  unused:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.17.6"
+#
+#  unused:
+#    # Select the Go version to target. The default is '1.13'.
+#    go: "1.17.6"
