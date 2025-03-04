@@ -83,6 +83,7 @@ async function sanitizeCSSRule(r, baseURL) {
     await sanitizeCSSBgImage(r, baseURL);
     await sanitizeCSSListStyleImage(r, baseURL);
     await sanitizeCSSContentImage(r, baseURL);
+    await sanitizeCSSMask(r, baseURL);
     return r.cssText;
 }
 
@@ -153,6 +154,32 @@ async function sanitizeCSSContentImage(r, baseURL) {
             } else {
                 console.log('failed to get content image: ', error);
                 r.style.content = '';
+            }
+        }
+    }
+}
+
+async function sanitizeCSSMask(r, baseURL) {
+    await fixURL(r, "maskImage", baseURL);
+}
+
+async function fixURL(r, name, baseURL) {
+    const attr = r.style[name];
+    if (attr && attr.startsWith('url("') && attr.endsWith('")')) {
+        const u = attr.substring(5, attr.length - 2);
+        const bgURL = absoluteURL(baseURL, u);
+        if (!bgURL.startsWith('data:')) {
+            let res = await resources.create(bgURL);
+            if (res) {
+                try {
+                    r.style[name] = `url('${res.src}')`;
+                } catch (error) {
+                    console.log(`failed to set ${name} css url property: `, error);
+                    r.style[name] = '';
+                }
+            } else {
+                console.log(`failed to set ${name} css url property: `, error);
+                r.style[name] = '';
             }
         }
     }
