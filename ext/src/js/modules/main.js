@@ -57,7 +57,7 @@ function setupComms(msg) {
         );
         commChan.onMessage.addListener((msg, sender) => {
             if(sender.name != "omnom") {
-                return;
+                return false;
             }
             const msgHandler = messageHandlers.get(msg.type);
             if(msgHandler) {
@@ -85,7 +85,7 @@ async function handleDomDataMessage(msg) {
         let data = await executeScriptToPromise(getDomData, br);
         if (data) {
             data = data[0].result;
-            doc = new Document(data.html, data.url, data.doctype, data.attributes);
+            doc = new Document(data.html, data.text, data.url, data.doctype, data.title, data.attributes);
         } else {
             // TODO display error to user
             console.log("failed to get dom information");
@@ -94,7 +94,7 @@ async function handleDomDataMessage(msg) {
     if (msg.data.url == getSiteUrl()) {
         numberOfPages -= 1;
     } else {
-        let d = new Document(msg.data.html, msg.data.url, msg.data.doctype, msg.data.attributes);
+        let d = new Document(msg.data.html, msg.data.text, msg.data.url, msg.data.doctype, msg.data.doctype, msg.data.attributes);
         iframes.push(d);
     }
     if (doc && iframes.length >= numberOfPages) {
@@ -216,7 +216,7 @@ async function createBookmark(e) {
             return;
         }
         data = data[0].result;
-        doc = new Document(data.html, data.url, data.doctype, data.attributes);
+        doc = new Document(data.html, data.text, data.url, data.doctype, data.title, data.attributes);
         saveBookmark();
         return;
     } else {
@@ -235,7 +235,8 @@ async function saveBookmark() {
     }
     const snapshotBlob = new Blob([snapshotData['dom']], { type: 'text/html' });
     form.append('snapshot', snapshotBlob);
-    form.append('snapshot_text', snapshotData['text']);
+    form.append('snapshot_text', doc.text);
+    form.append('snapshot_title', doc.title);
     form.set('favicon', snapshotData['favicon']);
     const requestBody = {
         method: 'POST',

@@ -12,7 +12,7 @@ import {
 } from './utils';
 
 class Document {
-    constructor(html, url, doctype, htmlAttributes) {
+    constructor(html, text, url, doctype, title, htmlAttributes) {
         this.doctype = doctype;
         this.dom = document.createElement('html');
         this.iframes = [];
@@ -20,6 +20,7 @@ class Document {
         this.dom.innerHTML = html;
         this.originalLength = html.length;
         this.resolver = new UrlResolver(url);
+        this.text = text;
         for (const k in htmlAttributes) {
             this.dom.setAttribute(k, htmlAttributes[k]);
         }
@@ -200,7 +201,7 @@ class Document {
                 iframeUrl = this.absoluteUrl();
             }
             let iframeHtml = base64Decode(node.getAttribute(dataHtmlAttr));
-            let iframe = new Document(iframeHtml, iframeUrl, '<!DOCTYPE html>', {});
+            let iframe = new Document(iframeHtml, '', iframeUrl, '<!DOCTYPE html>', '', {});
             await iframe.transformDom();
             const inlineSrc = `data:text/html;base64,${base64Encode(iframe.getDomAsText())}`;
             node.setAttribute('src', inlineSrc);

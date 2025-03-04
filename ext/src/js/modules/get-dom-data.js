@@ -3,6 +3,76 @@
 // SPDX-License-Identifier: AGPLv3+
 
 function getDomData() {
+    const sectionElements = [
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DIV',
+        'DL',
+        'DT',
+        'FIGURE',
+        'FOOTER',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'LI',
+        'MAIN',
+        'NAV',
+        'P',
+        'SECTION',
+        'TD',
+        'TH',
+    ];
+
+    function skipInvisible(n) {
+        if(n.nodeType != Node.ELEMENT_NODE) {
+            return NodeFilter.FILTER_ACCEPT;
+        }
+        const style = window.getComputedStyle(n);
+        const rect = n.getBoundingClientRect();
+        // TODO calculate valid height by font size: rect.height < (style.fontSize.replace('px', '')/2))
+        if(rect.width < 5 || rect.height < 5) {
+            return NodeFilter.FILTER_REJECT;
+        }
+        if(style.display == 'none' || style.visibility == 'hidden' || style.opacity == '0') {
+            return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+    }
+
+    function extractVisibleTextBlocks(el) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, skipInvisible);
+        let curTexts = [];
+        let parentNode = el.tagName;
+        let texts = [];
+        while(walker.nextNode()) {
+            let n = walker.currentNode;
+            if(n.nodeType == Node.ELEMENT_NODE) {
+                if(sectionElements.includes(n.tagName) && curTexts.length > 0) {
+                    let ct = curTexts.join('').replace(/\s+/g, " ").trim();
+                    if(ct) {
+                        texts.push(ct);
+                    }
+                    curTexts = [];
+                }
+            } else if(n.nodeType == Node.TEXT_NODE) {
+                curTexts.push(n.nodeValue);
+            }
+        }
+
+        if(curTexts.length > 0) {
+            let ct = curTexts.join('').replace(/\s+/g, " ").trim();
+            if(ct) {
+                texts.push(ct);
+            }
+        }
+
+        return texts;
+    }
+
     const html = document.documentElement;
     const styleElements = html.querySelectorAll('style');
     if (styleElements) {
@@ -29,6 +99,8 @@ function getDomData() {
         'iframeCount': html.querySelectorAll('iframe').length,
         'url': document.URL
     };
+    // use ||| as a delimiter to separate semantically independent parts of the site's text
+    ret.text = extractVisibleTextBlocks(document.body).join('|||');
     if (document.doctype) {
         ret.doctype = new XMLSerializer().serializeToString(document.doctype);
     }
@@ -76,6 +148,7 @@ function getDomData() {
             snapshotIframes[i].setAttribute('data-omnom-iframe-url', iframeContents[i]['url']);
         }
     }
+
     ret.html = ret.html.outerHTML;
     return ret;
 }
