@@ -119,44 +119,11 @@ async function sanitizeCSSBgImage(r, baseURL) {
 }
 
 async function sanitizeCSSListStyleImage(r, baseURL) {
-    const lsi = r.style.listStyleImage;
-    if (lsi && lsi.startsWith('url("') && lsi.endsWith('")')) {
-        const iURL = absoluteURL(baseURL, lsi.substring(5, lsi.length - 2));
-        if (!iURL.startsWith('data:')) {
-            let res = await resources.create(iURL);
-            if (res) {
-                try {
-                    r.style.listStyleImage = `url('${res.src}')`;
-                } catch (error) {
-                    console.log('failed to set list-style-image:', error);
-                    r.style.listStyleImage = '';
-                }
-            } else {
-                r.style.listStyleImage = '';
-            }
-        }
-    }
+    await fixURL(r, "listStyleImage", baseURL);
 }
 
 async function sanitizeCSSContentImage(r, baseURL) {
-    const ci = r.style.content;
-    if (ci && ci.startsWith('url("') && ci.endsWith('")')) {
-        const bgURL = absoluteURL(baseURL, ci.substring(5, ci.length - 2));
-        if (!bgURL.startsWith('data:')) {
-            let res = await resources.create(bgURL);
-            if (res) {
-                try {
-                    r.style.content = `url('${res.src}')`;
-                } catch (error) {
-                    console.log('failed to set content image: ', error);
-                    r.style.content = '';
-                }
-            } else {
-                console.log('failed to get content image: ', error);
-                r.style.content = '';
-            }
-        }
-    }
+    await fixURL(r, "content", baseURL);
 }
 
 async function sanitizeCSSMask(r, baseURL) {
@@ -167,9 +134,9 @@ async function fixURL(r, name, baseURL) {
     const attr = r.style[name];
     if (attr && attr.startsWith('url("') && attr.endsWith('")')) {
         const u = attr.substring(5, attr.length - 2);
-        const bgURL = absoluteURL(baseURL, u);
-        if (!bgURL.startsWith('data:')) {
-            let res = await resources.create(bgURL);
+        const iURL = absoluteURL(baseURL, u);
+        if (!iURL.startsWith('data:')) {
+            let res = await resources.create(iURL);
             if (res) {
                 try {
                     r.style[name] = `url('${res.src}')`;
