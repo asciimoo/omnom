@@ -49,6 +49,8 @@ func bookmarks(c *gin.Context) {
 			filterTag(sp.Tag, q, cq)
 		}
 	}
+	q.Group("bookmarks.id")
+	cq.Group("bookmarks.id")
 	cq.Count(&bookmarkCount)
 	orderBy, _ := c.GetQuery("order_by")
 	switch orderBy {
