@@ -1,6 +1,6 @@
 {
 	"name": "omnom",
-	"version": "0.13.0",
+	"version": "0.14.0",
 	"manifest_version": 3,
 	"description": "Bookmarking & snapshotting extension for omnom services.",
 	"content_scripts": [
