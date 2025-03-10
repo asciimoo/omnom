@@ -3,7 +3,10 @@
     <h4 class="title">
         Snapshot Details: <a href="{{ .URL }}">{{ .URL }}</a>
     </h4>
-    <p>Created at: {{ .Snapshot.CreatedAt | ToDateTime }}</p>
+    <p>
+        <span class="tag is-primary is-light is-medium">Created at</span> {{ .Snapshot.CreatedAt | ToDateTime }}<br />
+        <span class="tag is-primary is-light is-medium">Title</span> {{ .Bookmark.Title }}
+    </p>
     <hr />
     <div class="columns has-text-centered is-vcentered">
         <div class="column">

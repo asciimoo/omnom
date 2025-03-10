@@ -318,5 +318,6 @@ func snapshotDetails(c *gin.Context) {
 		"Resources":     rs,
 		"ResourceCount": len(res),
 		"URL":           b.URL,
+		"Bookmark":      b,
 	})
 }
