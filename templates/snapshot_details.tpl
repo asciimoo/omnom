@@ -3,6 +3,7 @@
     <h4 class="title">
         Snapshot Details: <a href="{{ .URL }}">{{ .URL }}</a>
     </h4>
+    <p>Created at: {{ .Snapshot.CreatedAt | ToDateTime }}</p>
     <hr />
     <div class="columns has-text-centered is-vcentered">
         <div class="column">
