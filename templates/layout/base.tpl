@@ -193,7 +193,7 @@
     <div class="snapshot__link">
       <div>
         <a href="{{ URLFor "Snapshot" }}?sid={{ $s.Key }}&bid={{ $s.BookmarkID }}">
-          <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span> 
+          <span class="snapshot__date">{{ $s.CreatedAt | ToDate }}</span>
           <span class="snapshot__title">
           {{if $s.Title}}{{ $s.Title }}{{else}}snapshot #{{ $i }}{{end}}
           </span>
@@ -220,10 +220,10 @@
 <div class="columns is-centered">
     <div class="column is-narrow">
         {{ if and .Pageno (gt .Pageno 1) }}
-        <a href="?pageno={{ dec .Pageno }}" class="button is-primary is-medium is-outlined"><span class="icon"><i class="fas fa-angle-left"></i></span><span>Previous page</span></a>
+        <a href="{{ AddURLParam .URL (printf "pageno=%d" (dec .Pageno)) }}" class="button is-primary is-medium is-outlined"><span class="icon"><i class="fas fa-angle-left"></i></span><span>Previous page</span></a>
         {{ end }}
         {{ if .HasNextPage }}
-        <a href="?pageno={{ inc .Pageno }}" class="button is-primary is-medium is-outlined"><span>Next page</span><span class="icon"><i class="fas fa-angle-right"></i></span></a>
+        <a href="{{ AddURLParam .URL (printf "pageno=%d" (inc .Pageno)) }}" class="button is-primary is-medium is-outlined"><span>Next page</span><span class="icon"><i class="fas fa-angle-right"></i></span></a>
         {{ end }}
     </div>
 </div>
@@ -246,28 +246,28 @@
     </div>
 </div>
 {{end}}
-{{define "searchParameters"}}        
+{{define "searchParameters"}}
         <div class="field field-row">
             <label class="label">Search in snapshots</label>
             <input class="switch is-rounded" value="true" type="checkbox" id="search_in_snapshot"  name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
-            <label for="search_in_snapshot"></label>    
+            <label for="search_in_snapshot"></label>
         </div>
         <div class="field field-row">
             <label class="label">Search in notes</label>
             <input class="switch is-rounded" value="true" type="checkbox" id="search_in_note" name="search_in_note"{{ if .SearchParams.SearchInNote }} checked="checked"{{ end }}>
-            <label for="search_in_note"></label>    
+            <label for="search_in_note"></label>
         </div>
         {{ if eq .Page "my-bookmarks" }}
         <div class="field field-row">
             <label class="label">Only public bookmarks</label>
-            <input class="switch is-rounded" value="true" type="checkbox" id="public" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>            
-            <label for="public"></label>    
+            <input class="switch is-rounded" value="true" type="checkbox" id="public" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>
+            <label for="public"></label>
         </div>
-        {{ end }}    
+        {{ end }}
 {{ end }}
 
 {{ define "domainFilter" }}
-<div class="field">    
+<div class="field">
     <label class="label">Domain</label>
     <div class="control">
         <input class="input" type="text" placeholder="Insert Url" name="domain" value="{{ .SearchParams.Domain }}">
@@ -308,7 +308,7 @@
                 <input class="input" type="date" placeholder="YYYY.MM.DD" name="to" value="{{ .SearchParams.ToDate }}">
             </p>
         </div>
-    </div>    
+    </div>
 </div>
 {{ end }}
 
