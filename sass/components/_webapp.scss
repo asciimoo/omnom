@@ -221,6 +221,7 @@ iframe {
     }
 
     &__tags {
+        margin-bottom: 1em;
         .tag:not(body).is-info {
             background-color: $color-red;
             border-radius: 0;
