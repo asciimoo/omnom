@@ -40,7 +40,6 @@ summary {
 .bd-main-container {
     background: $color-white !important;
     padding: 1em;
-    padding-top: 3em;
 }
 
 .webapp__main-container {
@@ -124,7 +123,6 @@ iframe {
         width: 100%;
         font-size: 0.7rem;
         color: $secondary-color;
-        border-bottom: 1px solid $tertiary-color;
         margin-bottom: 1rem;
 
         i {
@@ -190,18 +188,21 @@ iframe {
         justify-content: space-between;
         width: 100%;
         gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.5rem;
+        flex-wrap: nowrap;
     }
 
     &__title {
         display: flex;
         flex-direction: row;
         align-items: flex-start;
+            line-break: anywhere;
 
         .title {
             color: $primary-color;
             font-size: 1.2rem;
+            a:hover {
+              text-decoration: underline;
+            }
         }
     }
 
@@ -233,7 +234,6 @@ iframe {
         align-items: flex-start;
         justify-content: space-between;
         width: 100%;
-        margin-top: 1rem;
         flex-wrap: wrap;
         gap:1rem;
 
@@ -249,6 +249,22 @@ iframe {
         flex-direction: column;
         align-items: flex-start;
     }
+    &__snapshots summary {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 0.6666em;
+      padding-bottom: 0;
+    }
+    &__snapshots details {
+        width: 100%;
+        font-size: 0.7rem;
+        color: $secondary-color;
+        margin-bottom: 1rem;
+
+        i {
+            font-size: 1rem;
+        }
+    }
 
     &__actions {
         text-align: right;
@@ -263,7 +279,7 @@ iframe {
             text-align: left;
             justify-content: flex-start;
         }
-        
+
         i {
             margin-left: 1rem;
             color: $color-gray;

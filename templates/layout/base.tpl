@@ -128,7 +128,7 @@
         {{ end }}
           <h4 class="title">
               <a href="{{ .Bookmark.URL }}" target="_blank">
-                {{ Truncate .Bookmark.Title 100 }}
+                {{ .Bookmark.Title }}
               </a>
               <p class="is-size-7 has-text-grey has-text-weight-normal">
                   {{ Truncate .Bookmark.URL 100 }}<br />
@@ -138,7 +138,7 @@
           </h4>
       </div>
       <div class="bookmark__actions">
-          <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end}}</span> 
+          <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end }}</span>
           <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-eye"></i>
           </a>
@@ -175,12 +175,14 @@
         <p class="has-text-black">{{ .Bookmark.Notes }}</p>
       </div>
       <div class="bookmark__snapshots">
-        <div class="my-bookmarks__section-header">
-          <h3>
+        <details>
+          <summary>
             Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
-          </h3>
-        </div>
-         {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) "CSRF" .CSRF }}{{ end }}
+          </summary>
+          <div>
+              {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) "CSRF" .CSRF }}{{ end }}
+          </div>
+        </details>
       </div>
     </div>
 </div>
