@@ -261,6 +261,7 @@ func snapshots(c *gin.Context) {
 		"Snapshots":     ss,
 		"SnapshotCount": sc,
 		"Pageno":        pageno,
+		"HasNextPage":   offset+resultsPerPage < sc,
 		"SearchParams": searchParams{
 			Q: qs,
 		},
