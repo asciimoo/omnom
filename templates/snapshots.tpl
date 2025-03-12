@@ -27,6 +27,5 @@
         {{ end }}
     {{ block "paging" .}}{{ end }}
     {{ end }}
-    </div>
 </div>
 {{ end }}
