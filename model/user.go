@@ -65,6 +65,7 @@ func CreateUser(username, email string) error {
 	u := &User{
 		Username:   username,
 		Email:      email,
+		OAuthID:    email,
 		LoginToken: GenerateToken(),
 		SubmissionTokens: []Token{Token{
 			Text: GenerateToken(),
