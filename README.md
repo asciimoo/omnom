@@ -10,7 +10,7 @@ Omnom is a rebooted implementation of @stef's original omnom project, big thanks
 
 ## Requirements
 
-go >= 1.14
+go >= 1.20
 
 ## Setup & run
 
