@@ -14,11 +14,15 @@ html {
         padding: 0rem 1rem;
         margin: 0 0.5rem;
         line-height: 1rem;
+        color: $color-white !important;
+    }
+    .navbar-start .navbar-item:hover {
+      background: rgba(90,90,90,0.3);
     }
 
     nav {
         a {
-            color: $secondary-color;
+            color: $color-white !important;
             font-weight: 500;
         }
     }
@@ -36,6 +40,9 @@ summary {
 #nav-toggle-state:checked~.navbar-menu {
     display: block;
 }
+.navbar-burger span {
+    background-color: $color-white !important;
+}
 
 .bd-main-container {
     background: $color-white !important;
@@ -48,9 +55,8 @@ summary {
 
 
 a.navbar-item.is-active {
-    background-color: $secondary-color !important;
+    background-color: rgba(200,200,200,0.3) !important;
     color: $color-white !important;
-    border-radius: 8px;
 }
 
 .has-padding-top-50 {
@@ -363,6 +369,7 @@ iframe {
 
 .hero-body {
     background-color: $alternative-color;
+	background: linear-gradient(90deg, $alternative-color 10%, rgba(52,121,134,1) 100%);
     h1, h2, h3, h4, p {
         color: $color-white;
     }
@@ -373,6 +380,7 @@ iframe {
         max-height: 10em;
     }
 }
+
 
 .extension-button, .extension-button:hover {
     i{
@@ -404,6 +412,8 @@ iframe {
 
 .navbar{
     min-height: 4.8rem !important;
+    background-color: $alternative-color;
+	background: linear-gradient(90deg, $alternative-color 10%, rgba(52,121,134,1) 100%);
 }
 
 .navbar-menu {
@@ -411,6 +421,7 @@ iframe {
         position: absolute;
         top: 3.5rem;
         left:13rem;
+        background-color: $alternative-color;
     }
 }
 .resources {
