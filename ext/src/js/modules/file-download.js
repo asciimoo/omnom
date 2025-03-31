@@ -90,7 +90,9 @@ function updateStatus(status) {
             break;
         }
     }
-    downloadState.next({ downloadCount, downloadedCount, failedCount });
+    if(downloadState !== null) {
+        downloadState.next({ downloadCount, downloadedCount, failedCount });
+    }
 }
 
 function renderProgressBar(target) {

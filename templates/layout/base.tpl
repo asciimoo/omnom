@@ -30,6 +30,9 @@
           <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
         <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
+        {{ if .User }}
+          <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">Create bookmark</a>
+        {{ end }}
         <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">Snapshots</a>
       </div>
       <div class="navbar-end">
@@ -85,13 +88,13 @@
 </html>
 
 {{ define "error" }}
-<article class="message is-danger container is-size-3">
+<article class="message is-danger container is-size-5">
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
 
 {{ define "warning" }}
-<article class="message is-warning container is-size-3">
+<article class="message is-warning container is-size-5">
   <div class="message-header">
     <p>Warning</p>
   </div>
@@ -100,14 +103,14 @@
 {{ end }}
 
 {{ define "info" }}
-<article class="message is-info container is-size-3">
+<article class="message is-info container is-size-5">
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
 
 
 {{ define "note" }}
-<article class="message is-info container is-size-3">
+<article class="message is-info container is-size-5">
   <div class="message-header">
     <p>Note</p>
   </div>
@@ -314,7 +317,7 @@
 
 {{ define "submit" }}
 <div class="omnom-popup__submit">
-    <input type="submit" name="submit" value="Search" class="button is-primary" />
+    <input type="submit" name="submit" value="{{ . }}" class="button is-primary" />
 </div>
 
 {{ end }}

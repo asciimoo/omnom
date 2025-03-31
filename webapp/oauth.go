@@ -15,7 +15,7 @@ import (
 
 	"github.com/asciimoo/omnom/oauth"
 
-	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 

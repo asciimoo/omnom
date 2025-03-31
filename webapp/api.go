@@ -474,6 +474,48 @@ func init() {
 			},
 		},
 		&Endpoint{
+			Name:         "Create bookmark form",
+			Path:         "/create_bookmark",
+			Method:       GET,
+			AuthRequired: true,
+			Handler:      createBookmarkForm,
+			Description:  "Show create bookmark form",
+		},
+		&Endpoint{
+			Name:         "Create bookmark",
+			Path:         "/create_bookmark",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      createBookmark,
+			Description:  "Create new bookmark from webapp",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "url",
+					Type:        "string",
+					Required:    true,
+					Description: "URL of the bookmark",
+				},
+				&EndpointArg{
+					Name:        "title",
+					Type:        "string",
+					Required:    true,
+					Description: "Title of the bookmark",
+				},
+				&EndpointArg{
+					Name:        "notes",
+					Type:        "string",
+					Required:    false,
+					Description: "Bookmark notes",
+				},
+				&EndpointArg{
+					Name:        "public",
+					Type:        "boolean",
+					Required:    false,
+					Description: "Bookmark is publicly accessible",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "My bookmarks",
 			Path:         "/my_bookmarks",
 			Method:       GET,

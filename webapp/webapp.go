@@ -22,7 +22,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/gin-contrib/multitemplate"
-	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 )
 
 type NotificationType int
@@ -131,6 +132,7 @@ func createRenderer(rootDir string) multitemplate.Renderer {
 	addTemplate(r, rootDir, true, "snapshot-details", "snapshot_details.tpl")
 	addTemplate(r, rootDir, true, "view-bookmark", "view_bookmark.tpl")
 	addTemplate(r, rootDir, true, "edit-bookmark", "edit_bookmark.tpl")
+	addTemplate(r, rootDir, true, "create-bookmark", "create_bookmark.tpl")
 	addTemplate(r, rootDir, true, "api", "api.tpl")
 	addTemplate(r, rootDir, true, "error", "error.tpl")
 	addTemplate(r, rootDir, false, "rss", "rss.xml")
@@ -254,11 +256,11 @@ func Run(cfg *config.Config) {
 		resultsPerPage = cfg.App.ResultsPerPage
 	}
 	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
-	sess := sessions.NewCookieStore([]byte("secret"))
-	sess.Options(sessions.Options{
+	store := cookie.NewStore([]byte("secret"))
+	store.Options(sessions.Options{
 		Secure: cfg.Server.SecureCookie,
 	})
-	e.Use(sessions.Sessions("SID", sess))
+	e.Use(sessions.Sessions("SID", store))
 	e.Use(SessionMiddleware())
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())

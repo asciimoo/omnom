@@ -6,7 +6,6 @@ import { Document } from "./document";
 import { renderProgressBar, destroyProgressBar } from './file-download';
 import { getDomData } from "./get-dom-data";
 import { createSnapshot } from './snapshot';
-import { resources } from './resources';
 import { TagInputController } from './tag-input';
 import {
     browser as br,
@@ -252,7 +251,7 @@ async function saveBookmark() {
             let blobs = new Array();
             let blobMetas = new Array();
             let blobsSize = 0;
-            for (const resource of resources.getAll()) {
+            for (const resource of doc.resources.getAll()) {
                 const resourceBlob = new Blob([resource.content], { type: resource.mimetype });
                 if (blobsSize && blobsSize + resourceBlob.size > blobSizeLimit) {
                     let rform = new FormData();

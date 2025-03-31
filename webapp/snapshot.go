@@ -22,9 +22,8 @@ import (
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-
-	"github.com/gin-gonic/contrib/sessions"
 )
 
 var resourceAttributes map[string]string = map[string]string{

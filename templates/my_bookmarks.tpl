@@ -47,7 +47,7 @@
                 {{ block "dateFilter" .}}{{ end }}
                 </div>
             </div>
-                {{ block "submit" . }}{{ end }}
+                {{ block "submit" "Search" }}{{ end }}
           </div>
           </div>
         </div>

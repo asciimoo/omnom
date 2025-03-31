@@ -6,17 +6,23 @@ package webapp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"net/url"
+	"os"
+	"path"
 	"reflect"
-	"strings"
+	"time"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/validator"
 
+	"github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/chromedp"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +30,22 @@ const (
 	dateAsc  = "date_asc"
 	dateDesc = "date_desc"
 )
+
+var snapshotJS string
+
+type browserBookmarkResponse struct {
+	DOM       string `json:"dom"`
+	Favicon   string `json:"favicon"`
+	Title     string `json:"string"`
+	Text      string `json:"string"`
+	Resources []struct {
+		Content   []byte `json:"content"`
+		Mimetype  string `json:"mimetype"`
+		Filename  string `json:"filename"`
+		Extension string `json:"extension"`
+		Src       string `json:"src"`
+	} `json:"resources"`
+}
 
 func bookmarks(c *gin.Context) {
 	var bs []*model.Bookmark
@@ -125,6 +147,115 @@ func myBookmarks(c *gin.Context) {
 	})
 }
 
+func createBookmarkForm(c *gin.Context) {
+	render(c, http.StatusOK, "create-bookmark", nil)
+}
+
+func createBookmark(c *gin.Context) {
+	cu, _ := c.Get("user")
+	u, _ := cu.(*model.User)
+	urlString := c.PostForm("url")
+	if snapshotJS == "" {
+		cfg, _ := c.Get("config")
+		jsPath := path.Join(cfg.(*config.Config).App.StaticDir, "js", "snapshot.js")
+		b, err := os.ReadFile(jsPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		snapshotJS = string(b)
+	}
+
+	ctx, cancel := chromedp.NewContext(
+		context.Background(),
+		chromedp.WithLogf(log.Printf),
+		//chromedp.WithDebugf(log.Printf),
+		chromedp.WithErrorf(log.Printf),
+	)
+	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	var res browserBookmarkResponse
+	err := chromedp.Run(ctx,
+		chromedp.EmulateViewport(1200, 1000),
+		chromedp.Navigate(urlString),
+		chromedp.WaitVisible("body", chromedp.ByQuery),
+		chromedp.Evaluate(snapshotJS, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+			return p.WithAwaitPromise(true)
+		}),
+		chromedp.Evaluate(`webapp_snapshot.createOmnomSnapshot();`, &res, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+			return p.WithAwaitPromise(true)
+		}),
+	)
+	if err != nil {
+		setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
+		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+		return
+	}
+
+	b, err := model.GetOrCreateBookmark(
+		u,
+		c.PostForm("url"),
+		c.PostForm("title"),
+		c.PostForm("tags"),
+		c.PostForm("notes"),
+		c.PostForm("public"),
+		res.Favicon,
+	)
+	if err != nil {
+		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+		return
+	}
+
+	sd := []byte(res.DOM)
+	// TODO don't save identical snapshots twice
+	if err = validator.ValidateHTML(sd); err != nil {
+		setNotification(c, nError, "HTML validation failed: "+err.Error(), false)
+		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+		return
+	}
+
+	key := storage.Hash(sd)
+	err = storage.SaveSnapshot(key, sd)
+	if err != nil {
+		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+		return
+	}
+
+	s := &model.Snapshot{
+		Key:        key,
+		Text:       res.Text,
+		Title:      res.Title,
+		BookmarkID: b.ID,
+		Size:       storage.GetSnapshotSize(key),
+	}
+	for _, r := range res.Resources {
+		if bytes.Equal(r.Content, []byte("")) {
+			continue
+		}
+		key := storage.Hash(r.Content) + "." + r.Extension
+		err = storage.SaveResource(key, r.Content)
+		if err != nil {
+			setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+			c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+			return
+		}
+		size := storage.GetResourceSize(key)
+		s.Size += size
+		// TODO check error in GetOrCreateResource
+		s.Resources = append(s.Resources, model.GetOrCreateResource(key, r.Mimetype, r.Filename, size))
+	}
+	if err := model.DB.Save(s).Error; err != nil {
+		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+		return
+	}
+
+	setNotification(c, nInfo, "Bookmark successfully created", true)
+	c.Redirect(http.StatusFound, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
+}
+
 func addBookmark(c *gin.Context) {
 	// TODO error handling
 	tok := c.PostForm("token")
@@ -136,62 +267,21 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	url, err := url.Parse(c.PostForm("url"))
-	if err != nil || url.Hostname() == "" || url.Scheme == "" {
-		setNotification(c, nError, "Invalid URL", false)
+	b, err := model.GetOrCreateBookmark(
+		u,
+		c.PostForm("url"),
+		c.PostForm("title"),
+		c.PostForm("tags"),
+		c.PostForm("notes"),
+		c.PostForm("public"),
+		c.PostForm("favicon"),
+	)
+	if err != nil {
+		setNotification(c, nError, err.Error(), false)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid URL",
+			"error": err.Error(),
 		})
 		return
-	}
-	var b *model.Bookmark = nil
-	newBookmark := false
-	r := model.DB.
-		Model(&model.Bookmark{}).
-		Preload("Snapshots").
-		Where("url = ? and user_id = ?", url.String(), u.ID).
-		First(&b)
-	if r.RowsAffected < 1 {
-		newBookmark = true
-	}
-	if newBookmark {
-		b = &model.Bookmark{
-			Title:     c.PostForm("title"),
-			URL:       url.String(),
-			Domain:    url.Hostname(),
-			Notes:     c.PostForm("notes"),
-			Favicon:   c.PostForm("favicon"),
-			UserID:    u.ID,
-			Snapshots: make([]model.Snapshot, 0, 8),
-		}
-		if b.Title == "" {
-			setNotification(c, nError, "Missing title", false)
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "Missing title",
-			})
-			return
-		}
-		if !strings.HasPrefix(b.Favicon, "data:image") {
-			b.Favicon = ""
-		}
-		if c.PostForm("public") != "" {
-			b.Public = true
-		}
-		tags := c.PostForm("tags")
-		if tags != "" {
-			b.Tags = make([]model.Tag, 0, 8)
-			for _, t := range strings.Split(tags, ",") {
-				t = strings.TrimSpace(t)
-				b.Tags = append(b.Tags, model.GetOrCreateTag(t))
-			}
-		}
-		if err := model.DB.Save(b).Error; err != nil {
-			setNotification(c, nError, err.Error(), false)
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
 	}
 	snapshotFile, _, err := c.Request.FormFile("snapshot")
 	if err != nil {

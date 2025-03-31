@@ -2,6 +2,11 @@ html {
   overflow-y: hidden;
 }
 
+input[type=checkbox] {
+  transform: scale(2);
+  margin: 0.4em !important;
+}
+
 #omnom-webapp {
     height: 100% !important;
     display: flex;
@@ -31,6 +36,8 @@ html {
 summary {
     outline: 0;
     cursor: pointer;
+}
+  font-size: 0.5em;
 }
 
 #nav-toggle-state {

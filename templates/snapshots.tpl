@@ -6,7 +6,7 @@
     <div class="columns">
         <div class="column">
         {{ block "textFilter" .}}{{ end }}
-        {{ block "submit" . }}{{ end }}
+        {{ block "submit" "Search" }}{{ end }}
         </div>
     </div>
     </form>

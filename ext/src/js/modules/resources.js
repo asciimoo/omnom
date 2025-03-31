@@ -66,10 +66,7 @@ class ResourceStorage {
     }
 }
 
-let resources = new ResourceStorage();
-
-
 export {
     Resource,
-    resources
+    ResourceStorage
 }

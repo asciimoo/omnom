@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: AGPLv3+
 
 import { downloadFile } from './file-download';
-import { resources } from './resources';
-import { sanitizeCSS, sanitizeAttributes } from './sanitize';
+import { ResourceStorage } from './resources';
+import { Sanitizer } from './sanitize';
 import {
     UrlResolver,
     base64Decode,
@@ -20,11 +20,13 @@ class Document {
         this.dom.innerHTML = html;
         this.originalLength = html.length;
         this.resolver = new UrlResolver(url);
+        this.resources = new ResourceStorage();
+        this.sanitizer = new Sanitizer(this.resources);
         this.text = text;
         for (const k in htmlAttributes) {
             this.dom.setAttribute(k, htmlAttributes[k]);
         }
-        this.nodeTransformFunctons = new Map([
+        this.nodeTransformFunctions = new Map([
             ['SCRIPT', (node) => node.remove()],
             ['TEMPLATE', (node) => node.remove()],
             ['LINK', this.transformLink],
@@ -68,9 +70,9 @@ class Document {
         if (node.nodeType !== Node.ELEMENT_NODE) {
             return;
         }
-        sanitizeAttributes(node);
+        this.sanitizer.sanitizeAttributes(node);
         await this.rewriteAttributes(node);
-        const transformFunction = this.nodeTransformFunctons.get(node.nodeName);
+        const transformFunction = this.nodeTransformFunctions.get(node.nodeName);
         if (transformFunction) {
             try {
                 await transformFunction.call(this, node);
@@ -89,9 +91,9 @@ class Document {
                     return;
                 }
                 const cssHref = this.absoluteUrl(node.attributes.href.nodeValue);
-                res = await resources.create(cssHref);
+                res = await this.resources.create(cssHref);
                 if (res) {
-                    await res.updateContent(await sanitizeCSS(res.content, cssHref));
+                    await res.updateContent(await this.sanitizer.sanitizeCSS(res.content, cssHref));
                     node.setAttribute('href', res.src);
                 } else {
                     node.removeAttribute('href', '');
@@ -126,7 +128,7 @@ class Document {
                         node.removeAttribute('href');
                         break;
                     case 'font':
-                        res = await resources.create(this.absoluteUrl(href));
+                        res = await this.resources.create(this.absoluteUrl(href));
                         if (res) {
                             node.setAttribute('href', res.src);
                         } else {
@@ -135,9 +137,9 @@ class Document {
                         break;
                     case 'style':
                         const cssHref = this.absoluteUrl(href);
-                        res = await resources.create(cssHref);
+                        res = await this.resources.create(cssHref);
                         if (res) {
-                            await res.updateContent(await sanitizeCSS(res.content, cssHref));
+                            await res.updateContent(await this.sanitizer.sanitizeCSS(res.content, cssHref));
                             node.setAttribute('href', res.src);
                         } else {
                             node.removeAttribute('href');
@@ -158,14 +160,14 @@ class Document {
     }
 
     async transformStyle(node) {
-        const innerText = await sanitizeCSS(node.innerText, this.absoluteUrl());
+        const innerText = await this.sanitizer.sanitizeCSS(node.innerText, this.absoluteUrl());
         node.innerText = innerText;
     }
 
     async transformImg(node) {
         if (node.getAttribute('src') && !node.getAttribute('src').startsWith('data:')) {
             const src = this.absoluteUrl(node.getAttribute('src'));
-            const res = await resources.create(src);
+            const res = await this.resources.create(src);
             if (res) {
                 node.setAttribute('src', res.src);
             } else {
@@ -175,13 +177,13 @@ class Document {
         if (node.getAttribute('srcset')) {
             // ignore srcest if we have src
             if (node.getAttribute('src')) {
-                node.removeAttribute('src');
+                node.removeAttribute('srcset');
             } else {
                 let val = node.getAttribute('srcset');
                 let newParts = [];
                 for (let s of val.split(',')) {
                     let srcParts = s.trim().split(' ');
-                    const res = await resources.create(this.absoluteUrl(srcParts[0]));
+                    const res = await this.resources.create(this.absoluteUrl(srcParts[0]));
                     if (res) {
                         srcParts[0] = res.src;
                         newParts.push(srcParts.join(' '));
@@ -240,7 +242,7 @@ class Document {
                 attr.nodeValue = this.absoluteUrl(attr.nodeValue);
             }
             if (attr.nodeName == 'style') {
-                const sanitizedValue = await sanitizeCSS(`a{${attr.nodeValue}}`, this.absoluteUrl());
+                const sanitizedValue = await this.sanitizer.sanitizeCSS(`a{${attr.nodeValue}}`, this.absoluteUrl());
                 attr.nodeValue = sanitizedValue.substr(4, sanitizedValue.length - 6);
             }
         }));

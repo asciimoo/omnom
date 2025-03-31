@@ -16,9 +16,8 @@ import (
 	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-
-	"github.com/gin-gonic/contrib/sessions"
 )
 
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
