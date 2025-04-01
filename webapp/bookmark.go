@@ -148,15 +148,24 @@ func myBookmarks(c *gin.Context) {
 }
 
 func createBookmarkForm(c *gin.Context) {
+	cfg, _ := c.Get("config")
+	if !cfg.(*config.Config).App.CreateBookmarkFromWebapp {
+		notFoundView(c)
+		return
+	}
 	render(c, http.StatusOK, "create-bookmark", nil)
 }
 
 func createBookmark(c *gin.Context) {
+	cfg, _ := c.Get("config")
+	if !cfg.(*config.Config).App.CreateBookmarkFromWebapp {
+		notFoundView(c)
+		return
+	}
 	cu, _ := c.Get("user")
 	u, _ := cu.(*model.User)
 	urlString := c.PostForm("url")
 	if snapshotJS == "" {
-		cfg, _ := c.Get("config")
 		jsPath := path.Join(cfg.(*config.Config).App.StaticDir, "js", "snapshot.js")
 		b, err := os.ReadFile(jsPath)
 		if err != nil {
@@ -172,7 +181,10 @@ func createBookmark(c *gin.Context) {
 		chromedp.WithErrorf(log.Printf),
 	)
 	defer cancel()
-	ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
+	to := cfg.(*config.Config).App.WebappSnapshotterTimeout
+	if to > 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(to)*time.Second)
+	}
 	defer cancel()
 	var res browserBookmarkResponse
 	err := chromedp.Run(ctx,

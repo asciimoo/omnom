@@ -145,11 +145,12 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	cfg, _ := c.Get("config")
 	csrf, _ := c.Get("_csrf")
 	tplVars := gin.H{
-		"Page":          page,
-		"User":          u,
-		"DisableSignup": cfg.(*config.Config).App.DisableSignup,
-		"CSRF":          csrf,
-		"OAuth":         cfg.(*config.Config).OAuth,
+		"Page":                  page,
+		"User":                  u,
+		"DisableSignup":         cfg.(*config.Config).App.DisableSignup,
+		"AllowBookmarkCreation": cfg.(*config.Config).App.CreateBookmarkFromWebapp,
+		"CSRF":                  csrf,
+		"OAuth":                 cfg.(*config.Config).OAuth,
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {

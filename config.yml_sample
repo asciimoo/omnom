@@ -4,6 +4,8 @@ app:
   disable_signup:  false # set to true to restrict user creation to command line
   template_dir: "./templates"
   static_dir: "./static"
+  create_bookmark_from_webapp: true # set to false to allow create bookmark/snapshot only from the addon
+  webapp_snapshotter_timeout: 15 # seconds
 server:
   address: "127.0.0.1:7331"
   # e.g. https://mydomain.tld/xy/

@@ -30,7 +30,7 @@
           <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
         {{ end }}
         <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
-        {{ if .User }}
+        {{ if (and .User .AllowBookmarkCreation) }}
           <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">Create bookmark</a>
         {{ end }}
         <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">Snapshots</a>
