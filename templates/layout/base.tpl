@@ -119,7 +119,7 @@
 {{ end }}
 
 {{ define "bookmark" }}
-<div class="box media bookmark__container">
+<div class="media bookmark__container">
     <div class="bookmark__header">
       <div class="bookmark__title">
         {{ if .Bookmark.Favicon }}
@@ -137,6 +137,13 @@
                   {{ Truncate .Bookmark.URL 100 }}<br />
                   <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
                 <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?user={{ .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
+                {{ if .Bookmark.Tags }}
+                <span class="bookmark__tags">
+                    {{ range .Bookmark.Tags }}
+                        <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+                    {{ end }}
+                </span>
+                {{ end }}
               </p>
           </h4>
       </div>
@@ -161,21 +168,16 @@
           <i class="fas fa-share-alt"></i>-->
       </div>
     </div>
-    <div class="bookmark__tags">
-        {{ if .Bookmark.Tags }}
-          {{ range .Bookmark.Tags }}
-            <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
-          {{ end }}
-        {{ end }}
-    </div>
     <div class="bookmark__more-info">
       <div class="bookmark__notes">
-        <div class="my-bookmarks__section-header">
-          <h3>
+        {{ if .Bookmark.Notes }}
+        <details>
+          <summary>
             Notes
-          </h3>
-        </div>
-        <p class="has-text-black">{{ .Bookmark.Notes }}</p>
+          </summary>
+          <p class="has-text-black">{{ .Bookmark.Notes }}</p>
+        </details>
+        {{ end }}
       </div>
       <div class="bookmark__snapshots">
         <details>

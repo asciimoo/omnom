@@ -37,8 +37,6 @@ summary {
     outline: 0;
     cursor: pointer;
 }
-  font-size: 0.5em;
-}
 
 #nav-toggle-state {
     display: none;
@@ -192,7 +190,7 @@ iframe {
 .bookmark {
     &__container {
         flex-direction: column;
-        border-left: 0.75rem #b8ddee solid;
+        padding: 0;
     }
 
     &__header {
@@ -209,7 +207,6 @@ iframe {
         display: flex;
         flex-direction: row;
         align-items: flex-start;
-            line-break: anywhere;
 
         .title {
             color: $primary-color;
@@ -235,7 +232,6 @@ iframe {
     }
 
     &__tags {
-        margin-bottom: 1em;
         .tag:not(body).is-info {
             background-color: $color-red;
             border-radius: 0;
@@ -257,28 +253,27 @@ iframe {
             flex: 1;
             min-width: 15rem;
         }
+        summary {
+          font-size: 1.5em;
+          font-weight: bold;
+          margin-bottom: 0.6666em;
+          padding-bottom: 0;
+        }
+        details {
+            width: 100%;
+            font-size: 0.7rem;
+            color: $secondary-color;
+
+            i {
+                font-size: 1rem;
+            }
+        }
     }
 
     &__snapshots {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-    }
-    &__snapshots summary {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-bottom: 0.6666em;
-      padding-bottom: 0;
-    }
-    &__snapshots details {
-        width: 100%;
-        font-size: 0.7rem;
-        color: $secondary-color;
-        margin-bottom: 1rem;
-
-        i {
-            font-size: 1rem;
-        }
     }
 
     &__actions {
@@ -317,8 +312,6 @@ iframe {
 }
 
 .snapshot {
-    &__container {
-    }
     &__date {
         color: $secondary-color;
         font-size: 1rem;
