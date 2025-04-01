@@ -2,10 +2,8 @@ module github.com/asciimoo/omnom
 
 go 1.24
 
-toolchain go1.24.1
-
 require (
-	github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8
+	github.com/chromedp/cdproto v0.0.0-20250401022514-c504a7d7a18f
 	github.com/chromedp/chromedp v0.13.3
 	github.com/gin-contrib/multitemplate v1.1.0
 	github.com/gin-contrib/sessions v1.0.2

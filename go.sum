@@ -3,8 +3,8 @@ github.com/bytedance/sonic v1.13.2/go.mod h1:o68xyaF9u2gvVBuGHPlUVCy+ZfmNNO5ETf1
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
 github.com/bytedance/sonic/loader v0.2.4 h1:ZWCw4stuXUsn1/+zQDqeE7JKP+QO47tz7QCNan80NzY=
 github.com/bytedance/sonic/loader v0.2.4/go.mod h1:N8A3vUdtUebEY2/VQC0MyhYeKUFosQU6FxH2JmUe6VI=
-github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8 h1:AqW2bDQf67Zbq6Tpop/+yJSIknxhiQecO2B8jNYTAPs=
-github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8/go.mod h1:NItd7aLkcfOA/dcMXvl8p1u+lQqioRMq/SqDp71Pb/k=
+github.com/chromedp/cdproto v0.0.0-20250401022514-c504a7d7a18f h1:6Jo+Hvw8xbBTtmWdTR4rZHmFs1oU8V9nbSkuCdh83fY=
+github.com/chromedp/cdproto v0.0.0-20250401022514-c504a7d7a18f/go.mod h1:NItd7aLkcfOA/dcMXvl8p1u+lQqioRMq/SqDp71Pb/k=
 github.com/chromedp/chromedp v0.13.3 h1:c6nTn97XQBykzcXiGYL5LLebw3h3CEyrCihm4HquYh0=
 github.com/chromedp/chromedp v0.13.3/go.mod h1:khsDP9OP20GrowpJfZ7N05iGCwcAYxk7qf9AZBzR3Qw=
 github.com/chromedp/sysutil v1.1.0 h1:PUFNv5EcprjqXZD9nJb9b/c9ibAbxiYo4exNWZyipwM=
