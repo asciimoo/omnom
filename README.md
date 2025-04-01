@@ -1,24 +1,42 @@
 # Omnom
 
-A webpage bookmarking and snapshotting service.
-
-Omnom consists of two parts; a multi-user web application that accepts bookmarks and snapshots and a browser extension responsible for bookmark and snapshot creation.
+Bookmarking with website snapshots.
 
 
-Omnom is a rebooted implementation of @stef's original omnom project, big thanks for it.
+Access & share previously visited pages without worrying about modifications or availibilty.
+
+
+Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more information.
+
+
+## Features
+
+ - Self hosted
+ - Web interface with multiuser support
+ - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
+ - Private & public bookmarks
+ - Multiple snapshots of the same URL
+ - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
 
 
 ## Requirements
 
-go >= 1.20
+go >= 1.24
 
 ## Setup & run
 
  - Checkout the repo and execute `go get -u`
  - Copy `config.yml_sample` to `config.yml`
- - Execute `go run omnom.go listen` in the repo root
+ - Execute `go build && ./omnom listen` or `go run omnom.go listen` in the repo root
 
 Settings can be configured in `config.yml` config file - don't forget to restart webapp after updating.
+
+
+## User handling
+
+Omnom does not store passwords. Login requires one time login tokens or OAuth.
+Login tokens can be requested via email (this requires a valid SMTP configuration in `config.yml`) through the web interface or can be generated from command line using the `./omnom create-token [username] login`.
+
 
 ### Command line tool
 
