@@ -16,9 +16,11 @@
         </div>
         <div class="columns">
             <div class="column is-offset-2 is-10">
+            {{ if not .DisableSignup }}
                 <form method="get" action="{{ URLFor "Signup" }}">
                     <button class="button is-link is-large">Sign me up</button>
                 </form>
+            {{ end }}
             </div>
         </div>
     </div>
