@@ -3,9 +3,20 @@
 }
 
 .omnom-popup {
+
     &__container {
+        input[type="text"], input:not([type]), textarea {
+            padding: 0.4em;
+            width: 100%;
+        }
+
+        .field {
+            margin-bottom: 0.4em;
+            width: 100%;
+        }
         width: 22rem;
         padding: 0.2rem 1.5rem 0.5rem 1.5rem;
+        font-size: 100% !important;
 
         h2 {
             font-size: $small-font;
@@ -25,21 +36,16 @@
     }
 
     &__form {
-        label {
-            font-size: 0.9rem;
-            font-weight: 400;
-        }
-
-        .tag:not(body).is-rounded {
-            border: 1px solid $primary-color;
-
-            .delete {
-                background-color: $primary-color;
-            }
-        }
+      margin-bottom: 0.5em;
 
         .tags-input {
             margin-bottom: 0.5rem;
+        }
+        .chip-control {
+          margin: 0.4em;
+          padding: 0.2em;
+          display: inline-block;
+          border: 1px solid $primary-color;
         }
     }
 

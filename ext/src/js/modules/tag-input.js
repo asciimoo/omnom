@@ -17,7 +17,7 @@ function renderTag(value, tagChipContainer, tags) {
     const tagTemplate = `<div class="control chip-control">
         <span class="tag is-rounded">
             ${value}
-            <button type="button" class="delete is-small"></button>
+            <button type="button" class="delete is-small"><span class="icon"><i class="fas fa-times"></i></span></button>
         </span>
     </div>`
     const template = document.createElement('template');

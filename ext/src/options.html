@@ -2,11 +2,6 @@
 <template id="options-body">
   <h2>Extension Options</h2>
   <div id="omnom-options" class="omnom-popup__form options-page">
-    <div class="options-page__section-header">
-      <h3>
-        General settings
-      </h3>
-    </div>
     <form>
       <div class="field">
         <label>Token: </label>
@@ -89,34 +84,15 @@
           </div>
         </div>
       </div> -->
-      <div class="accordion-tabs">
-        <div class="accordion-tab">
-          <input class="accordion-tab__control" type="checkbox" id="chck2" checked>
-          <label class="accordion-tab-label" for="chck2">
-            <div class="options-page__section-header">
-              <h3>
-                Advanced settings
-              </h3>
-              <i class="fas fa-angle-down"></i>
-            </div>
-          </label>
-          <div class="accordion-tab-content">
-            <div class="field">
-              <label>Omnom server URL: </label>
-              <div class="control">
-                <input required class="input" type="text" name="url" id="url" placeholder="Set server url">
-              </div>
-            </div>
-            <div class="options-page__reset">
-              <button class="button" type="button">Reset to default</button>
-            </div>
-            <div class="field field-row">
-              <label class="label">Debug mode:</label>
-              <input id="debug" type="checkbox" name="debug" class="switch is-rounded">
-              <label for="debug"></label>
-            </div>
-          </div>
+      <div class="field">
+        <label>Omnom server URL: </label>
+        <div class="control">
+          <input required class="input" type="text" name="url" id="url" placeholder="Set server url">
         </div>
+      </div>
+      <div class="field field-row">
+        <label class="label" for="debug">Debug mode:</label>
+        <input id="debug" type="checkbox" name="debug" class="switch is-rounded">
       </div>
       <div class="omnom-popup__submit">
         <input type="submit" value="Save changes" class="button is-primary" />
