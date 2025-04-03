@@ -28,7 +28,7 @@ class Document {
         }
         this.nodeTransformFunctions = new Map([
             ['SCRIPT', (node) => node.remove()],
-            ['TEMPLATE', (node) => node.remove()],
+            //['TEMPLATE', (node) => node.remove()],
             ['LINK', this.transformLink],
             ['STYLE', this.transformStyle],
             ['IMG', this.transformImg],
@@ -160,8 +160,8 @@ class Document {
     }
 
     async transformStyle(node) {
-        const innerText = await this.sanitizer.sanitizeCSS(node.innerText, this.absoluteUrl());
-        node.innerText = innerText;
+        const innerText = await this.sanitizer.sanitizeCSS(node.textContent, this.absoluteUrl());
+        node.textContent = innerText;
     }
 
     async transformImg(node) {

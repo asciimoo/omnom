@@ -86,7 +86,7 @@ function getDomData() {
             }
             if (sheetRules) {
                 const concatRules = [...sheetRules].reduce((rules, rule) => rules.concat(rule.cssText), '');
-                style.innerText = concatRules;
+                style.textContent = concatRules;
             }
         }
 

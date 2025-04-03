@@ -19,12 +19,7 @@ class Sanitizer {
             return `@import url("${res.src}") ${rule.media};`;
         };
         this.sanitizeMediaRule = async (rule, baseURL) => {
-            const cssRuleArray = [...rule.cssRules];
-            let cssResult = '';
-            await Promise.allSettled(cssRuleArray.map(async (r, index) => {
-                const css = await this.sanitizeCSSRule(r, baseURL);
-                cssResult += css;
-            }));
+            let cssResult = await this.sanitizeCSS(rule.cssRules, baseURL);
             return `@media ${rule.media.mediaText}{${cssResult}}`;
         };
         this.sanitizeFontFaceRule = async (rule, baseURL) => {
@@ -48,6 +43,31 @@ class Sanitizer {
         this.sanitizeCounterStyleRule = async (rule, baseURL) => {
             return rule.cssText;
         };
+        this.sanitizePropertyRule = async (rule, baseURL) => {
+            // TODO check if initial-value requires sanitization
+            return rule.cssText;
+        };
+        this.sanitizeContainerRule = async (rule, baseURL) => {
+            let cssResult = await this.sanitizeCSS(rule.cssRules, baseURL);
+            return `@container ${rule.conditionText}{${cssResult}}`;
+        };
+        this.sanitizeLayerBlockRule = async (rule, baseURL) => {
+            let name = '';
+            if(rule.name) {
+                name = rule.name;
+            }
+            if(rule.nameList) {
+                name = rule.nameList.join(', ');
+            }
+            let cssResult = await this.sanitizeCSS(rule.cssRules, baseURL);
+            if(cssResult) {
+                return `@layer ${name}{${cssResult}}`;
+            }
+            return `@layer ${name}`;
+        };
+        this.sanitizeLayerStatementRule = async (rule, baseURL) => {
+            return rule.cssText;
+        }
         this.unknownRule = async (rule) => {
             console.log('MEEEH, unknown css rule type: ', rule);
             return Promise.reject('MEEEH, unknown css rule type: ', rule);
@@ -178,7 +198,7 @@ class Sanitizer {
                     const css = await sanitizeFunction(r, baseURL).catch(err => console.log(err));
                     cssMap.set(index, css);
                 } else {
-                    unknownRule(r, baseURL);
+                    this.unknownRule(r, baseURL);
                 }
             }));
             const sortedCss = new Map([...cssMap.entries()].sort((e1, e2) => e1[0] - e2[0]));
@@ -203,6 +223,10 @@ class Sanitizer {
             ['CSSPageRule', this.sanitizePageRule],
             ['CSSKeyframesRule', this.sanitizeKeyframesRule],
             ['CSSKeyframeRule', this.sanitizeKeyframeRule],
+            ['CSSContainerRule', this.sanitizeContainerRule],
+            ['CSSLayerBlockRule', this.sanitizeLayerBlockRule],
+            ['CSSLayerStatementRule', this.sanitizeLayerStatementRule],
+            ['CSSPropertyRule', this.sanitizePropertyRule],
             ['CSSNamespaceRule', this.unknownRule], // XML only
             ['CSSCounterStyleRule', this.sanitizeCounterStyleRule],
             ['CSSSupportsRule', this.sanitizeSupportsRule],
