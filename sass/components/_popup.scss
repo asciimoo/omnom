@@ -1,5 +1,10 @@
 #popup {
     height: 99%;
+    border: 1px solid $primary-color;
+}
+
+input[type="submit"] {
+  padding: 0.4em;
 }
 
 .omnom-popup {
@@ -29,6 +34,10 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+
+        button {
+          padding: 0.2em;
+        }
     }
 
     &__title {
