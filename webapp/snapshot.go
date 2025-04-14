@@ -24,6 +24,8 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/tdewolff/parse/v2"
+	"github.com/tdewolff/parse/v2/css"
 )
 
 var resourceAttributes map[string]string = map[string]string{
@@ -108,6 +110,9 @@ func downloadSnapshot(c *gin.Context) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=omnom_snapshot_%s.html;", id))
 	c.Status(http.StatusOK)
+	if !writeBytes(c.Writer, []byte("<!DOCTYPE html>")) {
+		return
+	}
 	doc := html.NewTokenizer(gr)
 	for {
 		tt := doc.Next()
@@ -157,20 +162,21 @@ func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 			href := string(aVal)
 			res, err := storage.GetResource(filepath.Base(href))
 			if err == nil {
+				defer res.Close()
 				gres, err := gzip.NewReader(res)
 				if err == nil {
 					ext := filepath.Ext(href)
 					if !writeBytes(out, []byte(fmt.Sprintf("data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0]))) {
 						return
 					}
-					bw := base64.NewEncoder(base64.StdEncoding, out)
-					// TODO configure file size
-					if _, err := io.CopyN(bw, gres, 1024*1024); err != nil && !errors.Is(err, io.EOF) {
-						log.Println("Error: IO copy error", href, err)
-						return
+					if ext == ".css" {
+						err = writeB64(generateCSS(gres), out)
+					} else {
+						err = writeB64(gres, out)
 					}
-					bw.Close()
-					res.Close()
+					if err != nil {
+						log.Println("Error: IO error", href, err)
+					}
 				}
 			} else {
 				if !writeBytes(out, aVal) {
@@ -178,7 +184,7 @@ func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 				}
 			}
 		} else {
-			if !writeBytes(out, aVal) {
+			if !writeBytes(out, []byte(html.EscapeString(string(aVal)))) {
 				return
 			}
 		}
@@ -189,6 +195,52 @@ func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 			break
 		}
 	}
+}
+
+func generateCSS(in io.Reader) io.Reader {
+	out := bytes.NewBuffer(nil)
+	l := css.NewLexer(parse.NewInput(in))
+	for {
+		tt, text := l.Next()
+		switch tt {
+		case css.ErrorToken:
+			return out
+		case css.URLToken:
+			href := string(text[5 : len(text)-2])
+			if strings.HasPrefix(href, "../../resources/") {
+				ext := filepath.Ext(href)
+				res, err := storage.GetResource(filepath.Base(href))
+				if err == nil {
+					defer res.Close()
+					writeBytes(out, []byte(fmt.Sprintf("url(\"data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])))
+					err := writeB64(res, out)
+					if err != nil {
+						log.Println("Error: CSS IO error", err)
+					}
+					writeBytes(out, []byte("\")"))
+				} else {
+					out.Write(text)
+				}
+			} else {
+				out.Write(text)
+			}
+		// TODO handle CSS @import
+		default:
+			out.Write(text)
+		}
+	}
+	return out
+}
+
+func writeB64(in io.Reader, out io.Writer) error {
+	bw := base64.NewEncoder(base64.StdEncoding, out)
+	// TODO configure file size
+	if _, err := io.CopyN(bw, in, 1024*1024); err != nil && !errors.Is(err, io.EOF) {
+		log.Println("Error: IO copy error", err)
+		return err
+	}
+	defer bw.Close()
+	return nil
 }
 
 func attributeHasResource(tag, name, val []byte) bool {
