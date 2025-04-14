@@ -1,7 +1,8 @@
 {{ define "content" }}
 <div class="content">
     <div class="is-pulled-right"><a href="{{ AddURLParam .URL "format=rss" }}">RSS<span class="icon"><i class="fas fa-rss"></i></span></a></div>
-    <h3 class="title">Snapshot search</h3>
+    <h3 class="title">Find snapshots by domain or URL</h3>
+    {{ block "info" "Check out the search functionality on the Bookmark listing for full text search and advanced filtering" }}{{ end }}
     <form action="" method="get">
     <div class="columns">
         <div class="column">
