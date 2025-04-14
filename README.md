@@ -11,6 +11,7 @@ Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more informatio
 
 ## Features
 
+ - Websites are captured as your browser renders it - saves the displayed content of heavily JS driven dynamic pages
  - Self hosted
  - Web interface with multiuser support
  - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
