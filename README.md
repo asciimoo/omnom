@@ -3,7 +3,7 @@
 Bookmarking with website snapshots.
 
 
-Access & share previously visited pages without worrying about modifications or availibilty.
+Access & share previously visited pages without worrying about modifications or availability.
 
 
 Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more information.
