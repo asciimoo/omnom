@@ -77,70 +77,56 @@ class Sanitizer {
             if (!r || !r.style) {
                 return '';
             }
-            await this.sanitizeCSSBgImage(r, baseURL);
-            await this.sanitizeCSSListStyleImage(r, baseURL);
-            await this.sanitizeCSSContentImage(r, baseURL);
-            await this.sanitizeCSSMask(r, baseURL);
+            for(let prop of r.style) {
+                if(prop.startsWith('--')) {
+                    console.log("YOOOO", prop, r.style.getPropertyValue(prop));
+                    await this.fixURL(r, prop, baseURL);
+                    console.log("YOOOOHOHOOO", prop, r.style.getPropertyValue(prop));
+                    continue
+                }
+                switch(prop) {
+                    case 'background-image':
+                    case 'list-style-image':
+                    case 'content':
+                    case 'mask-image':
+                        await this.fixURL(r, prop, baseURL);
+                        break;
+                }
+
+            }
             return r.cssText;
         };
         this.parseCssUrls = (rule) => {
             let ret = new Set();
-            for (let m of rule.matchAll(/url\(\"[^\"]+\"\)/g)) {
-                ret.add(m[0].substring(5, m[0].length-2));
+            for (let m of rule.matchAll(/url\(([\"\']?)([^\)\"\']+)\1\)/g)) {
+                ret.add(m[2]);
             }
             return ret;
         };
-        this.sanitizeCSSBgImage = async (r, baseURL) => {
-            for (let u of this.parseCssUrls(r.style.backgroundImage)) {
+        this.fixURL = async (r, name, baseURL) => {
+            const attr = r.style.getPropertyValue(name);
+            if(!attr) {
+                return;
+            }
+            for (let u of this.parseCssUrls(attr)) {
                 if (!u || u.startsWith('data:')) {
                     continue;
                 }
                 const href = absoluteURL(baseURL, u);
+                console.log('trying to set URL for', name, u, href);
                 let res = await this.resources.create(href);
                 if (res) {
+                    console.log('setting URL for', name, u, res.src);
                     try {
-                        r.style.backgroundImage = r.style.backgroundImage.replaceAll(u, res.src);
+                        r.style.setProperty(name, r.style.getPropertyValue(name).replaceAll(u, res.src));
+                        console.log('url set');
                     } catch (error) {
-                        console.log('failed to set background image: ', error);
-                        r.style.backgroundImage = '';
-                        break;
+                        console.log(`failed to set ${name} css url property: `, error);
+                        r.style.setProperty(name, '');
                     }
                 } else {
-                    console.log('failed to download background image: ', u);
-                    r.style.backgroundImage = '';
-                    break;
-                }
-            }
-        };
-        this.sanitizeCSSListStyleImage = async (r, baseURL) => {
-            await this.fixURL(r, "listStyleImage", baseURL);
-        };
-
-        this.sanitizeCSSContentImage = async (r, baseURL) => {
-            await this.fixURL(r, "content", baseURL);
-        };
-
-        this.sanitizeCSSMask = async (r, baseURL) => {
-            await this.fixURL(r, "maskImage", baseURL);
-        };
-        this.fixURL = async (r, name, baseURL) => {
-            const attr = r.style[name];
-            if (attr && attr.startsWith('url("') && attr.endsWith('")')) {
-                const u = attr.substring(5, attr.length - 2);
-                const iURL = absoluteURL(baseURL, u);
-                if (!iURL.startsWith('data:')) {
-                    let res = await this.resources.create(iURL);
-                    if (res) {
-                        try {
-                            r.style[name] = `url('${res.src}')`;
-                        } catch (error) {
-                            console.log(`failed to set ${name} css url property: `, error);
-                            r.style[name] = '';
-                        }
-                    } else {
-                        console.log(`failed to set ${name} css url property: `, error);
-                        r.style[name] = '';
-                    }
+                    console.log(`failed to set ${name} css url property: cannot download resource`);
+                    r.style.setProperty(name, '');
                 }
             }
         };
