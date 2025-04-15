@@ -128,6 +128,11 @@ iframe {
     flex-grow: 1;
 }
 
+.snapshot-iframe {
+  border-top: 0.4em solid $primary-color;
+  background: white;
+}
+
 .navbar {
     position: sticky !important;
     top: 0;

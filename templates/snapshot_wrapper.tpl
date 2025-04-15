@@ -30,5 +30,5 @@
     </div>
     {{ end }}
 </div>
-<iframe src="{{ SnapshotURL .Snapshot.Key }}" title="snapshot of {{ .Bookmark.URL }}"></iframe>
+<iframe src="{{ SnapshotURL .Snapshot.Key }}" title="snapshot of {{ .Bookmark.URL }}" class="snapshot-iframe"></iframe>
 {{ end }}
