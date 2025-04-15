@@ -62,14 +62,19 @@ function renderError(errorMessage, error) {
 }
 
 async function renderSuccess(successMessage, bookmarkInfo) {
-    const omnomData = await getOmnomDataFromLocal().catch(renderError);
-    const burl = absoluteURL(omnomData.omnom_url, bookmarkInfo.bookmark_url);
-    const surl = absoluteURL(omnomData.omnom_url, bookmarkInfo.snapshot_url);
-    document.getElementById('omnom-content').innerHTML = `
-<h1 id="status" class="success">${successMessage}</h1>
-<a href="${burl}">view bookmark</a><br />
-<a href="${surl}">view snapshot</a>
-    `;
+    if(bookmarkInfo) {
+        const omnomData = await getOmnomDataFromLocal().catch(renderError);
+        const burl = absoluteURL(omnomData.omnom_url, bookmarkInfo.bookmark_url);
+        const surl = absoluteURL(omnomData.omnom_url, bookmarkInfo.snapshot_url);
+        document.getElementById('omnom-content').innerHTML = `
+    <h1 id="status" class="success">${successMessage}</h1>
+    <a href="${burl}">view bookmark</a><br />
+    <a href="${surl}">view snapshot</a>
+        `;
+    } else {
+        document.getElementById('omnom-content').innerHTML = `
+    <h1 id="status" class="success">${successMessage}</h1>`
+    }
     // setTimeout(window.close, 2000);
 }
 

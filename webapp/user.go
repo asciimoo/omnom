@@ -240,3 +240,19 @@ func deleteAddonToken(c *gin.Context) {
 	}
 	c.Redirect(http.StatusFound, baseURL("/profile"))
 }
+
+func checkAddonToken(c *gin.Context) {
+	tok := c.PostForm("token")
+	log.Printf("'%v'\n", tok)
+	var t model.Token
+	err := model.DB.Where("text = ?", tok).First(&t).Error
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Invalid token. Check your addon tokens on your profile page of the webapp.",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+	})
+}

@@ -1,21 +1,53 @@
 // SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
 //
 // SPDX-License-Identifier: AGPLv3+
+import {
+    renderError,
+    renderSuccess
+} from './utils';
 
 export default function () {
     function saveOptions(e) {
+        const serverUrlErrMsg = `Invalid server URL. Use <code>http[s]://youromnom.tld/</code> format.`;
         let serverUrl = document.querySelector('#url').value;
         if (!serverUrl.endsWith('/')) {
             serverUrl += '/';
         }
+        let formData = new FormData();
+        formData.append('token', document.querySelector('#token').value);
+        fetch(serverUrl + 'check_token', {
+            'method': 'POST',
+            'body': formData,
+        }).then(response => {
+			if (response.ok) {
+                persistSettings(serverUrl);
+				return
+			}
+            if(response.status == 403) {
+                response.json().then(j => {
+                    renderError(`Invalid settings! ${j.message}`);
+                }).catch(error => {
+                    renderError(serverUrlErrMsg);
+                });
+            } else {
+                renderError(serverUrlErrMsg);
+            }
+            return
+		}).catch(error => {
+			renderError(serverUrlErrMsg);
+			return
+		});
+        e.preventDefault();
+    }
+    function persistSettings(serverUrl) {
         chrome.storage.local.set({
             omnom_url: serverUrl,
             omnom_token: document.querySelector('#token').value,
             omnom_debug: document.querySelector('#debug').checked,
             omnom_public: document.querySelector('#public').checked,
         });
-        e.preventDefault();
-        window.close();
+        renderSuccess('Settings successfully saved!');
+        setTimeout(window.close, 2000);
     }
 
     function loadContent() {

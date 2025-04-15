@@ -430,6 +430,22 @@ func init() {
 			Handler:      oauthRedirectHandler,
 			Description:  "Verifies OAuth requests",
 		},
+		&Endpoint{
+			Name:         "Check token",
+			Path:         "/check_token",
+			Method:       POST,
+			AuthRequired: false,
+			Handler:      checkAddonToken,
+			Description:  "Verifies addon tokens",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "token",
+					Type:        "string",
+					Required:    true,
+					Description: "Addon token",
+				},
+			},
+		},
 		/****************************************\
 		| LOGIN REQUIRED FOR THE ENDPOINTS BELOW |
 		\****************************************/
