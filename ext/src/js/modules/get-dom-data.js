@@ -27,6 +27,34 @@ function getDomData() {
         'TH',
     ];
 
+    function createShadowDomTemplates(node) {
+		let ni = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT)
+		let n;
+		let elCount = 0;
+		let tpls = [];
+		while((n = ni.nextNode())) {
+			if(!n.shadowRoot) {
+				continue;
+			}
+			let cHTML = [];
+			for(let c of n.shadowRoot.children) {
+				cHTML.push(c.outerHTML);
+			}
+			n.setAttribute("omnomshadowroot", elCount++);
+			let tpl = document.createElement('template');
+			tpl.innerHTML = cHTML.join('');
+			tpls.push(tpl);
+		}
+		return tpls;
+	}
+
+	function applyShadowDomTemplates(node, tpls) {
+		node.querySelectorAll("[omnomshadowroot]").forEach(el => {
+			let idx = Number(el.getAttribute("omnomshadowroot"));
+			el.prepend(tpls[idx]);
+		});
+	}
+
     function skipInvisible(n) {
         if(n.nodeType != Node.ELEMENT_NODE) {
             return NodeFilter.FILTER_ACCEPT;
@@ -73,6 +101,7 @@ function getDomData() {
         return texts;
     }
 
+    const shadowTpls = createShadowDomTemplates(document.getRootNode());
     const html = document.documentElement;
     const styleElements = html.querySelectorAll('style');
     if (styleElements) {
@@ -99,6 +128,7 @@ function getDomData() {
         'iframeCount': html.querySelectorAll('iframe').length,
         'url': document.URL
     };
+    applyShadowDomTemplates(ret.html, shadowTpls);
     // use ||| as a delimiter to separate semantically independent parts of the site's text
     ret.text = extractVisibleTextBlocks(document.body).join('|||');
     if (document.doctype) {

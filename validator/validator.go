@@ -12,7 +12,13 @@ import (
 	"golang.org/x/net/html"
 )
 
-func ValidateHTML(h []byte) error {
+type Result struct {
+	Error        error
+	HasShadowDOM bool
+}
+
+func ValidateHTML(h []byte) Result {
+	ret := Result{}
 	r := bytes.NewReader(h)
 	doc := html.NewTokenizer(r)
 	for {
@@ -21,19 +27,25 @@ func ValidateHTML(h []byte) error {
 		case html.ErrorToken:
 			err := doc.Err()
 			if errors.Is(err, io.EOF) {
-				return nil
+				return ret
 			}
-			return err
+			ret.Error = err
+			return ret
 		case html.StartTagToken:
 			tn, hasAttr := doc.TagName()
 			if bytes.Equal(tn, []byte("script")) {
-				return errors.New("script tag found")
+				ret.Error = errors.New("script tag found")
+				return ret
 			}
 			if hasAttr {
 				for {
 					aName, aVal, moreAttr := doc.TagAttr()
 					if bytes.HasPrefix(aName, []byte("on")) && len(aVal) > 0 {
-						return errors.New("invalid attribute " + string(aName))
+						ret.Error = errors.New("invalid attribute " + string(aName))
+						return ret
+					}
+					if bytes.Equal(aName, []byte("omnomshadowroot")) {
+						ret.HasShadowDOM = true
 					}
 					if !moreAttr {
 						break
@@ -42,4 +54,5 @@ func ValidateHTML(h []byte) error {
 			}
 		}
 	}
+	return ret
 }

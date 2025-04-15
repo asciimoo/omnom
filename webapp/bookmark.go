@@ -32,6 +32,30 @@ const (
 )
 
 var snapshotJS string
+var shadowDOMScript = []byte(`<script>
+// render shadow DOM nodes
+(()=>{
+    document.currentScript.remove();
+    function processNode(node){
+        node.querySelectorAll("[omnomshadowroot]").forEach(el => {
+            let shadowRoot = el.shadowRoot;
+            if (!shadowRoot) {
+                try {
+                    shadowRoot = el.attachShadow({mode: "open"});
+                    let tpl = el.querySelector("template");
+                    shadowRoot.innerHTML = tpl.innerHTML;
+                    tpl.remove()
+                } catch (error) {
+                    console.log("Cannot populate shadow root element:", error);
+                }
+                if (shadowRoot) {
+                    processNode(shadowRoot);
+                }
+            }
+        });
+    }
+    processNode(document);
+})()</script>`)
 
 type browserBookmarkResponse struct {
 	DOM       string `json:"dom"`
@@ -219,18 +243,9 @@ func createBookmark(c *gin.Context) {
 		return
 	}
 
-	sd := []byte(res.DOM)
-	// TODO don't save identical snapshots twice
-	if err = validator.ValidateHTML(sd); err != nil {
-		setNotification(c, nError, "HTML validation failed: "+err.Error(), false)
-		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
-		return
-	}
-
-	key := storage.Hash(sd)
-	err = storage.SaveSnapshot(key, sd)
+	key, err := storeSnapshot([]byte(res.DOM))
 	if err != nil {
-		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+		setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
 		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
 		return
 	}
@@ -314,16 +329,14 @@ func addBookmark(c *gin.Context) {
 	var sSize uint
 	var sKey = ""
 	if !bytes.Equal(snapshot, []byte("")) {
-		// TODO don't save identical snapshots twice
-		if err := validator.ValidateHTML(snapshot); err != nil {
+		key, err := storeSnapshot(snapshot)
+		if err != nil {
 			setNotification(c, nError, "HTML validation failed: "+err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": "HTML validation failed: " + err.Error(),
 			})
 			return
 		}
-		key := storage.Hash(snapshot)
-		_ = storage.SaveSnapshot(key, snapshot)
 		s := &model.Snapshot{
 			Key:        key,
 			Text:       c.PostForm("snapshot_text"),
@@ -537,4 +550,22 @@ func deleteTag(c *gin.Context) {
 	}
 	setNotification(c, nInfo, "Tag deleted", true)
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
+}
+
+func storeSnapshot(sb []byte) (string, error) {
+	vr := validator.ValidateHTML(sb)
+	if vr.Error != nil {
+		return "", vr.Error
+	}
+
+	if vr.HasShadowDOM {
+		sb = append(sb, shadowDOMScript...)
+	}
+
+	key := storage.Hash(sb)
+	err := storage.SaveSnapshot(key, sb)
+	if err != nil {
+		return "", err
+	}
+	return key, nil
 }
