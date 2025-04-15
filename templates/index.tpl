@@ -10,7 +10,7 @@
                     Bookmarking and snapshotting websites made easy
                 </h2>
                 <p class="big">
-                    Create self-contained snapshots for every bookmark you save.<br/> Access &amp; share previously visited pages without worrying about modifications or availibilty.
+                    Create self-contained snapshots for every bookmark you save.<br/> Access &amp; share previously visited pages without worrying about modifications or availability.
                 </p>
             </div>
         </div>
