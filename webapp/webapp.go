@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -59,7 +60,15 @@ var tplFuncMap = template.FuncMap{
 	},
 	"AddURLParam": func(base string, param string) string {
 		if strings.Contains(base, "?") {
-			return base + "&" + param
+			u, err := url.Parse(base)
+			if err != nil {
+				return base + "&" + param
+			}
+			kv := strings.SplitN(param, "=", 2)
+			q := u.Query()
+			q.Set(kv[0], kv[1])
+			u.RawQuery = q.Encode()
+			return u.String()
 		}
 		return base + "?" + param
 	},
