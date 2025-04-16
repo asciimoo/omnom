@@ -148,6 +148,26 @@
           </h4>
       </div>
       <div class="bookmark__actions">
+        {{ if .Bookmark.Snapshots }}
+          <details>
+              <summary>
+                  Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
+              </summary>
+              <div>
+                  {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) "CSRF" .CSRF }}{{ end }}
+              </div>
+          </details>
+          {{ end }}
+        {{ if .Bookmark.Notes }}
+        <details>
+          <summary>
+            Notes
+          </summary>
+          <div>
+              <p class="has-text-black">{{ .Bookmark.Notes }}</p>
+          </div>
+        </details>
+        {{ end }}
           <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end }}</span>
           <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-eye"></i>
@@ -166,28 +186,6 @@
           {{ end }}
           <!--<i class="fas fa-heart"></i>
           <i class="fas fa-share-alt"></i>-->
-      </div>
-    </div>
-    <div class="bookmark__more-info">
-      <div class="bookmark__notes">
-        {{ if .Bookmark.Notes }}
-        <details>
-          <summary>
-            Notes
-          </summary>
-          <p class="has-text-black">{{ .Bookmark.Notes }}</p>
-        </details>
-        {{ end }}
-      </div>
-      <div class="bookmark__snapshots">
-        <details>
-          <summary>
-            Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
-          </summary>
-          <div>
-              {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) "CSRF" .CSRF }}{{ end }}
-          </div>
-        </details>
       </div>
     </div>
 </div>
@@ -252,30 +250,29 @@
 </div>
 {{end}}
 {{define "searchParameters"}}
-        <div class="field field-row">
-            <label class="label">Search in snapshots</label>
-            <input class="switch is-rounded" value="true" type="checkbox" id="search_in_snapshot"  name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
-            <label for="search_in_snapshot"></label>
-        </div>
-        <div class="field field-row">
-            <label class="label">Search in notes</label>
-            <input class="switch is-rounded" value="true" type="checkbox" id="search_in_note" name="search_in_note"{{ if .SearchParams.SearchInNote }} checked="checked"{{ end }}>
-            <label for="search_in_note"></label>
-        </div>
-        {{ if eq .Page "my-bookmarks" }}
-        <div class="field field-row">
-            <label class="label">Only public bookmarks</label>
-            <input class="switch is-rounded" value="true" type="checkbox" id="public" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>
-            <label for="public"></label>
-        </div>
-        {{ end }}
+<div class="checkboxes">
+    <label class="label" for="search_in_snapshot">
+        <input class="switch is-rounded" value="true" type="checkbox" id="search_in_snapshot"  name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
+        Search in snapshot content
+    </label>
+    <label class="label">
+        <input class="switch is-rounded" value="true" type="checkbox" id="search_in_note" name="search_in_note"{{ if .SearchParams.SearchInNote }} checked="checked"{{ end }}>
+        Search in notes
+    </label>
+    {{ if eq .Page "my-bookmarks" }}
+    <label class="label">
+        <input class="switch is-rounded" value="true" type="checkbox" id="public" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>
+        Only public bookmarks
+    </label>
+    {{ end }}
+</div>
 {{ end }}
 
 {{ define "domainFilter" }}
 <div class="field">
     <label class="label">Domain</label>
     <div class="control">
-        <input class="input" type="text" placeholder="Insert Url" name="domain" value="{{ .SearchParams.Domain }}">
+        <input class="input" type="text" placeholder="Domain.." name="domain" value="{{ .SearchParams.Domain }}">
     </div>
 </div>
 {{ end }}
@@ -284,7 +281,7 @@
 <div class="field">
 <label class="label">Owner</label>
     <div class="control">
-        <input class="input" type="text" placeholder="username.." name="owner" value="{{ .SearchParams.Owner }}">
+        <input class="input" type="text" placeholder="Username.." name="owner" value="{{ .SearchParams.Owner }}">
     </div>
 </div>
 {{ end }}
@@ -293,20 +290,22 @@
 <div class="field">
 <label class="label">Tags</label>
     <div class="control">
-        <input class="input" type="text" placeholder="Add tag" name="tag" value="{{ .SearchParams.Tag }}">
+        <input class="input" type="text" placeholder="Tag.." name="tag" value="{{ .SearchParams.Tag }}">
     </div>
 </div>
 {{ end }}
 
 {{ define "dateFilter" }}
-<div class="field is-horizontal">
-    <div class="field-body">
+<div class="field is-grouped is-grouped-multiline">
+    <div class="control">
     <div class="field">
         <label class="label">Date from</label>
             <p class="control is-expanded">
                 <input class="input" type="date" placeholder="YYYY.MM.DD" name="from" value="{{ .SearchParams.FromDate }}">
             </p>
         </div>
+    </div>
+    <div class="control">
         <div class="field">
         <label class="label">Date to</label>
             <p class="control is-expanded">
@@ -318,7 +317,7 @@
 {{ end }}
 
 {{ define "submit" }}
-<div class="omnom-popup__submit">
+<div class="control">
     <input type="submit" name="submit" value="{{ . }}" class="button is-primary" />
 </div>
 

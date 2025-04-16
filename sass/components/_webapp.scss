@@ -17,13 +17,28 @@ html {
     }
 
     @include respond(big-desktop) {
-        font-size: 100%;
+        font-size: 90%;
     }
 }
 
-input[type=checkbox] {
-  transform: scale(2);
-  margin: 0.4em !important;
+@media (min-width: 768px) {
+  .bookmark-list {
+    padding-left: 2em;
+  }
+  .bookmark-wrapper {
+    padding: 2em;
+  }
+}
+
+@media (max-width: 768px) {
+  .bookmark__actions details > div {
+    left: 0;
+  }
+}
+
+
+.bookmark-filter {
+  border-right: 1px solid $color-gray;
 }
 
 #omnom-webapp {
@@ -50,6 +65,11 @@ input[type=checkbox] {
             font-weight: 500;
         }
     }
+}
+
+.bookmark-wrapper {
+  background: $color-white;
+  padding: 1em;
 }
 
 summary {
@@ -186,12 +206,6 @@ iframe {
     }
 
     &__advanced-search {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 6rem;
         font-size: 1rem;
 
         .label {
@@ -215,6 +229,7 @@ iframe {
     &__container {
         flex-direction: column;
         padding: 0;
+        margin-bottom: 0 !important;
     }
 
     &__header {
@@ -224,7 +239,7 @@ iframe {
         justify-content: space-between;
         width: 100%;
         gap: 1rem;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
     }
 
     &__title {
@@ -257,9 +272,7 @@ iframe {
 
     &__tags {
         .tag:not(body).is-info {
-            background-color: $color-red;
-            border-radius: 0;
-            color: $color-white;
+          height: 1.4em;
         }
     }
 
@@ -302,7 +315,7 @@ iframe {
 
     &__actions {
         text-align: right;
-        font-size: 1.2rem;
+        font-size: 1rem;
         display: flex;
         flex-direction: row;
         gap: 1rem;
@@ -321,6 +334,23 @@ iframe {
 
         a {
             color: $color-gray;
+        }
+        details {
+          position: relative;
+          text-align: left !important;
+        }
+        details > summary {
+          font-size: 0.8em;
+        }
+        details > div {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          background-color: $color-white;
+          min-width: 20em;
+          padding: 1em;
+          z-index: 1000;
+          border: 1px solid $color-gray;
         }
     }
 
