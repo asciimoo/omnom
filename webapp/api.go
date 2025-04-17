@@ -446,6 +446,22 @@ func init() {
 				},
 			},
 		},
+		&Endpoint{
+			Name:         "ActivityPub inbox",
+			Path:         "/ap_inbox",
+			Method:       POST,
+			AuthRequired: false,
+			Handler:      apInbox,
+			Description:  "Inbox for ActivityPub messages",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "message",
+					Type:        "JSON",
+					Required:    true,
+					Description: "ActivityPub message",
+				},
+			},
+		},
 		/****************************************\
 		| LOGIN REQUIRED FOR THE ENDPOINTS BELOW |
 		\****************************************/

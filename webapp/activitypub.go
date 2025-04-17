@@ -151,7 +151,7 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 	"type": "Application",
 	"following": "",
 	"followers": "",
-	"inbox": "",
+	"inbox": "%[5]s",
 	"outbox": "%[1]s",
 	"preferredUsername": "%[4]s",
 	"name": "%[2]s",
@@ -169,9 +169,14 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 			p.String(),
 			baseU,
 			baseU+"/"+p.String(),
+			baseU+URLFor("ActivityPub inbox"),
 		),
 	)
 	if err != nil {
 		log.Println("ActivityPub ident write error")
 	}
+}
+
+func apInbox(c *gin.Context) {
+	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 }
