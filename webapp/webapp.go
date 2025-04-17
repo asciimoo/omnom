@@ -58,20 +58,7 @@ var tplFuncMap = template.FuncMap{
 	"SnapshotURL": func(key string) string {
 		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
 	},
-	"AddURLParam": func(base string, param string) string {
-		if strings.Contains(base, "?") {
-			u, err := url.Parse(base)
-			if err != nil {
-				return base + "&" + param
-			}
-			kv := strings.SplitN(param, "=", 2)
-			q := u.Query()
-			q.Set(kv[0], kv[1])
-			u.RawQuery = q.Encode()
-			return u.String()
-		}
-		return base + "?" + param
-	},
+	"AddURLParam": addURLParam,
 	"Truncate": func(s string, maxLen int) string {
 		if len(s) > maxLen {
 			return s[:maxLen] + "[..]"
@@ -104,6 +91,21 @@ var tplFuncMap = template.FuncMap{
 }
 
 var resultsPerPage int64 = 20
+
+func addURLParam(base string, param string) string {
+	if strings.Contains(base, "?") {
+		u, err := url.Parse(base)
+		if err != nil {
+			return base + "&" + param
+		}
+		kv := strings.SplitN(param, "=", 2)
+		q := u.Query()
+		q.Set(kv[0], kv[1])
+		u.RawQuery = q.Encode()
+		return u.String()
+	}
+	return base + "?" + param
+}
 
 func getFullURLPrefix(c *gin.Context) string {
 	fullURLPrefix := ""

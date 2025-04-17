@@ -75,25 +75,28 @@ func bookmarks(c *gin.Context) {
 	var bs []*model.Bookmark
 	pageno := getPageno(c)
 	offset := (pageno - 1) * resultsPerPage
-	var bookmarkCount int64
-	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
-	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User")
-	sp := &searchParams{}
 	hasSearch := false
+	sp := &searchParams{}
+	var bookmarkCount int64
 	if err := c.ShouldBind(sp); err != nil {
 		setNotification(c, nError, err.Error(), false)
 		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
-	} else {
-		if !reflect.DeepEqual(*sp, searchParams{}) {
-			hasSearch = true
-			filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
-			filterOwner(sp.Owner, q, cq)
-			_ = filterFromDate(sp.FromDate, q, cq)
-			_ = filterToDate(sp.ToDate, q, cq)
-			filterDomain(sp.Domain, q, cq)
-			filterTag(sp.Tag, q, cq)
-		}
+	}
+	if c.Query("format") == "ap-identity" {
+		apIdentityResponse(c, sp)
+		return
+	}
+	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
+	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User")
+	if !reflect.DeepEqual(*sp, searchParams{}) {
+		hasSearch = true
+		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
+		filterOwner(sp.Owner, q, cq)
+		_ = filterFromDate(sp.FromDate, q, cq)
+		_ = filterToDate(sp.ToDate, q, cq)
+		filterDomain(sp.Domain, q, cq)
+		filterTag(sp.Tag, q, cq)
 	}
 	q.Group("bookmarks.id")
 	cq.Group("bookmarks.id")
@@ -108,7 +111,7 @@ func bookmarks(c *gin.Context) {
 		q = q.Order("bookmarks.updated_at desc")
 	}
 	q.Find(&bs)
-	render(c, http.StatusOK, "bookmarks", map[string]interface{}{
+	args := map[string]interface{}{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
@@ -116,7 +119,12 @@ func bookmarks(c *gin.Context) {
 		"SearchParams":  sp,
 		"HasSearch":     hasSearch,
 		"OrderBy":       orderBy,
-	})
+	}
+	if c.Query("format") == "activitypub" {
+		apOutboxResponse(c, bs, bookmarkCount)
+		return
+	}
+	render(c, http.StatusOK, "bookmarks", args)
 }
 
 func myBookmarks(c *gin.Context) {

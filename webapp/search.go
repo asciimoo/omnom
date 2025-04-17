@@ -30,6 +30,41 @@ type searchParams struct {
 	SearchInNote     bool   `form:"search_in_note"`
 }
 
+func (s *searchParams) String() string {
+	parts := make([]string, 0, 4)
+	if s.Q != "" {
+		parts = append(parts, "@q:"+s.Q)
+	}
+	if s.Owner != "" {
+		parts = append(parts, "@u:"+s.Owner)
+	}
+	if s.FromDate != "" {
+		parts = append(parts, "@from:"+s.FromDate)
+	}
+	if s.ToDate != "" {
+		parts = append(parts, "@to:"+s.ToDate)
+	}
+	if s.Tag != "" {
+		parts = append(parts, "@t:"+s.Tag)
+	}
+	if s.Domain != "" {
+		parts = append(parts, "@d:"+s.Domain)
+	}
+	if s.IsPublic {
+		parts = append(parts, "@public")
+	}
+	if s.IsPrivate {
+		parts = append(parts, "@private")
+	}
+	if s.SearchInSnapshot {
+		parts = append(parts, "@snapshot")
+	}
+	if s.SearchInNote {
+		parts = append(parts, "@note")
+	}
+	return strings.Join(parts, "")
+}
+
 func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) {
 	if qs == "" {
 		return
