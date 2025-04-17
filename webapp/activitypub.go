@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/asciimoo/omnom/config"
@@ -102,7 +103,6 @@ func parseURL(us string) (*url.URL, error) {
 }
 
 func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
-	log.Println(len(bs), bc)
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	baseU := getFullURLPrefix(c)
 	u, err := parseURL(baseU + c.Request.URL.String())
@@ -120,7 +120,10 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 		OrderedItems: make([]apItem, len(bs)),
 	}
 	for i, b := range bs {
-		id := fmt.Sprintf("%s%s?id=%d", baseU, URLFor("Bookmark"), b.ID)
+		id := fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID)
+		if strings.HasPrefix(id, "/") {
+			id = baseU + id
+		}
 		actor := fmt.Sprintf("%s/@%s", baseU, b.User.Username)
 		published := b.CreatedAt.Format(time.RFC3339)
 		item := apItem{
@@ -149,7 +152,10 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 			},
 		}
 		for i, t := range b.Tags {
-			tagBase := fmt.Sprintf("%s%s?tag=", baseU, URLFor("Public bookmarks"))
+			tagBase := fmt.Sprintf("%s?tag=", URLFor("Public bookmarks"))
+			if strings.HasPrefix(tagBase, "/") {
+				tagBase = baseU + tagBase
+			}
 			item.Object.Tag[i] = apTag{
 				Type: "Hashtag",
 				Href: tagBase + t.Text,
@@ -172,27 +178,31 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 func apIdentityResponse(c *gin.Context, p *searchParams) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	baseU := getFullURLPrefix(c)
+	id := baseU + c.Request.URL.String()
 	u, err := parseURL(baseU + c.Request.URL.String())
 	if err != nil {
 		log.Println("ActivityPub URL parse error", err)
 		return
 	}
-	id := baseU + "/" + p.String()
 	cfg, _ := c.Get("config")
 	pk, err := cfg.(*config.Config).ActivityPub.ExportPubKey()
 	if err != nil {
 		log.Println("ActivityPub JSON serialization error", err)
 		return
 	}
+	inbox := URLFor("ActivityPub inbox")
+	if strings.HasPrefix(inbox, "/") {
+		inbox = baseU + inbox
+	}
 	j, err := json.Marshal(apIdentity{
 		Context:           "https://www.w3.org/ns/activitystreams",
 		ID:                id,
 		Type:              "Application",
-		Inbox:             baseU + URLFor("ActivityPub inbox"),
+		Inbox:             inbox,
 		Outbox:            addURLParam(u.String(), "format=activitypub"),
 		PreferredUsername: p.String(),
 		Name:              baseU + "/" + p.String(),
-		URL:               baseU,
+		URL:               baseU + "/",
 		Discoverable:      true,
 		Icon: apIcon{
 			Type:      "Image",
