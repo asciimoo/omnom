@@ -137,14 +137,14 @@ func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
 		}
 		ap.PubK = &ap.PrivK.PublicKey
 	}
-	privkey_bytes := x509.MarshalPKCS1PrivateKey(ap.PrivK)
-	privkey_pem := pem.EncodeToMemory(
+	privkeyBytes := x509.MarshalPKCS1PrivateKey(ap.PrivK)
+	privkeyPem := pem.EncodeToMemory(
 		&pem.Block{
 			Type:  "RSA PRIVATE KEY",
-			Bytes: privkey_bytes,
+			Bytes: privkeyBytes,
 		},
 	)
-	return privkey_pem, nil
+	return privkeyPem, nil
 }
 
 func (ap *ActivityPub) ParsePrivKey(privPEM []byte) error {
@@ -159,18 +159,18 @@ func (ap *ActivityPub) ParsePrivKey(privPEM []byte) error {
 }
 
 func (ap *ActivityPub) ExportPubKey() ([]byte, error) {
-	pubkey_bytes, err := x509.MarshalPKIXPublicKey(ap.PubK)
+	pubkeyBytes, err := x509.MarshalPKIXPublicKey(ap.PubK)
 	if err != nil {
 		return []byte{}, err
 	}
-	pubkey_pem := pem.EncodeToMemory(
+	pubkeyPem := pem.EncodeToMemory(
 		&pem.Block{
 			Type:  "RSA PUBLIC KEY",
-			Bytes: pubkey_bytes,
+			Bytes: pubkeyBytes,
 		},
 	)
 
-	return pubkey_pem, nil
+	return pubkeyPem, nil
 }
 
 func (ap *ActivityPub) ParsePubKey(pubPEM []byte) error {
@@ -191,5 +191,5 @@ func (ap *ActivityPub) ParsePubKey(pubPEM []byte) error {
 	default:
 		break // fall through
 	}
-	return errors.New("Key type is not RSA")
+	return errors.New("key type is not RSA")
 }
