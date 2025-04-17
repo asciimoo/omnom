@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 
 	"github.com/gin-gonic/gin"
@@ -50,6 +51,38 @@ type apTag struct {
 	Type string `json:"type"`
 	Href string `json:"href"`
 	Name string `json:"name"`
+}
+
+type apIdentity struct {
+	Context           string   `json:"@context"`
+	ID                string   `json:"id"`
+	Type              string   `json:"type"`
+	Following         string   `json:"following"`
+	Followers         string   `json:"followers"`
+	Inbox             string   `json:"inbox"`
+	Outbox            string   `json:"outbox"`
+	PreferredUsername string   `json:"preferredUsername"`
+	Name              string   `json:"name"`
+	Summary           string   `json:"summary"`
+	URL               string   `json:"url"`
+	Discoverable      bool     `json:"discoverable"`
+	Memorial          bool     `json:"memorial"`
+	Icon              apIcon   `json:"icon"`
+	Pubkey            apPubkey `json:"pubkey"`
+}
+
+type apIcon struct {
+	Type      string `json:"type"`
+	MediaType string `json:"mediaType"`
+	URL       string `json:"url"`
+}
+
+type apPubkey struct {
+	Context      string `json:"@context"`
+	ID           string `json:"id"`
+	Type         string `json:"type"`
+	Owner        string `json:"owner"`
+	PublicKeyPem string `json:"publicKeyPem"`
 }
 
 const contentTpl = `<h1>%[1]s</h1>
@@ -144,34 +177,40 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 		log.Println("ActivityPub URL parse error", err)
 		return
 	}
-	_, err = c.Writer.WriteString(
-		fmt.Sprintf(`{
-	"@context": "https://www.w3.org/ns/activitystreams",
-	"id": "%[4]s",
-	"type": "Application",
-	"following": "",
-	"followers": "",
-	"inbox": "%[5]s",
-	"outbox": "%[1]s",
-	"preferredUsername": "%[4]s",
-	"name": "%[2]s",
-	"summary": "",
-	"url": "%[3]s/",
-	"discoverable": true,
-	"memorial": false,
-	"icon": {
-	  "type": "Image",
-	  "mediaType": "image/png",
-	  "url": "%[3]s/static/icons/addon_icon.png"
+	id := baseU + "/" + p.String()
+	cfg, _ := c.Get("config")
+	pk, err := cfg.(*config.Config).ActivityPub.ExportPubKey()
+	if err != nil {
+		log.Println("ActivityPub JSON serialization error", err)
+		return
 	}
-}`,
-			addURLParam(u.String(), "format=activitypub"),
-			p.String(),
-			baseU,
-			baseU+"/"+p.String(),
-			baseU+URLFor("ActivityPub inbox"),
-		),
-	)
+	j, err := json.Marshal(apIdentity{
+		Context:           "https://www.w3.org/ns/activitystreams",
+		ID:                id,
+		Type:              "Application",
+		Inbox:             baseU + URLFor("ActivityPub inbox"),
+		Outbox:            addURLParam(u.String(), "format=activitypub"),
+		PreferredUsername: p.String(),
+		Name:              baseU + "/" + p.String(),
+		URL:               baseU,
+		Discoverable:      true,
+		Icon: apIcon{
+			Type:      "Image",
+			MediaType: "image/png",
+			URL:       baseU + "/static/icons/addon_icon.png",
+		},
+		Pubkey: apPubkey{
+			Context:      "https://www.w3.org/ns/activitystreams",
+			ID:           baseU + "/#key",
+			Type:         "Key",
+			Owner:        id,
+			PublicKeyPem: string(pk),
+		},
+	})
+	if err != nil {
+		log.Println("ActivityPub JSON serialization error", err)
+	}
+	_, err = c.Writer.Write(j)
 	if err != nil {
 		log.Println("ActivityPub ident write error")
 	}
