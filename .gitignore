@@ -9,3 +9,5 @@ omnom_ext_firefox.zip
 omnom_ext_src.zip
 config.yml
 db.sqlite3
+public.pem
+private.pem

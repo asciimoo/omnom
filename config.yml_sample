@@ -28,6 +28,10 @@ smtp:
   tls_allow_insecure: false
   send_timeout: 10 # seconds
   connection_timeout: 5 # seconds
+activitypub:
+  # Note: Omnom going to generate these keys in case files can't be opened
+  pubkey: "./public.pem"
+  privkey: "./private.pem"
 oauth:
 #  github:
 #    client_id: ""

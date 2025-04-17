@@ -5,6 +5,10 @@
 package config
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"os"
 	"path/filepath"
@@ -15,12 +19,13 @@ import (
 )
 
 type Config struct {
-	App     App     `yaml:"app"`
-	Server  Server  `yaml:"server"`
-	DB      DB      `yaml:"db"`
-	Storage Storage `yaml:"storage"`
-	SMTP    SMTP    `yaml:"smtp"`
-	OAuth   OAuth   `yaml:"oauth"`
+	App         App          `yaml:"app"`
+	Server      Server       `yaml:"server"`
+	DB          DB           `yaml:"db"`
+	Storage     Storage      `yaml:"storage"`
+	SMTP        SMTP         `yaml:"smtp"`
+	ActivityPub *ActivityPub `yaml:"activitypub"`
+	OAuth       OAuth        `yaml:"oauth"`
 }
 
 type App struct {
@@ -58,6 +63,13 @@ type SMTP struct {
 	TLSAllowInsecure  bool   `yaml:"tls_allow_insecure"`
 	SendTimeout       int    `yaml:"send_timeout"`
 	ConnectionTimeout int    `yaml:"connection_timeout"`
+}
+
+type ActivityPub struct {
+	PubKeyPath  string `yaml:"pubkey"`
+	PrivKeyPath string `yaml:"privkey"`
+	PubK        *rsa.PublicKey
+	PrivK       *rsa.PrivateKey
 }
 
 type OAuth map[string]OAuthEntry
@@ -114,4 +126,70 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 		}
 	}
 	return c, nil
+}
+
+func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
+	if ap.PrivK == nil {
+		var err error
+		ap.PrivK, err = rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return nil, err
+		}
+		ap.PubK = &ap.PrivK.PublicKey
+	}
+	privkey_bytes := x509.MarshalPKCS1PrivateKey(ap.PrivK)
+	privkey_pem := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: privkey_bytes,
+		},
+	)
+	return privkey_pem, nil
+}
+
+func (ap *ActivityPub) ParsePrivKey(privPEM []byte) error {
+	block, _ := pem.Decode(privPEM)
+	if block == nil {
+		return errors.New("failed to parse PEM block containing the key")
+	}
+
+	var err error
+	ap.PrivK, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	return err
+}
+
+func (ap *ActivityPub) ExportPubKey() ([]byte, error) {
+	pubkey_bytes, err := x509.MarshalPKIXPublicKey(ap.PubK)
+	if err != nil {
+		return []byte{}, err
+	}
+	pubkey_pem := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: pubkey_bytes,
+		},
+	)
+
+	return pubkey_pem, nil
+}
+
+func (ap *ActivityPub) ParsePubKey(pubPEM []byte) error {
+	block, _ := pem.Decode(pubPEM)
+	if block == nil {
+		return errors.New("failed to parse PEM block containing the key")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return err
+	}
+
+	switch pub := pub.(type) {
+	case *rsa.PublicKey:
+		ap.PubK = pub
+		return nil
+	default:
+		break // fall through
+	}
+	return errors.New("Key type is not RSA")
 }

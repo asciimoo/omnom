@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -66,6 +67,11 @@ var listenCmd = &cobra.Command{
 		err := initMail()
 		if err != nil {
 			fmt.Println("Failed to initialize mailing:", err)
+			os.Exit(1)
+		}
+		err = initActivityPub()
+		if err != nil {
+			fmt.Println("Failed to initialize ActivityPub keys:", err)
 			os.Exit(1)
 		}
 		webapp.Run(cfg)
@@ -247,4 +253,40 @@ func initConfig() {
 	if b, _ := rootCmd.PersistentFlags().GetBool("debug"); b {
 		cfg.App.Debug = true
 	}
+}
+
+func initActivityPub() error {
+	privBytes, err := os.ReadFile(cfg.ActivityPub.PrivKeyPath)
+	if err != nil {
+		prvb, err := cfg.ActivityPub.ExportPrivKey()
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(cfg.ActivityPub.PrivKeyPath, prvb, 0400)
+		if err != nil {
+			return errors.New("failed to write privkey")
+		}
+		pubb, err := cfg.ActivityPub.ExportPubKey()
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(cfg.ActivityPub.PubKeyPath, pubb, 0400)
+		if err != nil {
+			return errors.New("failed to write pubkey")
+		}
+		return nil
+	}
+	err = cfg.ActivityPub.ParsePrivKey(privBytes)
+	if err != nil {
+		return err
+	}
+	pubBytes, err := os.ReadFile(cfg.ActivityPub.PubKeyPath)
+	if err != nil {
+		return errors.New("failed to read pubkey")
+	}
+	err = cfg.ActivityPub.ParsePubKey(pubBytes)
+	if err != nil {
+		return err
+	}
+	return nil
 }
