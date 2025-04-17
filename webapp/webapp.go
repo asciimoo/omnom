@@ -108,6 +108,11 @@ func addURLParam(base string, param string) string {
 }
 
 func getFullURLPrefix(c *gin.Context) string {
+	ccfg, _ := c.Get("config")
+	cfg := ccfg.(*config.Config)
+	if cfg.Server.BaseURL != "" {
+		return cfg.Server.BaseURL
+	}
 	fullURLPrefix := ""
 	if strings.HasPrefix(baseURL("/"), "/") {
 		fullURLPrefix = "http://"
