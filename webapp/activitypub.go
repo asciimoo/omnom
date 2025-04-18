@@ -68,11 +68,12 @@ type apIdentity struct {
 	URL               string   `json:"url"`
 	Discoverable      bool     `json:"discoverable"`
 	Memorial          bool     `json:"memorial"`
-	Icon              apIcon   `json:"icon"`
-	Pubkey            apPubkey `json:"pubkey"`
+	Icon              apImage  `json:"icon"`
+	Image             apImage  `json:"image"`
+	Pubkey            apPubkey `json:"publicKey"`
 }
 
-type apIcon struct {
+type apImage struct {
 	Type      string `json:"type"`
 	MediaType string `json:"mediaType"`
 	URL       string `json:"url"`
@@ -197,20 +198,25 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 	j, err := json.Marshal(apIdentity{
 		Context:           "https://www.w3.org/ns/activitystreams",
 		ID:                id,
-		Type:              "Application",
+		Type:              "Person",
 		Inbox:             inbox,
 		Outbox:            addURLParam(u.String(), "format=activitypub"),
-		PreferredUsername: p.String(),
+		PreferredUsername: "omnom" + p.String(),
 		Name:              baseU + "/" + p.String(),
 		URL:               baseU + "/",
 		Discoverable:      true,
-		Icon: apIcon{
+		Icon: apImage{
+			Type:      "Image",
+			MediaType: "image/png",
+			URL:       baseU + "/static/icons/addon_icon.png",
+		},
+		Image: apImage{
 			Type:      "Image",
 			MediaType: "image/png",
 			URL:       baseU + "/static/icons/addon_icon.png",
 		},
 		Pubkey: apPubkey{
-			Context:      "https://www.w3.org/ns/activitystreams",
+			Context:      "https://w3id.org/security/v1",
 			ID:           baseU + "/#key",
 			Type:         "Key",
 			Owner:        id,

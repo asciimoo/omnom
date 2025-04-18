@@ -33,34 +33,34 @@ type searchParams struct {
 func (s *searchParams) String() string {
 	parts := make([]string, 0, 4)
 	if s.Q != "" {
-		parts = append(parts, "@q:"+s.Q)
+		parts = append(parts, ".q_"+s.Q)
 	}
 	if s.Owner != "" {
-		parts = append(parts, "@u:"+s.Owner)
+		parts = append(parts, ".u_"+s.Owner)
 	}
 	if s.FromDate != "" {
-		parts = append(parts, "@from:"+s.FromDate)
+		parts = append(parts, ".from_"+s.FromDate)
 	}
 	if s.ToDate != "" {
-		parts = append(parts, "@to:"+s.ToDate)
+		parts = append(parts, ".to_"+s.ToDate)
 	}
 	if s.Tag != "" {
-		parts = append(parts, "@t:"+s.Tag)
+		parts = append(parts, ".t_"+s.Tag)
 	}
 	if s.Domain != "" {
-		parts = append(parts, "@d:"+s.Domain)
+		parts = append(parts, ".d_"+s.Domain)
 	}
 	if s.IsPublic {
-		parts = append(parts, "@public")
+		parts = append(parts, ".public")
 	}
 	if s.IsPrivate {
-		parts = append(parts, "@private")
+		parts = append(parts, ".private")
 	}
 	if s.SearchInSnapshot {
-		parts = append(parts, "@snapshot")
+		parts = append(parts, ".snapshot")
 	}
 	if s.SearchInNote {
-		parts = append(parts, "@note")
+		parts = append(parts, ".note")
 	}
 	return strings.Join(parts, "")
 }
