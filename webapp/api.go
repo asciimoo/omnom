@@ -451,7 +451,7 @@ func init() {
 			Path:         "/ap_inbox",
 			Method:       POST,
 			AuthRequired: false,
-			Handler:      apInbox,
+			Handler:      apInboxResponse,
 			Description:  "Inbox for ActivityPub messages",
 			Args: []*EndpointArg{
 				&EndpointArg{
@@ -459,6 +459,22 @@ func init() {
 					Type:        "JSON",
 					Required:    true,
 					Description: "ActivityPub message",
+				},
+			},
+		},
+		&Endpoint{
+			Name:         "ActivityPub webfinger",
+			Path:         "/.well_known/webfinger",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      apWebfingerResponse,
+			Description:  "Webfinger response for ActivityPub",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "resource",
+					Type:        "string",
+					Required:    true,
+					Description: "ActivityPub resource",
 				},
 			},
 		},

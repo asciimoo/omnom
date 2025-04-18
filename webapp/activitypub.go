@@ -87,6 +87,18 @@ type apPubkey struct {
 	PublicKeyPem string `json:"publicKeyPem"`
 }
 
+type apWebfinger struct {
+	Subject string   `json:"subject"`
+	Aliases []string `json:"aliases"`
+	Links   []apLink `json:"links"`
+}
+
+type apLink struct {
+	Rel  string `json:"rel"`
+	Href string `json:"href"`
+	Type string `json:"type"`
+}
+
 const contentTpl = `<h1>%[1]s</h1>
 <p>%[2]s</p>
 <small>Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[3]s">view bookmark</a></small>`
@@ -195,13 +207,14 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 	if strings.HasPrefix(inbox, "/") {
 		inbox = baseU + inbox
 	}
+	uname := "omnom" + p.String()
 	j, err := json.Marshal(apIdentity{
 		Context:           "https://www.w3.org/ns/activitystreams",
 		ID:                id,
 		Type:              "Person",
 		Inbox:             inbox,
 		Outbox:            addURLParam(u.String(), "format=activitypub"),
-		PreferredUsername: "omnom" + p.String(),
+		PreferredUsername: uname,
 		Name:              baseU + "/" + p.String(),
 		URL:               baseU + "/",
 		Discoverable:      true,
@@ -232,6 +245,30 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 	}
 }
 
-func apInbox(c *gin.Context) {
+func apInboxResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
+}
+
+func apWebfingerResponse(c *gin.Context) {
+	c.Header("Content-Type", "application/activity+json; charset=utf-8")
+	s := c.Query("resource")
+	u := URLFor("Public bookmarks")
+	if strings.HasPrefix(u, "/") {
+		u = getFullURLPrefix(c) + u
+	}
+	j, err := json.Marshal(apWebfinger{
+		Subject: s,
+		Aliases: []string{},
+		Links: []apLink{
+			apLink{Rel: "self", Type: "application/activity+json", Href: addURLParam(u, "format=ap-identity")},
+			apLink{Rel: "http://webfinger.net/rel/profile-page", Type: "text/html", Href: u},
+		},
+	})
+	if err != nil {
+		log.Println("Webfinger JSON serialization error", err)
+	}
+	_, err = c.Writer.Write(j)
+	if err != nil {
+		log.Println("ActivityPub webfinger write error")
+	}
 }
