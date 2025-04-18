@@ -256,6 +256,9 @@ func initConfig() {
 }
 
 func initActivityPub() error {
+	if cfg.ActivityPub == nil || cfg.ActivityPub.PubKeyPath == "" || cfg.ActivityPub.PrivKeyPath == "" {
+		return errors.New("cannot find ActivityPub config - check config.yml_sample for sample configuration")
+	}
 	privBytes, err := os.ReadFile(cfg.ActivityPub.PrivKeyPath)
 	if err != nil {
 		prvb, err := cfg.ActivityPub.ExportPrivKey()
