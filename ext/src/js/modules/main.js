@@ -291,9 +291,14 @@ async function saveBookmark() {
                 });
             }
             renderSuccess('Snapshot successfully saved!', msg);
-        }, async function(err) {
-            destroyProgressBar();
-            renderError(`Failed to save bookmark! ${err}`);
+        }, async function(resp) {
+            resp.json().then(j => {
+                destroyProgressBar();
+                renderError(`Failed to save bookmark! ${j.error}`);
+            }).catch(error => {
+                destroyProgressBar();
+                renderError(`Failed to save bookmark!`);
+            });
         });
 }
 
