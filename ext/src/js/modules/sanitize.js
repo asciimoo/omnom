@@ -79,9 +79,7 @@ class Sanitizer {
             }
             for(let prop of r.style) {
                 if(prop.startsWith('--')) {
-                    console.log("YOOOO", prop, r.style.getPropertyValue(prop));
                     await this.fixURL(r, prop, baseURL);
-                    console.log("YOOOOHOHOOO", prop, r.style.getPropertyValue(prop));
                     continue
                 }
                 switch(prop) {
@@ -113,19 +111,14 @@ class Sanitizer {
                     continue;
                 }
                 const href = absoluteURL(baseURL, u);
-                console.log('trying to set URL for', name, u, href);
                 let res = await this.resources.create(href);
                 if (res) {
-                    console.log('setting URL for', name, u, res.src);
                     try {
                         r.style.setProperty(name, r.style.getPropertyValue(name).replaceAll(u, res.src));
-                        console.log('url set');
                     } catch (error) {
-                        console.log(`failed to set ${name} css url property: `, error);
                         r.style.setProperty(name, '');
                     }
                 } else {
-                    console.log(`failed to set ${name} css url property: cannot download resource`);
                     r.style.setProperty(name, '');
                 }
             }
