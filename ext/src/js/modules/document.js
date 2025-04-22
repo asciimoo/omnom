@@ -28,7 +28,7 @@ class Document {
         }
         this.nodeTransformFunctions = new Map([
             ['SCRIPT', (node) => node.remove()],
-            //['TEMPLATE', (node) => node.remove()],
+            ['TEMPLATE', this.transformTemplate],
             ['LINK', this.transformLink],
             ['STYLE', this.transformStyle],
             ['IMG', this.transformImg],
@@ -115,6 +115,9 @@ class Document {
                 // TODO handle these elements more sophisticatedly
                 node.removeAttribute('href');
                 break;
+            case 'modulepreload':
+                node.remove();
+                return;
             case 'preload':
                 const href = node.getAttribute('href');
                 if (!href) {
@@ -125,8 +128,8 @@ class Document {
                     case 'fetch':
                     case 'track':
                     case 'worker':
-                        node.removeAttribute('href');
-                        break;
+                        node.remove();
+                        return;
                     case 'font':
                         res = await this.resources.create(this.absoluteUrl(href));
                         if (res) {
@@ -135,7 +138,11 @@ class Document {
                             node.removeAttribute('href');
                         }
                         break;
+                    case 'image':
                     case 'style':
+                        if(node.hasAttribute('imagesrcset')) {
+                            node.removeAttribute('imagesrcset');
+                        }
                         const cssHref = this.absoluteUrl(href);
                         res = await this.resources.create(cssHref);
                         if (res) {
@@ -225,6 +232,10 @@ class Document {
         }
         console.log("Meh, iframe not found: ", src);
         node.setAttribute('src', '');
+    }
+
+    async transformTemplate(node) {
+        await this.walkDOM(node.content);
     }
 
     async setUrl(node) {
