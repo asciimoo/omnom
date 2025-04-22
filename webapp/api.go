@@ -464,7 +464,7 @@ func init() {
 		},
 		&Endpoint{
 			Name:         "ActivityPub webfinger",
-			Path:         "/.well_known/webfinger",
+			Path:         "/.well-known/webfinger",
 			Method:       GET,
 			AuthRequired: false,
 			Handler:      apWebfingerResponse,
