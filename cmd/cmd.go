@@ -278,7 +278,6 @@ func Execute() {
 }
 
 func init() {
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yml", "config file (default paths: ./config.yml or $HOME/.omnomrc or $HOME/.config/omnom/config.yml)")
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "turn on debug mode")
