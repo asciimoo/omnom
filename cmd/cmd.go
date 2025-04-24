@@ -64,52 +64,52 @@ var listenCmd = &cobra.Command{
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
-		if v, err := cmd.PersistentFlags().GetString("listen"); err == nil {
+		if v, err := cmd.Flags().GetString("address"); err == nil {
 			cfg.Server.Address = v
 		}
-		if v, err := cmd.PersistentFlags().GetUint("results-per-page"); err == nil {
+		if v, err := cmd.Flags().GetUint("results-per-page"); err == nil {
 			cfg.App.ResultsPerPage = int64(v)
 		}
-		if v, err := cmd.PersistentFlags().GetUint("webapp-snapshotter-timeout"); err == nil {
+		if v, err := cmd.Flags().GetUint("webapp-snapshotter-timeout"); err == nil {
 			cfg.App.WebappSnapshotterTimeout = int(v)
 		}
-		if v, err := cmd.PersistentFlags().GetBool("create-bookmark-from-webapp"); err == nil {
+		if v, err := cmd.Flags().GetBool("create-bookmark-from-webapp"); err == nil {
 			cfg.App.CreateBookmarkFromWebapp = v
 		}
-		if v, err := cmd.PersistentFlags().GetBool("secure-cookie"); err == nil {
+		if v, err := cmd.Flags().GetBool("secure-cookie"); err == nil {
 			cfg.Server.SecureCookie = v
 		}
-		if v, err := cmd.PersistentFlags().GetString("db-type"); err == nil {
+		if v, err := cmd.Flags().GetString("db-type"); err == nil {
 			cfg.DB.Type = v
 		}
-		if v, err := cmd.PersistentFlags().GetString("db-connection"); err == nil {
+		if v, err := cmd.Flags().GetString("db-connection"); err == nil {
 			cfg.DB.Connection = v
 		}
-		if v, err := cmd.PersistentFlags().GetString("smtp-host"); err == nil {
+		if v, err := cmd.Flags().GetString("smtp-host"); err == nil {
 			cfg.SMTP.Host = v
 		}
-		if v, err := cmd.PersistentFlags().GetUint("smtp-port"); err == nil {
+		if v, err := cmd.Flags().GetUint("smtp-port"); err == nil {
 			cfg.SMTP.Port = int(v)
 		}
-		if v, err := cmd.PersistentFlags().GetString("smtp-username"); err == nil {
+		if v, err := cmd.Flags().GetString("smtp-username"); err == nil {
 			cfg.SMTP.Username = v
 		}
-		if v, err := cmd.PersistentFlags().GetString("smtp-password"); err == nil {
+		if v, err := cmd.Flags().GetString("smtp-password"); err == nil {
 			cfg.SMTP.Password = v
 		}
-		if v, err := cmd.PersistentFlags().GetString("smtp-sender"); err == nil {
+		if v, err := cmd.Flags().GetString("smtp-sender"); err == nil {
 			cfg.SMTP.Sender = v
 		}
-		if v, err := cmd.PersistentFlags().GetBool("smtp-tls"); err == nil {
+		if v, err := cmd.Flags().GetBool("smtp-tls"); err == nil {
 			cfg.SMTP.TLS = v
 		}
-		if v, err := cmd.PersistentFlags().GetBool("smtp-tls-allow-insecure"); err == nil {
+		if v, err := cmd.Flags().GetBool("smtp-tls-allow-insecure"); err == nil {
 			cfg.SMTP.TLSAllowInsecure = v
 		}
-		if v, err := cmd.PersistentFlags().GetUint("smtp-send-timeout"); err == nil {
+		if v, err := cmd.Flags().GetUint("smtp-send-timeout"); err == nil {
 			cfg.SMTP.SendTimeout = int(v)
 		}
-		if v, err := cmd.PersistentFlags().GetUint("smtp-connection-timeout"); err == nil {
+		if v, err := cmd.Flags().GetUint("smtp-connection-timeout"); err == nil {
 			cfg.SMTP.ConnectionTimeout = int(v)
 		}
 		err := initMail()
@@ -289,7 +289,7 @@ func init() {
 	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(generateAPIDocsMD)
 
-	listenCmd.Flags().StringP("listen", "l", "127.0.0.1:7331", "Listen address")
+	listenCmd.Flags().StringP("address", "a", "127.0.0.1:7331", "Listen address")
 	listenCmd.Flags().Uint("results-per-page", 20, "Number of bookmarks/snapshots per page")
 	listenCmd.Flags().Uint("webapp-snapshotter-timeout", 15, "Timeout duration for webapp snapshotter (seconds)")
 	listenCmd.Flags().Bool("create-bookmark-from-webapp", false, "Allow creating bookmarks from webapp (requires chromium)")
