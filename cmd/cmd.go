@@ -294,7 +294,7 @@ func init() {
 	listenCmd.Flags().Bool("create-bookmark-from-webapp", false, "Allow creating bookmarks from webapp (requires chromium)")
 	listenCmd.Flags().Bool("secure-cookie", false, "Use secure cookies")
 	listenCmd.Flags().String("db-type", "sqlite", "Database type")
-	listenCmd.Flags().String("db-connection", "db.sqlitee", "Database connection string (path for sqlite)")
+	listenCmd.Flags().String("db-connection", "db.sqlite", "Database connection string (path for sqlite)")
 	listenCmd.Flags().String("smtp-host", "", "Host of the SMTP server (leave it blank to disable SMTP)")
 	listenCmd.Flags().Uint("smtp-port", 25, "Port of the SMTP server")
 	listenCmd.Flags().String("smtp-username", "", "SMTP username")
