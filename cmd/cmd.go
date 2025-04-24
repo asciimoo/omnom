@@ -64,6 +64,54 @@ var listenCmd = &cobra.Command{
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
+		if v, err := cmd.PersistentFlags().GetString("listen"); err == nil {
+			cfg.Server.Address = v
+		}
+		if v, err := cmd.PersistentFlags().GetUint("results-per-page"); err == nil {
+			cfg.App.ResultsPerPage = int64(v)
+		}
+		if v, err := cmd.PersistentFlags().GetUint("webapp-snapshotter-timeout"); err == nil {
+			cfg.App.WebappSnapshotterTimeout = int(v)
+		}
+		if v, err := cmd.PersistentFlags().GetBool("create-bookmark-from-webapp"); err == nil {
+			cfg.App.CreateBookmarkFromWebapp = v
+		}
+		if v, err := cmd.PersistentFlags().GetBool("secure-cookie"); err == nil {
+			cfg.Server.SecureCookie = v
+		}
+		if v, err := cmd.PersistentFlags().GetString("db-type"); err == nil {
+			cfg.DB.Type = v
+		}
+		if v, err := cmd.PersistentFlags().GetString("db-connection"); err == nil {
+			cfg.DB.Connection = v
+		}
+		if v, err := cmd.PersistentFlags().GetString("smtp-host"); err == nil {
+			cfg.SMTP.Host = v
+		}
+		if v, err := cmd.PersistentFlags().GetUint("smtp-port"); err == nil {
+			cfg.SMTP.Port = int(v)
+		}
+		if v, err := cmd.PersistentFlags().GetString("smtp-username"); err == nil {
+			cfg.SMTP.Username = v
+		}
+		if v, err := cmd.PersistentFlags().GetString("smtp-password"); err == nil {
+			cfg.SMTP.Password = v
+		}
+		if v, err := cmd.PersistentFlags().GetString("smtp-sender"); err == nil {
+			cfg.SMTP.Sender = v
+		}
+		if v, err := cmd.PersistentFlags().GetBool("smtp-tls"); err == nil {
+			cfg.SMTP.TLS = v
+		}
+		if v, err := cmd.PersistentFlags().GetBool("smtp-tls-allow-insecure"); err == nil {
+			cfg.SMTP.TLSAllowInsecure = v
+		}
+		if v, err := cmd.PersistentFlags().GetUint("smtp-send-timeout"); err == nil {
+			cfg.SMTP.SendTimeout = int(v)
+		}
+		if v, err := cmd.PersistentFlags().GetUint("smtp-connection-timeout"); err == nil {
+			cfg.SMTP.ConnectionTimeout = int(v)
+		}
 		err := initMail()
 		if err != nil {
 			fmt.Println("Failed to initialize mailing:", err)
@@ -230,7 +278,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yml", "config file (default paths: ./config.yml or $HOME/.omnomrc or $HOME/.config/omnom/config.yml)")
 
@@ -241,6 +288,25 @@ func init() {
 	rootCmd.AddCommand(setTokenCmd)
 	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(generateAPIDocsMD)
+
+	listenCmd.Flags().StringP("listen", "l", "127.0.0.1:7331", "Listen address")
+	listenCmd.Flags().Uint("results-per-page", 20, "Number of bookmarks/snapshots per page")
+	listenCmd.Flags().Uint("webapp-snapshotter-timeout", 15, "Timeout duration for webapp snapshotter (seconds)")
+	listenCmd.Flags().Bool("create-bookmark-from-webapp", false, "Allow creating bookmarks from webapp (requires chromium)")
+	listenCmd.Flags().Bool("secure-cookie", false, "Use secure cookies")
+	listenCmd.Flags().String("db-type", "sqlite", "Database type")
+	listenCmd.Flags().String("db-connection", "db.sqlitee", "Database connection string (path for sqlite)")
+	listenCmd.Flags().String("smtp-host", "", "Host of the SMTP server (leave it blank to disable SMTP)")
+	listenCmd.Flags().Uint("smtp-port", 25, "Port of the SMTP server")
+	listenCmd.Flags().String("smtp-username", "", "SMTP username")
+	listenCmd.Flags().String("smtp-password", "", "SMTP password")
+	listenCmd.Flags().String("smtp-sender", "Omnom <omnom@127.0.0.1>", "SMTP sender")
+	listenCmd.Flags().Bool("smtp-tls", false, "Use TLS for SMTP")
+	listenCmd.Flags().Bool("smtp-tls-allow-insecure", false, "Allow insecure TLS connections for SMTP")
+	listenCmd.Flags().Uint("smtp-send-timeout", 10, "SMTP send timeout (seconds)")
+	listenCmd.Flags().Uint("smtp-connection-timeout", 5, "SMTP connection timeout (seconds)")
+
+	cobra.OnInitialize(initConfig)
 }
 
 func initConfig() {
