@@ -7,6 +7,7 @@ package webapp
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -28,6 +29,29 @@ type searchParams struct {
 	IsPrivate        bool   `form:"private"`
 	SearchInSnapshot bool   `form:"search_in_snapshot"`
 	SearchInNote     bool   `form:"search_in_note"`
+}
+
+func (s *searchParams) Serialize() string {
+	v := url.Values{}
+	v.Add("query", s.Q)
+	v.Add("user", s.Owner)
+	v.Add("from", s.FromDate)
+	v.Add("to", s.ToDate)
+	v.Add("tag", s.Tag)
+	v.Add("domain", s.Domain)
+	if s.IsPublic {
+		v.Add("public", "1")
+	}
+	if s.IsPrivate {
+		v.Add("private", "1")
+	}
+	if s.SearchInSnapshot {
+		v.Add("search_in_snapshot", "1")
+	}
+	if s.SearchInNote {
+		v.Add("search_in_note", "1")
+	}
+	return v.Encode()
 }
 
 func (s *searchParams) String() string {
