@@ -66,7 +66,7 @@ Omnom browser addon is available for
 Run Omnom with Docker using the following command:
 
 ```bash
-docker run -p 7331:7331/tcp ghcr.io/asciimoo/omnom:latest
+docker run -p 7331:7331/tcp ghcr.io/asciimoo/omnom:master
 ```
 
 ### Configuration
@@ -90,7 +90,7 @@ Example with volumes:
 docker run -p 7331:7331/tcp \
   -v ./omnom_config:/omnom/config \
   -v ./omnom_data:/omnom/static/data \
-  ghcr.io/asciimoo/omnom:latest
+  ghcr.io/asciimoo/omnom:master
 ```
 
 #### Custom Configuration
@@ -104,7 +104,7 @@ You can modify the default `config.yml` by mounting your own version:
 #### Custom Commands
 Run any Omnom command directly:
 ```bash
-docker run ghcr.io/asciimoo/omnom:latest /omnom/omnom --help
+docker run ghcr.io/asciimoo/omnom:master /omnom/omnom --help
 ```
 
 #### Environment Variables
