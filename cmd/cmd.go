@@ -64,52 +64,68 @@ var listenCmd = &cobra.Command{
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
-		if v, err := cmd.Flags().GetString("address"); err == nil {
+		arg := "address"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.Server.Address = v
 		}
-		if v, err := cmd.Flags().GetUint("results-per-page"); err == nil {
+		arg = "results-per-page"
+		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.App.ResultsPerPage = int64(v)
 		}
-		if v, err := cmd.Flags().GetUint("webapp-snapshotter-timeout"); err == nil {
+		arg = "webapp-snapshotter-timeout"
+		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.App.WebappSnapshotterTimeout = int(v)
 		}
-		if v, err := cmd.Flags().GetBool("create-bookmark-from-webapp"); err == nil {
+		arg = "create-bookmark-from-webapp"
+		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.App.CreateBookmarkFromWebapp = v
 		}
-		if v, err := cmd.Flags().GetBool("secure-cookie"); err == nil {
+		arg = "secure-cookie"
+		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.Server.SecureCookie = v
 		}
-		if v, err := cmd.Flags().GetString("db-type"); err == nil {
+		arg = "db-type"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.DB.Type = v
 		}
-		if v, err := cmd.Flags().GetString("db-connection"); err == nil {
+		arg = "db-connection"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.DB.Connection = v
 		}
-		if v, err := cmd.Flags().GetString("smtp-host"); err == nil {
+		arg = "smtp-host"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.Host = v
 		}
-		if v, err := cmd.Flags().GetUint("smtp-port"); err == nil {
+		arg = "smtp-port"
+		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.Port = int(v)
 		}
-		if v, err := cmd.Flags().GetString("smtp-username"); err == nil {
+		arg = "smtp-username"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.Username = v
 		}
-		if v, err := cmd.Flags().GetString("smtp-password"); err == nil {
+		arg = "smtp-password"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.Password = v
 		}
-		if v, err := cmd.Flags().GetString("smtp-sender"); err == nil {
+		arg = "smtp-sender"
+		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.Sender = v
 		}
-		if v, err := cmd.Flags().GetBool("smtp-tls"); err == nil {
+		arg = "smtp-tls"
+		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.TLS = v
 		}
-		if v, err := cmd.Flags().GetBool("smtp-tls-allow-insecure"); err == nil {
+		arg = "smtp-tls-allow-insecure"
+		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.TLSAllowInsecure = v
 		}
-		if v, err := cmd.Flags().GetUint("smtp-send-timeout"); err == nil {
+		arg = "smtp-send-timeout"
+		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.SendTimeout = int(v)
 		}
-		if v, err := cmd.Flags().GetUint("smtp-connection-timeout"); err == nil {
+		arg = "smtp-connection-timeout"
+		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
 			cfg.SMTP.ConnectionTimeout = int(v)
 		}
 		err := initMail()
