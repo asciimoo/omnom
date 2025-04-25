@@ -33,6 +33,34 @@ go >= 1.24
 Settings can be configured in `config.yml` config file - don't forget to restart webapp after updating.
 
 
+## User handling
+
+Omnom does not store passwords. Login requires one time login tokens or OAuth.
+Login tokens can be requested via email (this requires a valid SMTP configuration in `config.yml`) through the web interface or can be generated from command line using the `./omnom create-token [username] login`.
+
+
+### Command line tool
+
+Basic management actions are available using the command line tool (`go run omnom.go` or `go build; ./omnom`)
+
+#### Available Commands
+```
+  create-token         create new login/addon token for a user
+  create-user          create new user
+  generate-api-docs-md Generate Markdown API documentation
+  help                 Help about any command
+  listen               start server
+  set-token            set new login/addon token for a user
+  show-user            show user details
+  completion           Generate the autocompletion script for the specified shell
+```
+
+### Browser addon
+
+Omnom browser addon is available for
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnom/)
+- [Chrome/Chromium](https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei)
+
 ## Docker
 
 Run Omnom with Docker using the following command:
@@ -84,35 +112,6 @@ docker run ghcr.io/asciimoo/omnom:latest /omnom/omnom --help
 |----------|----------------------------|---------|
 | `UID`    | User ID for Omnom process  | 1000    |
 | `GID`    | Group ID for Omnom process | 1000    |
-
-
-## User handling
-
-Omnom does not store passwords. Login requires one time login tokens or OAuth.
-Login tokens can be requested via email (this requires a valid SMTP configuration in `config.yml`) through the web interface or can be generated from command line using the `./omnom create-token [username] login`.
-
-
-### Command line tool
-
-Basic management actions are available using the command line tool (`go run omnom.go` or `go build; ./omnom`)
-
-#### Available Commands
-```
-  create-token         create new login/addon token for a user
-  create-user          create new user
-  generate-api-docs-md Generate Markdown API documentation
-  help                 Help about any command
-  listen               start server
-  set-token            set new login/addon token for a user
-  show-user            show user details
-  completion           Generate the autocompletion script for the specified shell
-```
-
-### Browser addon
-
-Omnom browser addon is available for
-- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnom/)
-- [Chrome/Chromium](https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei)
 
 ## Bugs
 
