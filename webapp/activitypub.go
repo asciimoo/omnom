@@ -59,22 +59,22 @@ type apTag struct {
 }
 
 type apIdentity struct {
-	Context           string   `json:"@context"`
-	ID                string   `json:"id"`
-	Type              string   `json:"type"`
-	Following         string   `json:"following"`
-	Followers         string   `json:"followers"`
-	Inbox             string   `json:"inbox"`
-	Outbox            string   `json:"outbox"`
-	PreferredUsername string   `json:"preferredUsername"`
-	Name              string   `json:"name"`
-	Summary           string   `json:"summary"`
-	URL               string   `json:"url"`
-	Discoverable      bool     `json:"discoverable"`
-	Memorial          bool     `json:"memorial"`
-	Icon              apImage  `json:"icon"`
-	Image             apImage  `json:"image"`
-	Pubkey            apPubkey `json:"publicKey"`
+	Context           *apContext `json:"@context"`
+	ID                string     `json:"id"`
+	Type              string     `json:"type"`
+	Following         string     `json:"following"`
+	Followers         string     `json:"followers"`
+	Inbox             string     `json:"inbox"`
+	Outbox            string     `json:"outbox"`
+	PreferredUsername string     `json:"preferredUsername"`
+	Name              string     `json:"name"`
+	Summary           string     `json:"summary"`
+	URL               string     `json:"url"`
+	Discoverable      bool       `json:"discoverable"`
+	Memorial          bool       `json:"memorial"`
+	Icon              apImage    `json:"icon"`
+	Image             apImage    `json:"image"`
+	Pubkey            apPubkey   `json:"publicKey"`
 }
 
 type apImage struct {
@@ -114,6 +114,11 @@ type apInboxRequestObject struct {
 	ID string `json:"id"`
 }
 
+type apContext struct {
+	ID    string
+	Parts []interface{}
+}
+
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
 <p>%[3]s</p>
 <small>Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[4]s">view bookmark</a></small>`
@@ -148,10 +153,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 		OrderedItems: make([]apItem, len(bs)),
 	}
 	for i, b := range bs {
-		id := fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID)
-		if strings.HasPrefix(id, "/") {
-			id = baseU + id
-		}
+		id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
 		actor := fmt.Sprintf("%s/bookmarks?owner=%s", baseU, b.User.Username)
 		published := b.CreatedAt.Format(time.RFC3339)
 		item := apItem{
@@ -180,10 +182,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 			},
 		}
 		for i, t := range b.Tags {
-			tagBase := fmt.Sprintf("%s?tag=", URLFor("Public bookmarks"))
-			if strings.HasPrefix(tagBase, "/") {
-				tagBase = baseU + tagBase
-			}
+			tagBase := getFullURL(c, fmt.Sprintf("%s?tag=", URLFor("Public bookmarks")))
 			item.Object.Tag[i] = apTag{
 				Type: "Hashtag",
 				Href: tagBase + t.Text,
@@ -203,6 +202,13 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	}
 }
 
+func getFullURL(c *gin.Context, u string) string {
+	if strings.HasPrefix(u, "/") {
+		return getFullURLPrefix(c) + u
+	}
+	return u
+}
+
 func apIdentityResponse(c *gin.Context, p *searchParams) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	baseU := getFullURLPrefix(c)
@@ -218,13 +224,12 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 		log.Println("ActivityPub JSON serialization error", err)
 		return
 	}
-	inbox := URLFor("ActivityPub inbox")
-	if strings.HasPrefix(inbox, "/") {
-		inbox = baseU + inbox
-	}
+	inbox := getFullURL(c, URLFor("ActivityPub inbox"))
 	uname := "omnom" + p.String()
 	j, err := json.Marshal(apIdentity{
-		Context:           "https://www.w3.org/ns/activitystreams",
+		Context: &apContext{
+			ID: "https://www.w3.org/ns/activitystreams",
+		},
 		ID:                id,
 		Type:              "Person",
 		Inbox:             inbox,
@@ -307,15 +312,16 @@ func apInboxResponse(c *gin.Context) {
 }
 
 func apInboxFollowResponse(c *gin.Context, d *apInboxRequest) {
-	// TODO get actor info (inbox address) && validate d.Actor signature
+	actor, err := apFetchActor(d.Actor)
+	// validate d.Actor signature
+	if err != nil {
+		log.Println("Failed to fetch actor information:", d.Actor, err)
+		return
+	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	inURL := URLFor("ActivityPub inbox")
-	if strings.HasPrefix(inURL, "/") {
-		inURL = getFullURLPrefix(c) + inURL
-	}
-	actorInbox := "TODO"
-	sendSignedRequest(inURL, actorInbox, d.Object.ID+"#key", []byte("testdata"), key)
+	inURL := getFullURL(c, URLFor("ActivityPub inbox"))
+	sendSignedRequest(inURL, actor.Inbox, d.Object.ID+"#key", []byte("testdata"), key)
 }
 
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
@@ -344,13 +350,27 @@ func sendSignedRequest(inURL string, targetURL, keyID string, data []byte, key *
 	return
 }
 
+func apFetchActor(u string) (*apIdentity, error) {
+	c := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Accept", "application/activity+json; charset=utf-8")
+	r, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+	i := &apIdentity{}
+	err = json.NewDecoder(r.Body).Decode(i)
+	return i, err
+}
+
 func apWebfingerResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	s := c.Query("resource")
-	u := URLFor("Public bookmarks")
-	if strings.HasPrefix(u, "/") {
-		u = getFullURLPrefix(c) + u
-	}
+	u := getFullURL(c, URLFor("Public bookmarks"))
 	j, err := json.Marshal(apWebfinger{
 		Subject: s,
 		Aliases: []string{},
@@ -382,4 +402,21 @@ func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
 		return json.Unmarshal(data, (*T)(i))
 	}
 	return nil
+}
+
+func (c *apContext) UnmarshalJSON(data []byte) error {
+	if data[0] == '"' && data[len(data)-1] == '"' {
+		return json.Unmarshal(data, &c.ID)
+	}
+	if data[0] == '[' && data[len(data)-1] == ']' {
+		d := []interface{}{}
+		err := json.Unmarshal(data, &d)
+		c.Parts = d
+		return err
+	}
+	return nil
+}
+
+func (c *apContext) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, strings.ReplaceAll(c.ID, `"`, `\"`))), nil
 }
