@@ -1,12 +1,14 @@
 package webapp
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -18,6 +20,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+const apRequestTimeout = 10 * time.Second
 
 type apOutbox struct {
 	Context      string         `json:"@context"`
@@ -355,11 +359,11 @@ func sendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
 	if err != nil {
 		return
 	}
-	d := time.Now().UTC().Format(time.RFC3339)
+	d := time.Now().UTC().Format(http.TimeFormat)
 	h := sha256.New()
 	h.Write(data)
 	hash := h.Sum(nil)
-	digest := fmt.Sprintf("SHA-256=%s", base64.URLEncoding.EncodeToString(hash))
+	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(hash))
 	sigData := []byte(fmt.Sprintf("(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", u.Path, u.Host, d, digest))
 	sigHash := sha256.Sum256(sigData)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, []byte(sigHash[:]))
@@ -367,8 +371,29 @@ func sendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
 		log.Println("Can't sign request data:", err)
 		return
 	}
-	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date digest",signature="%s",algorithm="rsa-sha256"`, keyID, base64.URLEncoding.EncodeToString(sig))
-	log.Println("SIGNING DATA", sigHeader)
+	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date digest",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
+	cli := &http.Client{Timeout: apRequestTimeout}
+	req, err := http.NewRequest("POST", us, bytes.NewReader(data))
+	if err != nil {
+		log.Println("Can't create signed POST request:", err)
+		return
+	}
+	req.Header.Set("Host", u.Host)
+	req.Header.Set("Date", d)
+	req.Header.Set("Digest", digest)
+	req.Header.Set("Signature", sigHeader)
+	req.Header.Set("Content-Type", "application/activity+json; charset=utf-8")
+	req.Header.Set("Accept", "application/activity+json; charset=utf-8")
+	r, err := cli.Do(req)
+	if err != nil {
+		log.Println("Failed to send follow accept response:", err)
+		return
+	}
+	defer r.Body.Close()
+	rb, _ := io.ReadAll(r.Body)
+	if bytes.Contains(rb, []byte("error")) {
+		log.Println("Follow accept response contains error:", string(rb))
+	}
 	return
 }
 
