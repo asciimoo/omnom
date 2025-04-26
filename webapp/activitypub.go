@@ -20,25 +20,25 @@ import (
 )
 
 type apOutbox struct {
-	Context      string   `json:"@context"`
-	ID           string   `json:"id"`
-	Type         string   `json:"type"`
-	Summary      string   `json:"summary"`
-	TotalItems   int64    `json:"totalItems"`
-	OrderedItems []apItem `json:"orderedItems"`
+	Context      string         `json:"@context"`
+	ID           string         `json:"id"`
+	Type         string         `json:"type"`
+	Summary      string         `json:"summary"`
+	TotalItems   int64          `json:"totalItems"`
+	OrderedItems []apOutboxItem `json:"orderedItems"`
 }
 
-type apItem struct {
-	ID        string   `json:"id"`
-	Type      string   `json:"type"`
-	Actor     string   `json:"actor"`
-	To        []string `json:"to"`
-	Cc        []string `json:"cc"`
-	Published string   `json:"published"`
-	Object    apObject `json:"object"`
+type apOutboxItem struct {
+	ID        string         `json:"id"`
+	Type      string         `json:"type"`
+	Actor     string         `json:"actor"`
+	To        []string       `json:"to"`
+	Cc        []string       `json:"cc"`
+	Published string         `json:"published"`
+	Object    apOutboxObject `json:"object"`
 }
 
-type apObject struct {
+type apOutboxObject struct {
 	ID           string            `json:"id"`
 	Type         string            `json:"type"`
 	Content      string            `json:"content"`
@@ -119,6 +119,21 @@ type apContext struct {
 	Parts []interface{}
 }
 
+type apFollowResponseItem struct {
+	Context string                 `json:"@context"`
+	ID      string                 `json:"id"`
+	Type    string                 `json:"type"`
+	Actor   string                 `json:"actor"`
+	Object  apFollowResponseObject `json:"object"`
+}
+
+type apFollowResponseObject struct {
+	ID     string `json:"id"`
+	Type   string `json:"type"`
+	Actor  string `json:"actor"`
+	Object string `json:"object"`
+}
+
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
 <p>%[3]s</p>
 <small>Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[4]s">view bookmark</a></small>`
@@ -150,13 +165,13 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 		Type:         "OrderedCollection",
 		Summary:      "Recent bookmarks of " + u.String(),
 		TotalItems:   bc,
-		OrderedItems: make([]apItem, len(bs)),
+		OrderedItems: make([]apOutboxItem, len(bs)),
 	}
 	for i, b := range bs {
 		id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
 		actor := fmt.Sprintf("%s/bookmarks?owner=%s", baseU, b.User.Username)
 		published := b.CreatedAt.Format(time.RFC3339)
-		item := apItem{
+		item := apOutboxItem{
 			ID:    id + "/activity",
 			Type:  "Create",
 			Actor: actor,
@@ -165,7 +180,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 			},
 			Cc:        []string{},
 			Published: published,
-			Object: apObject{
+			Object: apOutboxObject{
 				ID:           id,
 				Type:         "Note",
 				Summary:      fmt.Sprintf("Bookmark of \"%s\"", b.Title),
@@ -313,16 +328,30 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest) {
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	inURL := getFullURL(c, URLFor("ActivityPub inbox"))
-	sendSignedRequest(inURL, actor.Inbox, d.Object.ID+"#key", []byte("testdata"), key)
+	data, err := json.Marshal(apFollowResponseItem{
+		Context: "https://www.w3.org/ns/activitystreams",
+		ID:      d.Object.ID,
+		Type:    "Accept",
+		Object: apFollowResponseObject{
+			ID:     d.ID,
+			Type:   "Follow",
+			Actor:  d.Actor,
+			Object: d.Object.ID,
+		},
+	})
+	if err != nil {
+		log.Println("Failed to serialize AP inbox response:", d.Actor, err)
+		return
+	}
+	sendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
 }
 
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
 	log.Println("UNFOLLOW", d.Actor, d.Object.ID)
 }
 
-func sendSignedRequest(inURL string, targetURL, keyID string, data []byte, key *rsa.PrivateKey) {
-	u, err := url.Parse(inURL)
+func sendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
+	u, err := url.Parse(us)
 	if err != nil {
 		return
 	}
@@ -331,7 +360,7 @@ func sendSignedRequest(inURL string, targetURL, keyID string, data []byte, key *
 	h.Write(data)
 	hash := h.Sum(nil)
 	digest := fmt.Sprintf("SHA-256=%s", base64.URLEncoding.EncodeToString(hash))
-	sigData := []byte(fmt.Sprintf("(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", inURL, u.Host, d, digest))
+	sigData := []byte(fmt.Sprintf("(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", u.Path, u.Host, d, digest))
 	sigHash := sha256.Sum256(sigData)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, []byte(sigHash[:]))
 	if err != nil {
