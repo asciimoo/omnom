@@ -1,9 +1,14 @@
 package webapp
 
 import (
+	"crypto"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -98,6 +103,17 @@ type apLink struct {
 	Type string `json:"type"`
 }
 
+type apInboxRequest struct {
+	ID     string               `json:"id"`
+	Type   string               `json:"type"`
+	Actor  string               `json:"actor"`
+	Object apInboxRequestObject `json:"object"`
+}
+
+type apInboxRequestObject struct {
+	ID string `json:"id"`
+}
+
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
 <p>%[3]s</p>
 <small>Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[4]s">view bookmark</a></small>`
@@ -157,9 +173,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 				To: []string{
 					"https://www.w3.org/ns/activitystreams#Public",
 				},
-				Cc: []string{
-					id + "/followers",
-				},
+				Cc:        []string{},
 				Published: published,
 				Tag:       make([]apTag, len(b.Tags)),
 				Replies:   map[string]string{},
@@ -231,7 +245,7 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 		},
 		Pubkey: apPubkey{
 			Context:      "https://w3id.org/security/v1",
-			ID:           baseU + "/#key",
+			ID:           id + "#key",
 			Type:         "Key",
 			Owner:        id,
 			PublicKeyPem: string(pk),
@@ -248,6 +262,86 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 
 func apInboxResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
+	body, err := c.GetRawData()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	d := &apInboxRequest{}
+	err = json.Unmarshal(body, d)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	if d.Object.ID == "" || d.Actor == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Missing attributes",
+		})
+		return
+	}
+	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid ID",
+		})
+		return
+	}
+	switch d.Type {
+	case "Follow":
+		go apInboxFollowResponse(c, d)
+	case "Unfollow":
+		go apInboxUnfollowResponse(c, d)
+	default:
+		log.Println("Unhandled ActivityPub inbox message type: " + d.Type)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Unknown action type",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, map[string]string{
+		"status": "OK",
+	})
+}
+
+func apInboxFollowResponse(c *gin.Context, d *apInboxRequest) {
+	// TODO get actor info (inbox address) && validate d.Actor signature
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	inURL := URLFor("ActivityPub inbox")
+	if strings.HasPrefix(inURL, "/") {
+		inURL = getFullURLPrefix(c) + inURL
+	}
+	actorInbox := "TODO"
+	sendSignedRequest(inURL, actorInbox, d.Object.ID+"#key", []byte("testdata"), key)
+}
+
+func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
+	log.Println("UNFOLLOW", d.Actor, d.Object.ID)
+}
+
+func sendSignedRequest(inURL string, targetURL, keyID string, data []byte, key *rsa.PrivateKey) {
+	u, err := url.Parse(inURL)
+	if err != nil {
+		return
+	}
+	d := time.Now().UTC().Format(time.RFC3339)
+	h := sha256.New()
+	h.Write(data)
+	hash := h.Sum(nil)
+	digest := fmt.Sprintf("SHA-256=%s", base64.URLEncoding.EncodeToString(hash))
+	sigData := []byte(fmt.Sprintf("(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", inURL, u.Host, d, digest))
+	sigHash := sha256.Sum256(sigData)
+	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, []byte(sigHash[:]))
+	if err != nil {
+		log.Println("Can't sign request data:", err)
+		return
+	}
+	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date digest",signature="%s",algorithm="rsa-sha256"`, keyID, base64.URLEncoding.EncodeToString(sig))
+	log.Println("SIGNING DATA", sigHeader)
+	return
 }
 
 func apWebfingerResponse(c *gin.Context) {
@@ -272,4 +366,20 @@ func apWebfingerResponse(c *gin.Context) {
 	if err != nil {
 		log.Println("ActivityPub webfinger write error")
 	}
+}
+
+func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		return nil
+	}
+	if data[0] == '"' && data[len(data)-1] == '"' {
+		return json.Unmarshal(data, &i.ID)
+	}
+	if data[0] == '{' && data[len(data)-1] == '}' {
+		type T struct {
+			ID string `json:"ID"`
+		}
+		return json.Unmarshal(data, (*T)(i))
+	}
+	return nil
 }
