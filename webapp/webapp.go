@@ -124,6 +124,13 @@ func getFullURLPrefix(c *gin.Context) string {
 	return fullURLPrefix
 }
 
+func getFullURL(c *gin.Context, u string) string {
+	if strings.HasPrefix(u, "/") {
+		return getFullURLPrefix(c) + u
+	}
+	return u
+}
+
 func addTemplate(r multitemplate.DynamicRender, rootDir string, hasBase bool, name, filename string) {
 	if hasBase {
 		r.AddFromFilesFuncs(name, tplFuncMap, filepath.Join(rootDir, "layout/base.tpl"), filepath.Join(rootDir, filename))

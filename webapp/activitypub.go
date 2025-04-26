@@ -202,13 +202,6 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	}
 }
 
-func getFullURL(c *gin.Context, u string) string {
-	if strings.HasPrefix(u, "/") {
-		return getFullURLPrefix(c) + u
-	}
-	return u
-}
-
 func apIdentityResponse(c *gin.Context, p *searchParams) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	baseU := getFullURLPrefix(c)
