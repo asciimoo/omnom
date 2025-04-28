@@ -5,13 +5,17 @@ import (
 	"crypto"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,6 +26,8 @@ import (
 )
 
 const apRequestTimeout = 10 * time.Second
+
+var apSigHeaderRe = regexp.MustCompile(`keyId="([^"]+)",headers="([^"]+)",signature="([^"]+)"`)
 
 type apOutbox struct {
 	Context      string         `json:"@context"`
@@ -78,7 +84,7 @@ type apIdentity struct {
 	Memorial          bool       `json:"memorial"`
 	Icon              apImage    `json:"icon"`
 	Image             apImage    `json:"image"`
-	Pubkey            apPubkey   `json:"publicKey"`
+	PubKey            apPubKey   `json:"publicKey"`
 }
 
 type apImage struct {
@@ -87,7 +93,7 @@ type apImage struct {
 	URL       string `json:"url"`
 }
 
-type apPubkey struct {
+type apPubKey struct {
 	Context      string `json:"@context"`
 	ID           string `json:"id"`
 	Type         string `json:"type"`
@@ -260,7 +266,7 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 			MediaType: "image/png",
 			URL:       baseU + "/static/icons/addon_icon.png",
 		},
-		Pubkey: apPubkey{
+		PubKey: apPubKey{
 			Context:      "https://w3id.org/security/v1",
 			ID:           id + "#key",
 			Type:         "Key",
@@ -308,7 +314,7 @@ func apInboxResponse(c *gin.Context) {
 	}
 	switch d.Type {
 	case "Follow":
-		go apInboxFollowResponse(c, d)
+		go apInboxFollowResponse(c, d, body)
 	case "Unfollow":
 		go apInboxUnfollowResponse(c, d)
 	default:
@@ -323,11 +329,15 @@ func apInboxResponse(c *gin.Context) {
 	})
 }
 
-func apInboxFollowResponse(c *gin.Context, d *apInboxRequest) {
+func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 	actor, err := apFetchActor(d.Actor)
 	// validate d.Actor signature
 	if err != nil {
 		log.Println("Failed to fetch actor information:", d.Actor, err)
+		return
+	}
+	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
+		log.Println("Failed to validate actor signature:", d.Actor, err)
 		return
 	}
 	cfg, _ := c.Get("config")
@@ -347,26 +357,86 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest) {
 		log.Println("Failed to serialize AP inbox response:", d.Actor, err)
 		return
 	}
-	sendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
+	apSendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
 }
 
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
-	log.Println("UNFOLLOW", d.Actor, d.Object.ID)
+	log.Println("UNFOLLOW", d.Actor, d.Object.ID, c)
 }
 
-func sendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
+func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
+	sigParts := apSigHeaderRe.FindStringSubmatch(c.Request.Header.Get("Signature"))
+	if len(sigParts) != 4 {
+		return "", nil, errors.New("invalid Signature header format")
+	}
+	signature := sigParts[3]
+	sigHeaders := make([]string, 0, 3)
+	for _, h := range strings.Split(sigParts[2], " ") {
+		if h == "(request-target)" {
+			method := strings.ToLower(c.Request.Method)
+			// TODO perhaps it is better to use the path information from
+			// the ActivityPub request payload, because c.Request.URL.Path
+			// can be different in case of some weird reverse proxying shenanigans
+			s := fmt.Sprintf("%s %s", method, c.Request.URL.Path)
+			if c.Request.URL.RawQuery != "" {
+				s += "?" + c.Request.URL.RawQuery
+			}
+			sigHeaders = append(sigHeaders, s)
+		} else {
+			hv := c.Request.Header.Get(strings.Title(h))
+			if h == "digest" {
+				if hv != digest {
+					return "", nil, errors.New("digest hash mismatch")
+				}
+			}
+			sigHeaders = append(sigHeaders, fmt.Sprintf("%s: %s", h, hv))
+		}
+	}
+	sigH := []byte(strings.Join(sigHeaders, " "))
+	hash := sha256.Sum256(sigH)
+	return signature, hash[:], nil
+}
+
+func apCheckSignature(c *gin.Context, key string, payload []byte) error {
+	pHash := sha256.Sum256(payload)
+	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(pHash[:]))
+	signature, hash, err := apParseSigHeader(c, digest)
+	if err != nil {
+		return fmt.Errorf("failed to parse signature header: %w", err)
+	}
+	pb, _ := pem.Decode([]byte(key))
+	if pb == nil || pb.Type != "PUBLIC KEY" {
+		return errors.New("failed to decode PEM block containing public key")
+	}
+	pk, err := x509.ParsePKIXPublicKey(pb.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse client cert: %w", err)
+	}
+	if _, ok := pk.(*rsa.PublicKey); !ok {
+		return errors.New("invalid key type")
+	}
+	signatureDecoded, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return fmt.Errorf("failed to decode signature: %w", err)
+	}
+	err = rsa.VerifyPKCS1v15(pk.(*rsa.PublicKey), crypto.SHA256, hash, signatureDecoded)
+	if err != nil {
+		return fmt.Errorf("invalid signature: %w", err)
+	}
+	return nil
+}
+
+func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
 	u, err := url.Parse(us)
 	if err != nil {
 		return
 	}
 	d := time.Now().UTC().Format(http.TimeFormat)
-	h := sha256.New()
-	h.Write(data)
-	hash := h.Sum(nil)
-	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(hash))
+	hash := sha256.Sum256(data)
+	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(hash[:]))
 	sigData := []byte(fmt.Sprintf("(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", u.Path, u.Host, d, digest))
 	sigHash := sha256.Sum256(sigData)
-	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, []byte(sigHash[:]))
+	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
 	if err != nil {
 		log.Println("Can't sign request data:", err)
 		return
@@ -394,7 +464,6 @@ func sendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
 	if bytes.Contains(rb, []byte("error")) {
 		log.Println("Follow accept response contains error:", string(rb))
 	}
-	return
 }
 
 func apFetchActor(u string) (*apIdentity, error) {
