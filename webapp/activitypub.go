@@ -357,7 +357,16 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Println("Failed to serialize AP inbox response:", d.Actor, err)
 		return
 	}
-	apSendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
+	err = apSendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
+	if err != nil {
+		log.Println("Failed to send follow response HTTP request:", d.Actor, err)
+		return
+	}
+	err = model.CreateAPFollower(d.Actor, d.Object.ID)
+	if err != nil {
+		log.Println("Failed to create AP follower", d.Actor, err)
+		return
+	}
 }
 
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
@@ -426,10 +435,10 @@ func apCheckSignature(c *gin.Context, key string, payload []byte) error {
 	return nil
 }
 
-func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) {
+func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) error {
 	u, err := url.Parse(us)
 	if err != nil {
-		return
+		return err
 	}
 	d := time.Now().UTC().Format(http.TimeFormat)
 	hash := sha256.Sum256(data)
@@ -439,14 +448,14 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
 	if err != nil {
 		log.Println("Can't sign request data:", err)
-		return
+		return err
 	}
 	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date digest",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
 	cli := &http.Client{Timeout: apRequestTimeout}
 	req, err := http.NewRequest("POST", us, bytes.NewReader(data))
 	if err != nil {
 		log.Println("Can't create signed POST request:", err)
-		return
+		return err
 	}
 	req.Header.Set("Host", u.Host)
 	req.Header.Set("Date", d)
@@ -457,13 +466,15 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	r, err := cli.Do(req)
 	if err != nil {
 		log.Println("Failed to send follow accept response:", err)
-		return
+		return err
 	}
 	defer r.Body.Close()
 	rb, _ := io.ReadAll(r.Body)
 	if bytes.Contains(rb, []byte("error")) {
 		log.Println("Follow accept response contains error:", string(rb))
+		return errors.New("invalid response")
 	}
+	return nil
 }
 
 func apFetchActor(u string) (*apIdentity, error) {
