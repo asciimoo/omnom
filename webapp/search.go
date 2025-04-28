@@ -20,7 +20,7 @@ const dateFormat string = "2006.01.02"
 
 type searchParams struct {
 	Q                string `form:"query"`
-	Owner            string `form:"user"`
+	Owner            string `form:"owner"`
 	FromDate         string `form:"from"`
 	ToDate           string `form:"to"`
 	Tag              string `form:"tag"`
