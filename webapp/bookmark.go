@@ -84,7 +84,7 @@ func bookmarks(c *gin.Context) {
 		return
 	}
 	if c.Query("format") == "ap-identity" {
-		apIdentityResponse(c, sp)
+		apIdentityResponse(c)
 		return
 	}
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")

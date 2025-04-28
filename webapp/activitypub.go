@@ -182,7 +182,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 		actor := fmt.Sprintf("%s/bookmarks?owner=%s", baseU, b.User.Username)
 		published := b.CreatedAt.Format(time.RFC3339)
 		item := apOutboxItem{
-			ID:    id + "/activity",
+			ID:    id + "#activity",
 			Type:  "Create",
 			Actor: actor,
 			To: []string{
@@ -227,11 +227,10 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	}
 }
 
-func apIdentityResponse(c *gin.Context, p *searchParams) {
+func apIdentityResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
-	baseU := getFullURLPrefix(c)
-	id := baseU + c.Request.URL.String()
-	u, err := parseURL(baseU + c.Request.URL.String())
+	id := getFullURL(c, c.Request.URL.String())
+	u, err := parseURL(id)
 	if err != nil {
 		log.Println("ActivityPub URL parse error", err)
 		return
@@ -243,7 +242,7 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 		return
 	}
 	inbox := getFullURL(c, URLFor("ActivityPub inbox"))
-	uname := "omnom" + p.String()
+	feedID := apCreateFeedID(id)
 	j, err := json.Marshal(apIdentity{
 		Context: &apContext{
 			ID: "https://www.w3.org/ns/activitystreams",
@@ -251,20 +250,20 @@ func apIdentityResponse(c *gin.Context, p *searchParams) {
 		ID:                id,
 		Type:              "Person",
 		Inbox:             inbox,
-		Outbox:            addURLParam(u.String(), "format=activitypub"),
-		PreferredUsername: uname,
-		Name:              baseU + "/" + p.String(),
-		URL:               baseU + "/",
+		Outbox:            getFullURL(c, addURLParam(u.String(), "format=activitypub")),
+		PreferredUsername: "omnom" + feedID,
+		Name:              getFullURL(c, "/"+feedID),
+		URL:               getFullURL(c, "/"),
 		Discoverable:      true,
 		Icon: apImage{
 			Type:      "Image",
 			MediaType: "image/png",
-			URL:       baseU + "/static/icons/addon_icon.png",
+			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
 		},
 		Image: apImage{
 			Type:      "Image",
 			MediaType: "image/png",
-			URL:       baseU + "/static/icons/addon_icon.png",
+			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
 		},
 		PubKey: apPubKey{
 			Context:      "https://w3id.org/security/v1",
@@ -362,11 +361,38 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Println("Failed to send follow response HTTP request:", d.Actor, err)
 		return
 	}
-	err = model.CreateAPFollower(d.Actor, d.Object.ID)
+	u, err := url.Parse(d.Object.ID)
+	if err != nil {
+		log.Println("Invalid subscription url:", d.Actor, err)
+		return
+	}
+	err = model.CreateAPFollower(d.Actor, u.RawQuery)
 	if err != nil {
 		log.Println("Failed to create AP follower", d.Actor, err)
 		return
 	}
+}
+
+func apCreateFeedID(us string) string {
+	u, err := url.Parse(us)
+	if err != nil {
+		return ""
+	}
+	q := u.Query()
+	s := ""
+	if q.Get("owner") != "" {
+		s += "@user." + q.Get("owner")
+	}
+	if q.Get("domain") != "" {
+		s += "@domain." + q.Get("domain")
+	}
+	if q.Get("tag") != "" {
+		s += "@tag." + strings.ReplaceAll(q.Get("tag"), " ", "_")
+	}
+	if q.Get("query") != "" {
+		s += "@query." + strings.ReplaceAll(q.Get("query"), " ", "_")
+	}
+	return s
 }
 
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
@@ -502,7 +528,7 @@ func apWebfingerResponse(c *gin.Context) {
 		Subject: s,
 		Aliases: []string{},
 		Links: []apLink{
-			apLink{Rel: "self", Type: "application/activity+json", Href: addURLParam(u, "format=ap-identity")},
+			apLink{Rel: "self", Type: "application/activity+json", Href: getFullURL(c, addURLParam(u, "format=ap-identity"))},
 			apLink{Rel: "http://webfinger.net/rel/profile-page", Type: "text/html", Href: u},
 		},
 	})
