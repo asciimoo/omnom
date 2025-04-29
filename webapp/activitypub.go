@@ -550,7 +550,7 @@ func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
 	}
 	if data[0] == '{' && data[len(data)-1] == '}' {
 		type T struct {
-			ID     string `json:"ID"`
+			ID     string `json:"id"`
 			Type   string `json:"type"`
 			Actor  string `json:"actor"`
 			Object string `json:"object"`
