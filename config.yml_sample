@@ -42,3 +42,8 @@ oauth:
 #    client_id: ""
 #    client_secret: ""
 #    icon: "fab fa-google"
+#  oidc:
+#    configuration_url: https://domain/.well-known/openid-configuration
+#    client_id: ""
+#    client_secret: ""
+#    icon: "fab fa-openid"

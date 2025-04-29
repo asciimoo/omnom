@@ -1,87 +1,94 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 type GoogleOAuth struct {
-	AuthURL  string
-	TokenURL string
+	AuthURL  AuthURL
+	TokenURL TokenURL
 }
 
-func (g GoogleOAuth) GetRedirectURL(clientID, handlerURL string) string {
-	params := url.Values{}
-	params.Add("client_id", clientID)
-	params.Add("response_type", "code")
-	params.Add("redirect_uri", handlerURL)
-	//params.Add("scope", "https://www.googleapis.com/auth/userinfo.email")
-	return fmt.Sprintf("%s?%s", g.AuthURL, params.Encode())
+func (g GoogleOAuth) Prepare(_ context.Context, _ ConfigurationURL) error { return nil }
+
+func (g GoogleOAuth) GetRedirectURL(clientID ClientID, redirectURI RedirectURI) string {
+	params := &url.Values{}
+	params.Add("client_id", clientID.String())
+	params.Add("response_type", responseTypeCode.String())
+	params.Add("redirect_uri", redirectURI.String())
+
+	return g.AuthURL.String() + "?" + params.Encode()
 }
 
-func (g GoogleOAuth) GetScope() (string, string) {
-	return "scope", "https://www.googleapis.com/auth/userinfo.email"
+func (g GoogleOAuth) GetScope() (ScopeName, ScopeValue) {
+	return scopeName, "https://www.googleapis.com/auth/userinfo.email"
 }
 
-func (g GoogleOAuth) GetTokenRequest(clientID, clientSecret, code, handlerURL string) (*http.Request, error) {
-	params := url.Values{}
-	params.Add("client_id", clientID)
-	params.Add("client_secret", clientSecret)
-	params.Add("code", code)
-	params.Add("grant_type", "authorization_code")
-	params.Add("redirect_uri", handlerURL)
-	r, err := http.NewRequest("POST", g.TokenURL, strings.NewReader(params.Encode()))
+func (g GoogleOAuth) GetTokenRequest(ctx context.Context, clientID ClientID, clientSecret ClientSecret, code Code, redirectURI RedirectURI) (*http.Request, error) {
+	params := &url.Values{}
+	params.Add("client_id", clientID.String())
+	params.Add("client_secret", clientSecret.String())
+	params.Add("code", code.String())
+	params.Add("grant_type", grantTypeAuthorizationCode.String())
+	params.Add("redirect_uri", redirectURI.String())
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, g.TokenURL.String(), strings.NewReader(params.Encode()))
 	if err != nil {
-		return r, err
+		return req, err
 	}
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return r, err
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return req, err
 }
 
-func (g GoogleOAuth) GetUniqueUserID(body []byte) (string, error) {
-	var j struct {
-		Tok string `json:"access_token"`
-	}
-	err := json.Unmarshal(body, &j)
-	if err != nil {
+func (g GoogleOAuth) GetUniqueUserID(ctx context.Context, body []byte) (string, error) {
+	var tData tokenData
+
+	if err := json.Unmarshal(body, &tData); err != nil {
 		return "", err
 	}
 
-	if j.Tok == "" {
+	if len(tData.AccessToken) < 1 {
 		return "", errors.New("no access token found")
 	}
 
-	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v3/userinfo?access_token="+j.Tok, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://www.googleapis.com/oauth2/v3/userinfo?access_token="+tData.AccessToken, nil)
 	if err != nil {
 		return "", errors.New("invalid token")
 	}
-	req.Header.Set("Authorization", "bearer "+j.Tok)
+
+	req.Header.Set("Authorization", "Bearer "+tData.AccessToken)
 
 	client := &http.Client{}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	uBody, err := ioutil.ReadAll(resp.Body)
+	uBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
-	var u struct {
-		Email string `json:"email"`
-	}
-	err = json.Unmarshal(uBody, &u)
+
+	var uData userData
+	err = json.Unmarshal(uBody, &uData)
 	if err != nil {
 		return "", err
 	}
-	if u.Email == "" {
+
+	if len(uData.Email) < 1 {
 		return "", errors.New("invalid email")
 	}
-	return fmt.Sprintf("goog-%s", u.Email), nil
+
+	return fmt.Sprintf("goog-%s", uData.Email), nil
 }

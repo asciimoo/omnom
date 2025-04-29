@@ -1,47 +1,52 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
 )
 
 type GitHubOAuth struct {
-	AuthURL  string
-	TokenURL string
+	AuthURL  AuthURL
+	TokenURL TokenURL
 }
 
-const scopeName = "scope"
-const scopeVal = "read:user"
+const scopeReadUser ScopeValue = "read:user"
 
-func (g GitHubOAuth) GetRedirectURL(clientID, handlerURL string) string {
-	params := url.Values{}
-	params.Add("client_id", clientID)
-	params.Add("scope", "read:user")
-	params.Add("response_type", "code")
-	params.Add("redirect_uri", handlerURL)
-	return fmt.Sprintf("%s?%s", g.AuthURL, params.Encode())
+func (g GitHubOAuth) Prepare(_ context.Context, _ ConfigurationURL) error { return nil }
+
+func (g GitHubOAuth) GetRedirectURL(clientID ClientID, redirectURI RedirectURI) string {
+	params := &url.Values{}
+	params.Add("client_id", clientID.String())
+	params.Add("scope", scopeReadUser.String())
+	params.Add("response_type", responseTypeCode.String())
+	params.Add("redirect_uri", redirectURI.String())
+
+	return g.AuthURL.String() + "?" + params.Encode()
 }
 
-func (g GitHubOAuth) GetScope() (string, string) {
-	return scopeName, scopeVal
+func (g GitHubOAuth) GetScope() (ScopeName, ScopeValue) {
+	return scopeName, scopeReadUser
 }
 
-func (g GitHubOAuth) GetTokenRequest(clientID, clientSecret, code, handlerURL string) (*http.Request, error) {
-	params := url.Values{}
-	params.Add("client_id", clientID)
-	params.Add("client_secret", clientSecret)
-	params.Add("code", code)
-	params.Add("redirect_uri", handlerURL)
+func (g GitHubOAuth) GetTokenRequest(ctx context.Context, clientID ClientID, clientSecret ClientSecret, code Code, redirectURI RedirectURI) (*http.Request, error) {
+	params := &url.Values{}
+	params.Add("client_id", clientID.String())
+	params.Add("client_secret", clientSecret.String())
+	params.Add("code", code.String())
+	params.Add("redirect_uri", redirectURI.String())
+
 	u := fmt.Sprintf("%s?%s", g.TokenURL, params.Encode())
-	return http.NewRequest("GET", u, nil)
+
+	return http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 }
 
-func (g GitHubOAuth) GetUniqueUserID(body []byte) (string, error) {
+func (g GitHubOAuth) GetUniqueUserID(ctx context.Context, body []byte) (string, error) {
 	v, err := url.ParseQuery(string(body))
 	if err != nil {
 		return "", err
@@ -52,7 +57,7 @@ func (g GitHubOAuth) GetUniqueUserID(body []byte) (string, error) {
 		return "", errors.New("no access token found")
 	}
 
-	req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
 		return "", err
 	}
@@ -60,12 +65,13 @@ func (g GitHubOAuth) GetUniqueUserID(body []byte) (string, error) {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	uBody, err := ioutil.ReadAll(resp.Body)
+	uBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
