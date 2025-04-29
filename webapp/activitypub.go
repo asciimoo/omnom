@@ -290,6 +290,7 @@ func apInboxResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	body, err := c.GetRawData()
 	if err != nil {
+		log.Println("Can't get Inbox request body:", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -298,18 +299,21 @@ func apInboxResponse(c *gin.Context) {
 	d := &apInboxRequest{}
 	err = json.Unmarshal(body, d)
 	if err != nil {
+		log.Println("Can't parse request json:", err, string(body))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 	if d.Object.ID == "" || d.Actor == "" {
+		log.Println("Inbox request has missing objectID or actor:", string(body))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Missing attributes",
 		})
 		return
 	}
 	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
+		log.Println("Inbox request objectID points to different host:", string(body))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid ID",
 		})
@@ -378,9 +382,10 @@ func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, pay
 }
 
 func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
-	sigParts := apSigHeaderRe.FindStringSubmatch(c.Request.Header.Get("Signature"))
+	sh := c.Request.Header.Get("Signature")
+	sigParts := apSigHeaderRe.FindStringSubmatch(sh)
 	if len(sigParts) != 4 {
-		return "", nil, errors.New("invalid Signature header format")
+		return "", nil, errors.New("invalid Signature header format: " + sh)
 	}
 	signature := sigParts[3]
 	sigHeaders := make([]string, 0, 3)
