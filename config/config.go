@@ -15,7 +15,7 @@ import (
 
 	"github.com/asciimoo/omnom/oauth"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -75,12 +75,13 @@ type ActivityPub struct {
 type OAuth map[string]OAuthEntry
 
 type OAuthEntry struct {
-	ClientID     string   `yaml:"client_id"`
-	ClientSecret string   `yaml:"client_secret"`
-	AuthURL      string   `yaml:"auth_url"`
-	TokenURL     string   `yaml:"token_url"`
-	Icon         string   `yaml:"icon"`
-	Scopes       []string `yaml:"scopes"`
+	ClientID         oauth.ClientID         `yaml:"client_id"`
+	ClientSecret     oauth.ClientSecret     `yaml:"client_secret"`
+	ConfigurationURL oauth.ConfigurationURL `yaml:"configuration_url"`
+	AuthURL          oauth.AuthURL          `yaml:"auth_url"`
+	TokenURL         oauth.TokenURL         `yaml:"token_url"`
+	Icon             oauth.Icon             `yaml:"icon"`
+	Scopes           []oauth.ScopeValue     `yaml:"scopes"`
 }
 
 func readConfigFile(filename string) ([]byte, error) {
