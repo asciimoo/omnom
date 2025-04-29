@@ -316,18 +316,11 @@ func apInboxResponse(c *gin.Context) {
 		})
 		return
 	}
-	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
-		log.Println("Inbox request objectID points to different host:", string(body))
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid ID",
-		})
-		return
-	}
 	switch d.Type {
 	case followAction:
-		go apInboxFollowResponse(c, followAction, d, body)
+		go apInboxFollowResponse(c, d, body)
 	case unfollowAction:
-		go apInboxFollowResponse(c, unfollowAction, d, body)
+		go apInboxUnfollowResponse(c, d, body)
 	default:
 		log.Println("Unhandled ActivityPub inbox message type: " + d.Type)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -340,9 +333,12 @@ func apInboxResponse(c *gin.Context) {
 	})
 }
 
-func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, payload []byte) {
+func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
+		log.Println("Inbox request objectID points to different host:", string(payload))
+		return
+	}
 	actor, err := apFetchActor(d.Actor)
-	// validate d.Actor signature
 	if err != nil {
 		log.Println("Failed to fetch actor information:", d.Actor, err)
 		return
@@ -359,7 +355,7 @@ func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, pay
 		Type:    "Accept",
 		Object: apFollowResponseObject{
 			ID:     d.ID,
-			Type:   action,
+			Type:   followAction,
 			Actor:  d.Actor,
 			Object: d.Object.ID,
 		},
@@ -378,19 +374,57 @@ func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, pay
 		log.Println("Invalid subscription url:", d.Actor, err)
 		return
 	}
-	if action == followAction {
-		err = model.CreateAPFollower(d.Actor, u.RawQuery)
-		if err != nil {
-			log.Println("Failed to create AP follower", d.Actor, err)
-			return
-		}
+	err = model.CreateAPFollower(d.Actor, u.RawQuery)
+	if err != nil {
+		log.Println("Failed to create AP follower", d.Actor, err)
+		return
 	}
-	if action == unfollowAction {
-		err = model.DB.Delete(&model.APFollower{}, "name = ? and filter = ?", d.Actor, u.RawQuery).Error
-		if err != nil {
-			log.Println("Failed to delete AP follower", d.Actor, err)
-			return
-		}
+}
+func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+	if !strings.HasPrefix(d.Object.Object, getFullURLPrefix(c)) {
+		log.Println("Inbox request objectID points to different host:", string(payload))
+		return
+	}
+	actor, err := apFetchActor(d.Actor)
+	if err != nil {
+		log.Println("Failed to fetch actor information:", d.Actor, err)
+		return
+	}
+	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
+		log.Println("Failed to validate actor signature:", d.Actor, err)
+		return
+	}
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	data, err := json.Marshal(apFollowResponseItem{
+		Context: "https://www.w3.org/ns/activitystreams",
+		ID:      getFullURL(c, "/"+uuid.New().String()),
+		Type:    "Accept",
+		Object: apFollowResponseObject{
+			ID:     d.ID,
+			Type:   unfollowAction,
+			Actor:  d.Actor,
+			Object: d.Object.ID,
+		},
+	})
+	if err != nil {
+		log.Println("Failed to serialize AP inbox response:", d.Actor, err)
+		return
+	}
+	err = apSendSignedPostRequest(actor.Inbox, d.Object.Object+"#key", data, key)
+	if err != nil {
+		log.Println("Failed to send HTTP request:", d.Actor, err)
+		return
+	}
+	u, err := url.Parse(d.Object.Object)
+	if err != nil {
+		log.Println("Invalid subscription url:", d.Actor, err)
+		return
+	}
+	err = model.DB.Delete(&model.APFollower{}, "name = ? and filter = ?", d.Actor, u.RawQuery).Error
+	if err != nil {
+		log.Println("Failed to delete AP follower", d.Actor, err)
+		return
 	}
 }
 
