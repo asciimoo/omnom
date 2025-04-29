@@ -374,17 +374,26 @@ func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, pay
 		log.Println("Invalid subscription url:", d.Actor, err)
 		return
 	}
-	err = model.CreateAPFollower(d.Actor, u.RawQuery)
-	if err != nil {
-		log.Println("Failed to create AP follower", d.Actor, err)
-		return
+	if action == "Follow" {
+		err = model.CreateAPFollower(d.Actor, u.RawQuery)
+		if err != nil {
+			log.Println("Failed to create AP follower", d.Actor, err)
+			return
+		}
+	}
+	if action == "Undo" {
+		err = model.DB.Delete(&model.APFollower{}, "name = ? and filter = ?", d.Actor, u.RawQuery).Error
+		if err != nil {
+			log.Println("Failed to delete AP follower", d.Actor, err)
+			return
+		}
 	}
 }
 
 func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
 	sh := c.Request.Header.Get("Signature")
 	sigParts := apSigHeaderRe.FindStringSubmatch(sh)
-	if len(sigParts) != 4 {
+	if len(sigParts) < 4 {
 		return "", nil, errors.New("invalid Signature header format: " + sh)
 	}
 	signature := sigParts[3]
