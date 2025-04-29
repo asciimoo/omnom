@@ -26,9 +26,13 @@ import (
 	"github.com/google/uuid"
 )
 
-const apRequestTimeout = 10 * time.Second
+const (
+	apRequestTimeout = 10 * time.Second
+	followAction     = "Follow"
+	unfollowAction   = "Undo"
+)
 
-var apSigHeaderRe = regexp.MustCompile(`keyId="([^"]+)",headers="([^"]+)",signature="([^"]+)"`)
+var apSigHeaderRe = regexp.MustCompile(`keyId="([^"]+)".*,headers="([^"]+)",.*signature="([^"]+)"`)
 
 type apOutbox struct {
 	Context      string         `json:"@context"`
@@ -320,10 +324,10 @@ func apInboxResponse(c *gin.Context) {
 		return
 	}
 	switch d.Type {
-	case "Follow":
-		go apInboxFollowResponse(c, "Follow", d, body)
-	case "Undo":
-		go apInboxFollowResponse(c, "Undo", d, body)
+	case followAction:
+		go apInboxFollowResponse(c, followAction, d, body)
+	case unfollowAction:
+		go apInboxFollowResponse(c, unfollowAction, d, body)
 	default:
 		log.Println("Unhandled ActivityPub inbox message type: " + d.Type)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -374,14 +378,14 @@ func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, pay
 		log.Println("Invalid subscription url:", d.Actor, err)
 		return
 	}
-	if action == "Follow" {
+	if action == followAction {
 		err = model.CreateAPFollower(d.Actor, u.RawQuery)
 		if err != nil {
 			log.Println("Failed to create AP follower", d.Actor, err)
 			return
 		}
 	}
-	if action == "Undo" {
+	if action == unfollowAction {
 		err = model.DB.Delete(&model.APFollower{}, "name = ? and filter = ?", d.Actor, u.RawQuery).Error
 		if err != nil {
 			log.Println("Failed to delete AP follower", d.Actor, err)
