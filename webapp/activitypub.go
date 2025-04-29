@@ -23,6 +23,7 @@ import (
 	"github.com/asciimoo/omnom/model"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 const apRequestTimeout = 10 * time.Second
@@ -121,7 +122,10 @@ type apInboxRequest struct {
 }
 
 type apInboxRequestObject struct {
-	ID string `json:"id"`
+	ID     string `json:"id"`
+	Type   string `json:"type"`
+	Actor  string `json:"actor"`
+	Object string `json:"object"`
 }
 
 type apContext struct {
@@ -313,9 +317,9 @@ func apInboxResponse(c *gin.Context) {
 	}
 	switch d.Type {
 	case "Follow":
-		go apInboxFollowResponse(c, d, body)
-	case "Unfollow":
-		go apInboxUnfollowResponse(c, d)
+		go apInboxFollowResponse(c, "Follow", d, body)
+	case "Undo":
+		go apInboxFollowResponse(c, "Undo", d, body)
 	default:
 		log.Println("Unhandled ActivityPub inbox message type: " + d.Type)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -328,7 +332,7 @@ func apInboxResponse(c *gin.Context) {
 	})
 }
 
-func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+func apInboxFollowResponse(c *gin.Context, action string, d *apInboxRequest, payload []byte) {
 	actor, err := apFetchActor(d.Actor)
 	// validate d.Actor signature
 	if err != nil {
@@ -343,11 +347,11 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 	key := cfg.(*config.Config).ActivityPub.PrivK
 	data, err := json.Marshal(apFollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
-		ID:      d.Object.ID,
+		ID:      getFullURL(c, "/"+uuid.New().String()),
 		Type:    "Accept",
 		Object: apFollowResponseObject{
 			ID:     d.ID,
-			Type:   "Follow",
+			Type:   action,
 			Actor:  d.Actor,
 			Object: d.Object.ID,
 		},
@@ -358,7 +362,7 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 	}
 	err = apSendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
 	if err != nil {
-		log.Println("Failed to send follow response HTTP request:", d.Actor, err)
+		log.Println("Failed to send HTTP request:", d.Actor, err)
 		return
 	}
 	u, err := url.Parse(d.Object.ID)
@@ -371,32 +375,6 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Println("Failed to create AP follower", d.Actor, err)
 		return
 	}
-}
-
-func apCreateFeedID(us string) string {
-	u, err := url.Parse(us)
-	if err != nil {
-		return ""
-	}
-	q := u.Query()
-	s := ""
-	if q.Get("owner") != "" {
-		s += "@user." + q.Get("owner")
-	}
-	if q.Get("domain") != "" {
-		s += "@domain." + q.Get("domain")
-	}
-	if q.Get("tag") != "" {
-		s += "@tag." + strings.ReplaceAll(q.Get("tag"), " ", "_")
-	}
-	if q.Get("query") != "" {
-		s += "@query." + strings.ReplaceAll(q.Get("query"), " ", "_")
-	}
-	return s
-}
-
-func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest) {
-	log.Println("UNFOLLOW", d.Actor, d.Object.ID, c)
 }
 
 func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
@@ -541,6 +519,28 @@ func apWebfingerResponse(c *gin.Context) {
 	}
 }
 
+func apCreateFeedID(us string) string {
+	u, err := url.Parse(us)
+	if err != nil {
+		return ""
+	}
+	q := u.Query()
+	s := ""
+	if q.Get("owner") != "" {
+		s += "@user." + q.Get("owner")
+	}
+	if q.Get("domain") != "" {
+		s += "@domain." + q.Get("domain")
+	}
+	if q.Get("tag") != "" {
+		s += "@tag." + strings.ReplaceAll(q.Get("tag"), " ", "_")
+	}
+	if q.Get("query") != "" {
+		s += "@query." + strings.ReplaceAll(q.Get("query"), " ", "_")
+	}
+	return s
+}
+
 func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 || string(data) == "null" {
 		return nil
@@ -550,7 +550,10 @@ func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
 	}
 	if data[0] == '{' && data[len(data)-1] == '}' {
 		type T struct {
-			ID string `json:"ID"`
+			ID     string `json:"ID"`
+			Type   string `json:"type"`
+			Actor  string `json:"actor"`
+			Object string `json:"object"`
 		}
 		return json.Unmarshal(data, (*T)(i))
 	}
