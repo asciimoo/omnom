@@ -8,84 +8,100 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+)
+
+const (
+	scopeReadUser  ScopeValue = "read:user"
+	scopeUserEmail ScopeValue = "user:email"
 )
 
 type GitHubOAuth struct {
-	AuthURL  AuthURL
-	TokenURL TokenURL
+	AuthURL  string
+	TokenURL string
 }
 
-const scopeReadUser ScopeValue = "read:user"
+func (g GitHubOAuth) Prepare(_ context.Context, _ *PrepareRequest) error { return nil }
 
-func (g GitHubOAuth) Prepare(_ context.Context, _ ConfigurationURL) error { return nil }
-
-func (g GitHubOAuth) GetRedirectURL(clientID ClientID, redirectURI RedirectURI) string {
+func (g GitHubOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	params := &url.Values{}
-	params.Add("client_id", clientID.String())
+
+	params.Add("client_id", req.clientID)
 	params.Add("scope", scopeReadUser.String())
 	params.Add("response_type", responseTypeCode.String())
-	params.Add("redirect_uri", redirectURI.String())
+	params.Add("redirect_uri", req.redirectURI)
 
-	return g.AuthURL.String() + "?" + params.Encode()
+	return g.AuthURL + "?" + params.Encode()
 }
 
-func (g GitHubOAuth) GetScope() (ScopeName, ScopeValue) {
-	return scopeName, scopeReadUser
-}
-
-func (g GitHubOAuth) GetTokenRequest(ctx context.Context, clientID ClientID, clientSecret ClientSecret, code Code, redirectURI RedirectURI) (*http.Request, error) {
+func (g GitHubOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Response, error) {
 	params := &url.Values{}
-	params.Add("client_id", clientID.String())
-	params.Add("client_secret", clientSecret.String())
-	params.Add("code", code.String())
-	params.Add("redirect_uri", redirectURI.String())
 
-	u := fmt.Sprintf("%s?%s", g.TokenURL, params.Encode())
+	params.Add("client_id", req.clientID)
+	params.Add("client_secret", req.clientSecret)
+	params.Add("code", req.code)
+	params.Add("redirect_uri", req.redirectURI)
 
-	return http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
-}
-
-func (g GitHubOAuth) GetUniqueUserID(ctx context.Context, body []byte) (string, error) {
-	v, err := url.ParseQuery(string(body))
+	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodGet, g.TokenURL+"?"+params.Encode(), nil)
 	if err != nil {
-		return "", err
+		return nil, errors.New("github: failed to create token request")
 	}
 
-	t := v.Get("access_token")
-	if t == "" {
-		return "", errors.New("no access token found")
+	return http.DefaultClient.Do(tokenReq)
+}
+
+func (g GitHubOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*UserInfoResponse, error) {
+	v, err := url.ParseQuery(string(response))
+	if err != nil {
+		return nil, fmt.Errorf("github: failed to parse token response: %w", err)
+	}
+
+	accessToken := v.Get("access_token")
+	if accessToken == "" {
+		return nil, errors.New("github: no access token found")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("github: failed to create UserInfo request: %w", err)
 	}
-	req.Header.Set("Authorization", "bearer "+t)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
 
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("github: failed to execute UserInfo request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	uBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("github: failed to read UserInfo response: %w", err)
 	}
 
-	var j map[string]interface{}
+	var uData userData
 
-	err = json.Unmarshal(uBody, &j)
-	if err != nil {
-		return "", err
+	if err := json.Unmarshal(uBody, &uData); err != nil {
+		return nil, fmt.Errorf("github: failed to parse UserInfo response: %w", err)
 	}
 
-	l, ok := j["login"].(string)
-	if !ok {
-		return "", errors.New("failed to get user login data")
+	if len(uData.Login) < 1 {
+		return nil, errors.New("github: failed to get user login from UserInfo")
 	}
 
-	return fmt.Sprintf("gh-%s", l), nil
+	return &UserInfoResponse{
+		UID:      "gh-" + uData.Login,
+		Email:    uData.Email,
+		Username: uData.Login,
+	}, nil
+}
+
+func (g GitHubOAuth) GetScope() (ScopeName, ScopeValue) {
+	str := &strings.Builder{}
+
+	str.WriteString(scopeReadUser.String())
+	str.WriteRune(' ')
+	str.WriteString(scopeUserEmail.String())
+
+	return scopeName, ScopeValue(str.String())
 }
