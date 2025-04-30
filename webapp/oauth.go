@@ -57,7 +57,7 @@ func oauthHandler(c *gin.Context) {
 	sName, sValue := p.GetScope()
 	reqURI := oauth.NewRedirectURIRequest(
 		pCfg.ClientID,
-		fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider")),
+		fmt.Sprintf("%s?provider=%s", getFullURL(c, URLFor("Oauth verification")), c.Query("provider")),
 	)
 
 	c.Redirect(http.StatusFound, fmt.Sprintf("%s&%s=%s&state=%s", p.GetRedirectURL(reqURI), sName, sValue, token))

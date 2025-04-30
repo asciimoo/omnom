@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -79,8 +78,6 @@ func (g GitHubOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*
 	if err != nil {
 		return nil, fmt.Errorf("github: failed to read UserInfo response: %w", err)
 	}
-
-	log.Println("BODY:", string(uBody))
 
 	var uData userData
 
