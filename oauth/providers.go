@@ -12,44 +12,35 @@ const (
 )
 
 type (
-	ClientID         string
-	ClientSecret     string
-	ConfigurationURL string
-	AuthURL          string
-	TokenURL         string
-	UserInfoURL      string
-	Icon             string
-	ScopeName        string
-	ScopeValue       string
-	Code             string
-	ResponseType     string
-	GrantType        string
-	RedirectURI      string
+	ScopeName    string
+	ScopeValue   string
+	ResponseType string
+	GrantType    string
+
+	TokenResponse []byte
+
+	PrepareRequest struct {
+		configurationURL string
+	}
+
+	RedirectURIRequest struct {
+		clientID    string
+		redirectURI string
+	}
+
+	TokenRequest struct {
+		clientID     string
+		clientSecret string
+		code         string
+		redirectURI  string
+	}
+
+	UserInfoResponse struct {
+		UID      string
+		Email    string
+		Username string
+	}
 )
-
-func (c ClientID) String() string {
-	return string(c)
-}
-
-func (c ClientSecret) String() string {
-	return string(c)
-}
-
-func (c ConfigurationURL) String() string {
-	return string(c)
-}
-
-func (a AuthURL) String() string {
-	return string(a)
-}
-
-func (t TokenURL) String() string {
-	return string(t)
-}
-
-func (ui UserInfoURL) String() string {
-	return string(ui)
-}
 
 func (sn ScopeName) String() string {
 	return string(sn)
@@ -57,10 +48,6 @@ func (sn ScopeName) String() string {
 
 func (sv ScopeValue) String() string {
 	return string(sv)
-}
-
-func (c Code) String() string {
-	return string(c)
 }
 
 func (rt ResponseType) String() string {
@@ -71,15 +58,23 @@ func (gt GrantType) String() string {
 	return string(gt)
 }
 
-func (ri RedirectURI) String() string {
-	return string(ri)
+func NewPrepareRequest(cURL string) *PrepareRequest {
+	return &PrepareRequest{configurationURL: cURL}
+}
+
+func NewRedirectURIRequest(clientID string, redirectURI string) *RedirectURIRequest {
+	return &RedirectURIRequest{clientID: clientID, redirectURI: redirectURI}
+}
+
+func NewTokenRequest(clientID string, clientSecret string, code string, redirectURI string) *TokenRequest {
+	return &TokenRequest{clientID: clientID, clientSecret: clientSecret, code: code, redirectURI: redirectURI}
 }
 
 type oauthProvider interface {
-	Prepare(context.Context, ConfigurationURL) error
-	GetRedirectURL(ClientID, RedirectURI) string
-	GetTokenRequest(context.Context, ClientID, ClientSecret, Code, RedirectURI) (*http.Request, error)
-	GetUniqueUserID(context.Context, []byte) (string, error)
+	Prepare(context.Context, *PrepareRequest) error
+	GetRedirectURL(*RedirectURIRequest) string
+	GetToken(context.Context, *TokenRequest) (*http.Response, error)
+	GetUserInfo(context.Context, TokenResponse) (*UserInfoResponse, error)
 	GetScope() (ScopeName, ScopeValue)
 }
 
@@ -89,7 +84,10 @@ type (
 	}
 
 	userData struct {
-		Email string `json:"email"`
+		Email             string `json:"email"`              // all
+		Login             string `json:"login"`              // github
+		Name              string `json:"name"`               // google
+		PreferredUsername string `json:"preferred_username"` // oidc
 	}
 )
 

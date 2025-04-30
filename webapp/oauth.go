@@ -33,9 +33,9 @@ func oauthHandler(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
-	tok := model.GenerateToken()
+	token := model.GenerateToken()
 
-	session.Set("oauth_token", tok)
+	session.Set("oauth_token", token)
 	if session.Save() != nil {
 		setNotification(c, nError, "Session persist error", false)
 		c.Redirect(http.StatusFound, URLFor("Login"))
@@ -46,23 +46,21 @@ func oauthHandler(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	if err := p.Prepare(ctx, pCfg.ConfigurationURL); err != nil {
+	req := oauth.NewPrepareRequest(pCfg.ConfigurationURL)
+	if err := p.Prepare(ctx, req); err != nil {
 		setNotification(c, nError, err.Error(), true)
 		c.Redirect(http.StatusFound, URLFor("Login"))
 
 		return
 	}
 
-	redirectURI := oauth.RedirectURI(
+	sName, sValue := p.GetScope()
+	reqURI := oauth.NewRedirectURIRequest(
+		pCfg.ClientID,
 		fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider")),
 	)
-	sName, sValue := p.GetScope()
-	reqURL := fmt.Sprintf(
-		"%s&%s=%s&state=%s",
-		p.GetRedirectURL(pCfg.ClientID, redirectURI), sName, sValue, tok,
-	)
 
-	c.Redirect(http.StatusFound, reqURL)
+	c.Redirect(http.StatusFound, fmt.Sprintf("%s&%s=%s&state=%s", p.GetRedirectURL(reqURI), sName, sValue, token))
 }
 
 func oauthRedirectHandler(c *gin.Context) {
@@ -85,7 +83,7 @@ func oauthRedirectHandler(c *gin.Context) {
 		tok, _ := t.(string)
 		if tok != oauthToken {
 			setNotification(c, nError, "Invalid OAuth response", false)
-			log.Println("OAuth handler: token mismatch ")
+			log.Println("OAuth handler: token mismatch")
 			c.Redirect(http.StatusFound, URLFor("Login"))
 
 			return
@@ -101,23 +99,10 @@ func oauthRedirectHandler(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	redirectURI := oauth.RedirectURI(
-		fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider")),
-	)
-	code := oauth.Code(c.Query("code"))
+	redirectURI := fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider"))
+	code := c.Query("code")
 
-	req, err := p.GetTokenRequest(ctx, pCfg.ClientID, pCfg.ClientSecret, code, redirectURI)
-	if err != nil {
-		setNotification(c, nError, "Invalid OAuth response", false)
-		log.Println("OAuth handler http request error:", err)
-		c.Redirect(http.StatusFound, URLFor("Login"))
-
-		return
-	}
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
+	resp, err := p.GetToken(ctx, oauth.NewTokenRequest(pCfg.ClientID, pCfg.ClientSecret, code, redirectURI))
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", true)
 		log.Println("OAuth handler http response error:", err)
@@ -127,7 +112,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	tokenBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
 		log.Println("OAuth handler response error:", err)
@@ -136,7 +121,7 @@ func oauthRedirectHandler(c *gin.Context) {
 		return
 	}
 
-	uid, err := p.GetUniqueUserID(ctx, body)
+	userInfo, err := p.GetUserInfo(ctx, tokenBody)
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
 		log.Println("OAuth provider response parse error:", err)
@@ -145,10 +130,11 @@ func oauthRedirectHandler(c *gin.Context) {
 		return
 	}
 
-	u := model.GetUserByOAuthID(uid)
+	u := model.GetUserByOAuthID(userInfo.UID)
 	if u == nil {
-		session.Set("oauth_id", uid)
-		session.Set("email", uid)
+		session.Set("oauth_id", userInfo.UID)
+		session.Set("oauth_email", userInfo.Email)
+		session.Set("oauth_username", userInfo.Username)
 
 		err = session.Save()
 		if err != nil {
