@@ -13,6 +13,8 @@ server:
   # leave blank if you don't have custom base URL
   base_url: ""
   secure_cookie: true
+  # Trust any username sent in this header. Only for use behind an authenticating proxy!
+  # remote_user_header: "Remote-User"
 db:
   type: "sqlite"
   connection: "./db.sqlite3"

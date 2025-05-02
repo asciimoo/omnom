@@ -39,9 +39,10 @@ type App struct {
 }
 
 type Server struct {
-	Address      string `yaml:"address"`
-	BaseURL      string `yaml:"base_url"`
-	SecureCookie bool   `yaml:"secure_cookie"`
+	Address          string `yaml:"address"`
+	BaseURL          string `yaml:"base_url"`
+	SecureCookie     bool   `yaml:"secure_cookie"`
+	RemoteUserHeader string `yaml:"remote_user_header"`
 }
 
 type DB struct {
@@ -120,6 +121,9 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 	err := yaml.Unmarshal(rawConfig, &c)
 	if err != nil {
 		return nil, err
+	}
+	if len(c.OAuth) > 0 && c.Server.RemoteUserHeader != "" {
+		return nil, errors.New("can't specify OAuth providers when remote user header is enabled")
 	}
 	for pn, _ := range c.OAuth {
 		if _, ok := oauth.Providers[pn]; !ok {
