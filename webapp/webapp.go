@@ -285,7 +285,7 @@ func Run(cfg *config.Config) {
 		Secure: cfg.Server.SecureCookie,
 	})
 	e.Use(sessions.Sessions("SID", store))
-	e.Use(SessionMiddleware())
+	e.Use(SessionMiddleware(cfg))
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
 	e.Use(ErrorLoggerMiddleware())
@@ -377,7 +377,28 @@ func authRequiredMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-func SessionMiddleware() gin.HandlerFunc {
+func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
+	if cfg.Server.RemoteUserHeader != "" {
+		// Always trust the username sent in the RemoteUserHeader. The user set
+		// in the session is ignored.
+		header := cfg.Server.RemoteUserHeader
+		return func(c *gin.Context) {
+			// Set the user in the context
+			hUname := c.GetHeader(header)
+			u := model.GetUser(hUname)
+			c.Set("user", u)
+
+			// Update the session if the username wasn't present
+			session := sessions.Default(c)
+			sUname := session.Get(SID)
+			if sUname == nil || sUname.(string) != hUname {
+				session.Set(SID, hUname)
+				_ = session.Save()
+			}
+
+			c.Next()
+		}
+	}
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		uname := session.Get(SID)
