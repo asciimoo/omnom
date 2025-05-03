@@ -214,6 +214,11 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	for k, v := range vars {
 		tplVars[k] = v
 	}
+	allowManualLogin := true
+	if cfg.(*config.Config).Server.RemoteUserHeader != "" {
+		allowManualLogin = false
+	}
+	tplVars["AllowManualLogin"] = allowManualLogin
 	switch c.Query("format") {
 	case "json":
 		renderJSON(c, status, tplVars)

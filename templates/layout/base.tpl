@@ -38,8 +38,10 @@
       <div class="navbar-end">
         {{ if .User }}
             <a href="{{ URLFor "Profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
-            <div class="navbar-item"><a href="{{ URLFor "Logout" }}" class="button is-outlined is-info">Logout</a></div>
-        {{ else }}
+              {{ if .AllowManualLogin }}
+                <div class="navbar-item"><a href="{{ URLFor "Logout" }}" class="button is-outlined is-info">Logout</a></div>
+              {{ end }}
+        {{ else if .AllowManualLogin }}
             <div class="navbar-item"><a href="{{ URLFor "Login" }}" class="button is-outlined is-info">Login</a></div>
             {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ URLFor "Signup" }}" class="button is-outlined is-info">Signup</a></div>{{ end }}
         {{ end }}

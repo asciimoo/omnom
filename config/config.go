@@ -122,8 +122,13 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(c.OAuth) > 0 && c.Server.RemoteUserHeader != "" {
-		return nil, errors.New("can't specify OAuth providers when remote user header is enabled")
+	if c.Server.RemoteUserHeader != "" {
+		if len(c.OAuth) > 0 {
+			return nil, errors.New("can't specify OAuth providers when remote user header is enabled")
+		}
+		if c.App.DisableSignup == false {
+			return nil, errors.New("user signups must be disabled when remote user header is enabled")
+		}
 	}
 	for pn, _ := range c.OAuth {
 		if _, ok := oauth.Providers[pn]; !ok {

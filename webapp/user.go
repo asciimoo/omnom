@@ -39,7 +39,7 @@ func validateUsername(username string) error {
 func signup(c *gin.Context) {
 	cfg, _ := c.Get("config")
 	if cfg.(*config.Config).App.DisableSignup {
-		return
+		c.Redirect(http.StatusFound, baseURL("/"))
 	}
 	session := sessions.Default(c)
 	tplVars := map[string]interface{}{
@@ -109,6 +109,10 @@ func signup(c *gin.Context) {
 }
 
 func login(c *gin.Context) {
+	cfg, _ := c.Get("config")
+	if cfg.(*config.Config).Server.RemoteUserHeader != "" {
+		c.Redirect(http.StatusFound, baseURL("/"))
+	}
 	uname, ok := c.GetPostForm("username")
 	if ok {
 		u := model.GetUser(uname)
