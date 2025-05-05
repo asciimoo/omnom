@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
+	"os"
 	"syscall"
 	"time"
 
@@ -33,14 +33,16 @@ var disabled = false
 var templates = &Templates{}
 
 func Init(c *config.Config) error {
+	tplFS := os.DirFS(c.App.TemplateDir)
+
 	var err error
-	templates.HTML, err = html.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*html.tpl"))
+	templates.HTML, err = html.New("mail").ParseFS(tplFS, "mail/*html.tpl")
 	if err != nil {
-		return errors.New("failed to parse mail templates. Check your template path")
+		return errors.New("failed to parse mail html templates")
 	}
-	templates.Text, err = text.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*txt.tpl"))
+	templates.Text, err = text.New("mail").ParseFS(tplFS, "mail/*txt.tpl")
 	if err != nil {
-		return errors.New("failed to parse mail templates. Set a valid template path in your config file")
+		return errors.New("failed to parse mail text templates")
 	}
 
 	sc := c.SMTP
