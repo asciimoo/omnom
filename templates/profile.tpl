@@ -1,6 +1,7 @@
 {{ define "content" }}
 <div class="content">
-    <h2 class="title">{{ .User.Username }} <span class="is-size-7 is-italic has-text-grey">{{ .User.Email }}</span></h2>
+    <h2 class="title">{{ .User.Username }}
+	<span class="is-size-7 is-italic has-text-grey">{{ or .User.Email "No email provided" }}</span></h2>
     <p>Snapshot storage usage: <strong>{{ .SnapshotsSize | FormatSize }}</strong></p>
     {{ if .DisplayTokens }}
         {{ if not .AddonTokens }}

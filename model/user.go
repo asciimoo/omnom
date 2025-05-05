@@ -11,8 +11,8 @@ import (
 type User struct {
 	CommonFields
 	Username         string     `gorm:"unique" json:"username"`
-	Email            string     `gorm:"unique" json:"email"`
-	OAuthID          string     `gorm:"unique" json:"-"`
+	Email            *string    `gorm:"unique" json:"email"`
+	OAuthID          *string    `gorm:"unique" json:"-"`
 	LoginToken       string     `json:"-"`
 	SubmissionTokens []Token    `json:"-"`
 	Bookmarks        []Bookmark `json:"bookmarks"`
@@ -38,7 +38,7 @@ func GetUserByLoginToken(tok string) *User {
 
 func GetUserByOAuthID(id string) *User {
 	var u User
-	err := DB.Where(&User{OAuthID: id}).First(&u).Error
+	err := DB.Where(&User{OAuthID: &id}).First(&u).Error
 	if err != nil {
 		return nil
 	}
@@ -62,10 +62,14 @@ func CreateUser(username, email string) error {
 	if GetUser(username) != nil {
 		return fmt.Errorf("User already exists")
 	}
+	var dbemail *string
+	if email != "" {
+		dbemail = &email
+	}
 	u := &User{
 		Username:   username,
-		Email:      email,
-		OAuthID:    email,
+		Email:      dbemail,
+		OAuthID:    dbemail,
 		LoginToken: GenerateToken(),
 		SubmissionTokens: []Token{Token{
 			Text: GenerateToken(),
