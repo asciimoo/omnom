@@ -39,7 +39,7 @@ func validateUsername(username string) error {
 func signup(c *gin.Context) {
 	cfg, _ := c.Get("config")
 	if cfg.(*config.Config).App.DisableSignup {
-		return
+		c.Redirect(http.StatusFound, baseURL("/"))
 	}
 	session := sessions.Default(c)
 	tplVars := map[string]interface{}{
@@ -68,7 +68,7 @@ func signup(c *gin.Context) {
 		u := model.GetUser(username)
 		if session.Get("oauth_id") != nil {
 			oauthID, _ := session.Get("oauth_id").(string)
-			u.OAuthID = oauthID
+			u.OAuthID = &oauthID
 			err = model.DB.Save(u).Error
 			if err != nil {
 				setNotification(c, nError, err.Error(), false)
@@ -87,7 +87,7 @@ func signup(c *gin.Context) {
 			return
 		} else {
 			err = mail.Send(
-				u.Email,
+				*u.Email,
 				"Successful registration to Omnom",
 				"login",
 				map[string]interface{}{
@@ -109,6 +109,10 @@ func signup(c *gin.Context) {
 }
 
 func login(c *gin.Context) {
+	cfg, _ := c.Get("config")
+	if cfg.(*config.Config).Server.RemoteUserHeader != "" {
+		c.Redirect(http.StatusFound, baseURL("/"))
+	}
 	uname, ok := c.GetPostForm("username")
 	if ok {
 		u := model.GetUser(uname)
@@ -124,22 +128,26 @@ func login(c *gin.Context) {
 			render(c, http.StatusOK, "login", nil)
 			return
 		}
-		err = mail.Send(
-			u.Email,
-			fmt.Sprintf("Omnom login verification for %s", u.Username),
-			"login",
-			map[string]interface{}{
-				"Token":    u.LoginToken,
-				"Username": u.Username,
-				"BaseURL":  baseURL("/login"),
-			},
-		)
-		if err != nil {
-			setNotification(c, nError, err.Error(), false)
-			render(c, http.StatusOK, "login", nil)
-			return
+		if u.Email != nil {
+			err = mail.Send(
+				*u.Email,
+				fmt.Sprintf("Omnom login verification for %s", u.Username),
+				"login",
+				map[string]interface{}{
+					"Token":    u.LoginToken,
+					"Username": u.Username,
+					"BaseURL":  baseURL("/login"),
+				},
+			)
+			if err != nil {
+				setNotification(c, nError, err.Error(), false)
+				render(c, http.StatusOK, "login", nil)
+				return
+			}
 		}
-		log.Println("New login token generated:", u.LoginToken)
+		cfg, _ := c.Get("config")
+		addr := cfg.(*config.Config).Server.Address
+		log.Printf("Visit %s/login?token=%s to sign in as %s", addr, u.LoginToken, u.Username)
 		render(c, http.StatusOK, "login-confirm", nil)
 		return
 	}

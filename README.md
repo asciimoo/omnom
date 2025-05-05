@@ -35,8 +35,11 @@ Settings can be configured in `config.yml` config file - don't forget to restart
 
 ## User handling
 
-Omnom does not store passwords. Login requires one time login tokens or OAuth.
+Omnom does not store passwords. Login requires one time login token, OAuth, or a remote user header.
+
 Login tokens can be requested via email (this requires a valid SMTP configuration in `config.yml`) through the web interface or can be generated from command line using the `./omnom create-token [username] login`.
+
+If you use Omnom behind a reverse proxy with authentication, you can pass the logged-in username in an HTTP header like `Remote-User` to automatically log in. Omnom can be configured to trust the header by setting the `remote_user_header` option in `config.yml`. Remote user header authentication can't be used with OAuth or open signups.
 
 
 ### Command line tool

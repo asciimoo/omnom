@@ -214,6 +214,11 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	for k, v := range vars {
 		tplVars[k] = v
 	}
+	allowManualLogin := true
+	if cfg.(*config.Config).Server.RemoteUserHeader != "" {
+		allowManualLogin = false
+	}
+	tplVars["AllowManualLogin"] = allowManualLogin
 	switch c.Query("format") {
 	case "json":
 		renderJSON(c, status, tplVars)
@@ -285,7 +290,7 @@ func Run(cfg *config.Config) {
 		Secure: cfg.Server.SecureCookie,
 	})
 	e.Use(sessions.Sessions("SID", store))
-	e.Use(SessionMiddleware())
+	e.Use(SessionMiddleware(cfg))
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
 	e.Use(ErrorLoggerMiddleware())
@@ -377,7 +382,43 @@ func authRequiredMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-func SessionMiddleware() gin.HandlerFunc {
+func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
+	if cfg.Server.RemoteUserHeader != "" {
+		// Always trust the username sent in the RemoteUserHeader. The user set
+		// in the session is ignored.
+		header := cfg.Server.RemoteUserHeader
+		return func(c *gin.Context) {
+			// Set the user in the context
+			hUname := c.GetHeader(header)
+			u := model.GetUser(hUname)
+			// Create a user if it doesn't already exist
+			if hUname == "" {
+				log.Printf("remote user header %q was empty or not present, unable to log user in", header)
+			} else if u == nil {
+				log.Print("Automatically creating user based on remote user header")
+				err := validateUsername(hUname)
+				if err == nil {
+					err = model.CreateUser(hUname, "")
+				}
+				if err == nil {
+					u = model.GetUser(hUname)
+				} else {
+					log.Printf("Failed to automatically create user: %v", err)
+				}
+			}
+			c.Set("user", u)
+
+			// Update the session if the username wasn't present
+			session := sessions.Default(c)
+			sUname := session.Get(SID)
+			if sUname == nil || sUname.(string) != hUname {
+				session.Set(SID, hUname)
+				_ = session.Save()
+			}
+
+			c.Next()
+		}
+	}
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		uname := session.Get(SID)
