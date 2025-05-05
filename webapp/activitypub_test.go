@@ -18,7 +18,6 @@ import (
 var testCfg = &config.Config{
 	App: config.App{
 		LogLevel:    "debug",
-		TemplateDir: "../templates/",
 	},
 	DB: config.DB{
 		Type:       "sqlite",

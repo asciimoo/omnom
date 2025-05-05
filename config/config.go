@@ -33,7 +33,6 @@ type App struct {
 	LogLevel                 string `yaml:"log_level"`
 	ResultsPerPage           int64  `yaml:"results_per_page"`
 	DisableSignup            bool   `yaml:"disable_signup"`
-	TemplateDir              string `yaml:"template_dir"`
 	StaticDir                string `yaml:"static_dir"`
 	CreateBookmarkFromWebapp bool   `yaml:"create_bookmark_from_webapp"`
 	WebappSnapshotterTimeout int    `yaml:"webapp_snapshotter_timeout"`

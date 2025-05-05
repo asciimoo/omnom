@@ -2,7 +2,6 @@ app:
   log_level: "info" # possible values: error, warning, info, debug, trace
   results_per_page: 30
   disable_signup:  false # set to true to restrict user creation to command line
-  template_dir: "./templates"
   static_dir: "./static"
   # requires Chromium-like browser to be in your $PATH
   create_bookmark_from_webapp: true # set to false to allow create bookmark/snapshot only from the addon
