@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/localization"
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/static"
 	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/templates"
 
@@ -346,7 +348,34 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	tplFuncMap["BaseURL"] = baseURL
 	tplFuncMap["URLFor"] = URLFor
 	// ROUTES
-	e.Static("/static", cfg.App.StaticDir)
+
+	// These static routes are a hack to deal with static/data containing snapshot
+	// content. The actual static content uses "embed" which can only embed files that
+	// exist at compile time. Snapshot content isn't known until runtime so we have to
+	// handle it differently.
+	for _, dir := range []string{
+		"css",
+		"docs",
+		"icons",
+		"images",
+		"js",
+		"test",
+		"webfonts",
+	} {
+		sub, err := fs.Sub(static.FS, dir)
+		if err != nil {
+			panic(err)
+		}
+		e.StaticFS(fmt.Sprintf("/static/%s", dir), http.FS(sub))
+	}
+	for _, f := range []string{
+		"omnom.svg",
+		"placeholder-image.png",
+	} {
+		e.StaticFileFS(fmt.Sprintf("/static/%s", f), f, http.FS(static.FS))
+	}
+	// Snapshot content
+	e.Static("/static/data", filepath.Join(cfg.App.StaticDir, "data"))
 	for _, ep := range Endpoints {
 		if ep.AuthRequired {
 			registerEndpoint(authorized, ep)
