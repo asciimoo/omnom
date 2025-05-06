@@ -10,6 +10,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/asciimoo/omnom/config"
 )
 
 type FSStorage struct {
@@ -20,9 +22,9 @@ func New() *FSStorage {
 	return &FSStorage{}
 }
 
-func (s *FSStorage) Init(cfg map[string]string) error {
+func (s *FSStorage) Init(sCfg config.Storage) error {
 	var err error
-	s.baseDir, err = filepath.Abs(cfg["staticDir"] + "/data/")
+	s.baseDir, err = filepath.Abs(sCfg.RootDir)
 	if err != nil {
 		return err
 	}

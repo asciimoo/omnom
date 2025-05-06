@@ -11,7 +11,6 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -375,7 +374,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 		e.StaticFileFS(fmt.Sprintf("/static/%s", f), f, http.FS(static.FS))
 	}
 	// Snapshot content
-	e.Static("/static/data", filepath.Join(cfg.App.StaticDir, "data"))
+	e.Static("/static/data", cfg.Storage.RootDir)
 	for _, ep := range Endpoints {
 		if ep.AuthRequired {
 			registerEndpoint(authorized, ep)

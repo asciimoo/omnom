@@ -10,11 +10,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/storage/fs"
 )
 
 type Storage interface {
-	Init(map[string]string) error
+	Init(sCfg config.Storage) error
 	GetSnapshot(string) io.ReadCloser
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
@@ -36,8 +37,8 @@ var storages = map[string]Storage{
 	"fs": fs.New(),
 }
 
-func Init(sType string, sCfg map[string]string) error {
-	if s, ok := storages[sType]; ok {
+func Init(sCfg config.Storage) error {
+	if s, ok := storages[sCfg.Type]; ok {
 		if err := s.Init(sCfg); err != nil {
 			return err
 		}
