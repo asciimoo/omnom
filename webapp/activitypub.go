@@ -442,11 +442,17 @@ func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
 			// TODO perhaps it is better to use the path information from
 			// the ActivityPub request payload, because c.Request.URL.Path
 			// can be different in case of some weird reverse proxying shenanigans
-			s := fmt.Sprintf("%s %s", method, c.Request.URL.Path)
+			s := fmt.Sprintf("(request-target): %s %s", method, c.Request.URL.Path)
 			if c.Request.URL.RawQuery != "" {
 				s += "?" + c.Request.URL.RawQuery
 			}
 			sigHeaders = append(sigHeaders, s)
+		} else if h == "host" {
+			u, err := url.Parse(getFullURL(c, "/"))
+			if err != nil {
+				return "", nil, err
+			}
+			sigHeaders = append(sigHeaders, "host: "+u.Host)
 		} else {
 			hv := c.Request.Header.Get(strings.Title(h))
 			if h == "digest" {
@@ -457,7 +463,7 @@ func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
 			sigHeaders = append(sigHeaders, fmt.Sprintf("%s: %s", h, hv))
 		}
 	}
-	sigH := []byte(strings.Join(sigHeaders, " "))
+	sigH := []byte(strings.Join(sigHeaders, "\n"))
 	hash := sha256.Sum256(sigH)
 	return signature, hash[:], nil
 }
