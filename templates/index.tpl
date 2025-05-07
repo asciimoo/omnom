@@ -2,7 +2,7 @@
 <div class="hero is-medium">
     <div class="hero-body">
         <div class="columns">
-            <div class="column is-2 has-text-right">
+            <div class="column is-2 has-text-right-tablet has-text-centered-mobile">
                 <img src="{{ BaseURL "/static/images/omnom_logo_1024_white.png" }}" class="logo" />
             </div>
             <div class="column is-10">
@@ -25,9 +25,7 @@
         </div>
     </div>
 </div>
-<div class="container mt-6">
-    <div class="columns has-text-centered">
-        <div class="column is-12">
+<div class="container mt-6 has-text-centered">
             <h3 class="title is-3">Download extension</h3>
             <p>
                 Browser extensions are required to create bookmarks & snapshots. Install the extension to your browser and enjoy Omnoming.
@@ -48,7 +46,5 @@
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
 </div>
 {{ end }}

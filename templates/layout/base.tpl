@@ -11,6 +11,7 @@
     {{ block "head" . }} {{ end }}
 </head>
 <body id="omnom-webapp">
+<div class="webapp__content {{ block "content-class" . }}{{ end }}">
 <nav class="navbar {{ block "content-class" . }}{{ end }}{{ if ne .Page "index" }} shadow-bottom{{ end }}" role="navigation" aria-label="main navigation">
   <div class="navbar__container">
     <div class="navbar-brand is-size-4">
@@ -50,7 +51,6 @@
   </div>
 </nav>
 
-<div class="webapp__content {{ block "content-class" . }}{{ end }}">
     {{ if .Error }}
     <div class="section">{{ block "error" .Error }}{{ end }}</div>
     {{ end }}

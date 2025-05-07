@@ -1,7 +1,7 @@
 html {
-    overflow-y: hidden;
     width: 100%;
     height: 100%;
+    overflow: auto;
     min-height: 100%;
     // This defines what 1rem is
     font-size: 100%; //1 rem = 10px; 10px/16px = 62.5%
@@ -16,12 +16,12 @@ html {
         font-size: 62.5%;
     }
 
-    @include respond(big-desktop) {
+    @include respond(desktop) {
         font-size: 90%;
     }
 }
 
-@media (min-width: 768px) {
+@include respond(phone) {
   .bookmark-list {
     padding-left: 2em;
   }
@@ -30,7 +30,10 @@ html {
   }
 }
 
-@media (max-width: 768px) {
+@include respond(phone) {
+  .bookmark__actions {
+    min-width: 100%;
+  }
   .bookmark__actions details > div {
     left: 0;
   }
@@ -38,14 +41,18 @@ html {
 
 
 .bookmark-filter {
-  border-right: 1px solid $color-gray;
+  position: sticky;
+  top: 5em;
+  align-self: flex-start;
+  background: white;
+  z-index: 2000;
+  @include respond(phone) {
+    position: initial;
+  }
 }
 
 #omnom-webapp {
-    height: 100% !important;
-    display: flex;
-    flex-flow: column;
-    overflow: auto;
+    height: 100%;
     background-color: #f1f2ee;
 
     .navbar-item,
@@ -60,6 +67,8 @@ html {
     }
 
     .navbar {
+        display: flex;
+        z-index: 3000;
         a {
             color: $color-white !important;
             font-weight: 500;
@@ -83,6 +92,12 @@ summary {
 
 #nav-toggle-state:checked~.navbar-menu {
     display: block;
+    width: 100%;
+    background: transparent;
+}
+
+#nav-toggle-state:checked~.navbar-menu .navbar-item {
+  padding: 1em;
 }
 .navbar-burger span {
     background-color: $color-white !important;
@@ -94,6 +109,7 @@ summary {
 }
 
 .webapp__main-container {
+    flex: 1 0 auto;
     padding-top: 0 !important;
 }
 
@@ -121,7 +137,7 @@ a.navbar-item.is-active {
 }
 
 .shadow-bottom {
-    box-shadow: 0px 1px 4px 1px #d9d9d9
+    box-shadow: 0 0.1em 1em 0.1em #494949
 }
 
 .description {
@@ -156,6 +172,7 @@ iframe {
 .navbar {
     position: sticky !important;
     top: 0;
+    width: 100%;
     &__logo {
         @extend %omnomTitle;
         margin-right: 3rem;
@@ -169,6 +186,14 @@ iframe {
         align-items: center;
         justify-content: space-between;
     }
+}
+
+.webapp {
+  &__content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .my-bookmarks {
@@ -398,14 +423,6 @@ iframe {
     }
 }
 
-.webapp {
-    &__content {
-        height: 100%;
-        display: flex;
-        flex-flow: column;
-    }
-}
-
 
 .next-section {
     font-size: 2rem;
@@ -456,7 +473,7 @@ iframe {
 }
 
 .footer {
-    margin-top: auto;
+    flex-shrink: 0;
     a, a:hover {
         color: $color-orange;
     }
@@ -469,15 +486,6 @@ iframe {
     min-height: 4.8rem !important;
     background-color: $alternative-color;
 	background: linear-gradient(90deg, $alternative-color 10%, rgba(52,121,134,1) 100%);
-}
-
-.navbar-menu {
-    @include respond('tab-port'){
-        position: absolute;
-        top: 3.5rem;
-        left:13rem;
-        background-color: $alternative-color;
-    }
 }
 .resources {
   word-break: break-all;

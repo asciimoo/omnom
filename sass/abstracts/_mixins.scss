@@ -10,7 +10,7 @@ $breakpoint arguement choices:
 - phone
 - tab-port
 - tab-land
-- big-desktop
+- desktop
 
 ORDER: Base + typography > general layout + grid > page layout > components
 
@@ -49,8 +49,8 @@ ORDER: Base + typography > general layout + grid > page layout > components
         ; //1200px
     }
 
-    @if $breakpoint==big-desktop {
-        @media only screen and (min-width: 112.5em) {
+    @if $breakpoint==desktop {
+        @media only screen and (min-width: 75em) {
             @content
         }
 
