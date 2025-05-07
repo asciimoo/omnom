@@ -28,9 +28,6 @@ html {
   .bookmark-wrapper {
     padding: 2em;
   }
-}
-
-@include respond(phone) {
   .bookmark__actions {
     min-width: 100%;
   }
@@ -78,7 +75,7 @@ html {
 
 .bookmark-wrapper {
   background: $color-white;
-  padding: 1em;
+  padding: 2em 1em;
 }
 
 summary {
@@ -171,8 +168,12 @@ iframe {
 
 .navbar {
     position: sticky !important;
+    align-self: self-start;
     top: 0;
     width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
     &__logo {
         @extend %omnomTitle;
         margin-right: 3rem;
@@ -185,12 +186,14 @@ iframe {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        background: linear-gradient(90deg, $alternative-color 10%, rgba(52,121,134,1) 100%);
     }
 }
 
 .webapp {
   &__content {
-    height: 100%;
+    min-height: 100%;
+    height: auto;
     display: flex;
     flex-direction: column;
   }
@@ -483,7 +486,6 @@ iframe {
 }
 
 .navbar{
-    min-height: 4.8rem !important;
     background-color: $alternative-color;
 	background: linear-gradient(90deg, $alternative-color 10%, rgba(52,121,134,1) 100%);
 }

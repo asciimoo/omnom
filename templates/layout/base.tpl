@@ -12,11 +12,12 @@
 </head>
 <body id="omnom-webapp">
 <div class="webapp__content {{ block "content-class" . }}{{ end }}">
-<nav class="navbar {{ block "content-class" . }}{{ end }}{{ if ne .Page "index" }} shadow-bottom{{ end }}" role="navigation" aria-label="main navigation">
-  <div class="navbar__container">
+<nav class="navbar {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
+  <div class="navbar__container{{ if ne .Page "index" }} shadow-bottom{{ end }}">
     <div class="navbar-brand is-size-4">
       <a class="navbar__logo" href="{{ URLFor "Index" }}"><span>om</span><span class="text--primary">nom</span> </a>
       <label for="nav-toggle-state" role="button" class="navbar-burger burger has-text-black" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
