@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -21,6 +20,7 @@ import (
 	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-contrib/sessions"
@@ -277,10 +277,8 @@ func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
 }
 
 func Run(cfg *config.Config) {
+	gin.SetMode(gin.ReleaseMode)
 	e = gin.Default()
-	if !cfg.App.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	}
 	if cfg.App.ResultsPerPage > 0 {
 		resultsPerPage = cfg.App.ResultsPerPage
 	}
@@ -312,7 +310,7 @@ func Run(cfg *config.Config) {
 				return baseURL(ep.Path)
 			}
 		}
-		log.Printf("Error: Endpoint '%s' not found", e)
+		log.Error().Str("Endpoint", e).Msg("Not found")
 		return "/"
 	}
 	tplFuncMap["BaseURL"] = baseURL
@@ -330,10 +328,10 @@ func Run(cfg *config.Config) {
 	}
 	e.NoRoute(notFoundView)
 
-	log.Println("Starting server")
+	log.Info().Str("Address", cfg.Server.Address).Msg("Starting server")
 	err := e.Run(cfg.Server.Address)
 	if err != nil {
-		log.Printf("Error running server: %+v\n", err)
+		log.Error().Err(err).Msg("Cannot start server")
 	}
 }
 
@@ -393,9 +391,9 @@ func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
 			u := model.GetUser(hUname)
 			// Create a user if it doesn't already exist
 			if hUname == "" {
-				log.Printf("remote user header %q was empty or not present, unable to log user in", header)
+				log.Error().Msgf("remote user header %q was empty or not present, unable to log user in", header)
 			} else if u == nil {
-				log.Print("Automatically creating user based on remote user header")
+				log.Debug().Msgf("Automatically creating user '%s' based on remote user header", hUname)
 				err := validateUsername(hUname)
 				if err == nil {
 					err = model.CreateUser(hUname, "")
@@ -403,7 +401,7 @@ func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
 				if err == nil {
 					u = model.GetUser(hUname)
 				} else {
-					log.Printf("Failed to automatically create user: %v", err)
+					log.Error().Err(err).Msg("Failed to automatically create user")
 				}
 			}
 			c.Set("user", u)

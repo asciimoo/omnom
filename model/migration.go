@@ -5,9 +5,9 @@
 package model
 
 import (
-	"log"
-
 	"github.com/asciimoo/omnom/storage"
+
+	"github.com/rs/zerolog/log"
 )
 
 var migrationFunctions = []func() error{
@@ -15,7 +15,6 @@ var migrationFunctions = []func() error{
 }
 
 func migrate() error {
-	log.Println("Checking DB migrations")
 	var dbVer int64
 	err := DB.Model(&Database{}).
 		Select("version").
@@ -23,22 +22,25 @@ func migrate() error {
 	if err != nil {
 		DB.Save(&Database{Version: 0})
 	}
+	migCount := 0
 	for i, m := range migrationFunctions {
 		if int64(i) >= dbVer {
-			log.Println("Migrating DB to version ", i+1)
+			log.Info().Msgf("Migrating DB to version %d", i+1)
 			err := m()
 			if err != nil {
 				return err
 			}
 			dbVer = int64(i) + 1
 			DB.Model(&Database{}).Where("id = 1").Update("version", dbVer)
+			migCount += 1
 		}
 	}
+	log.Debug().Int("Migrations performed", migCount).Msg("DB migrations completed")
 	return nil
 }
 
 func addSnapshotSizes() error {
-	log.Println("updating snapshot sizes")
+	log.Debug().Msg("Updating snapshot sizes")
 	var snapshotsWithoutSize []string
 	DB.Model(&Snapshot{}).Distinct().
 		Select("key").

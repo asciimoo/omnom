@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -76,7 +75,6 @@ func (g GitHubOAuth) GetUniqueUserID(ctx context.Context, body []byte) (string, 
 		return "", err
 	}
 
-	log.Println("BODY:", string(uBody))
 	var j map[string]interface{}
 
 	err = json.Unmarshal(uBody, &j)

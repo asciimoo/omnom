@@ -6,11 +6,11 @@ package model
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/asciimoo/omnom/config"
 
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -19,13 +19,11 @@ import (
 )
 
 var DB *gorm.DB
-var debug = false //nolint: unused // it is used in Init
 
 func Init(c *config.Config) error {
 	dbCfg := &gorm.Config{}
-	if c.App.Debug {
-		debug = true
-		log.Println("Using database", c.DB.Connection)
+	log.Debug().Str("Database", c.DB.Connection).Msg("")
+	if c.App.DebugSQL {
 		dbCfg.Logger = logger.Default.LogMode(logger.Info)
 	}
 	var err error

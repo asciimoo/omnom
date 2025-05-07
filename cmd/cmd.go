@@ -17,6 +17,8 @@ import (
 	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/webapp"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +36,7 @@ func initDB(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
+	log.Debug().Msg("DB initialization complete")
 }
 
 func initStorage() {
@@ -44,6 +47,37 @@ func initStorage() {
 	if err != nil {
 		panic(err)
 	}
+	log.Debug().Msg("Storage initialization complete")
+}
+
+func initLog() {
+	switch cfg.App.LogLevel {
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "warning":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		log.Warn().Str("Invalid config log level", cfg.App.LogLevel)
+	}
+	out := zerolog.ConsoleWriter{
+		Out: os.Stderr,
+		FormatTimestamp: func(i interface{}) string {
+			return i.(string)
+		},
+		FormatLevel: func(i interface{}) string {
+			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
+		},
+	}
+	log.Logger = log.With().Caller().Logger()
+	log.Logger = log.Output(out)
+
 }
 
 func initMail() error {
@@ -296,7 +330,7 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yml", "config file (default paths: ./config.yml or $HOME/.omnomrc or $HOME/.config/omnom/config.yml)")
 
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "turn on debug mode")
+	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "set log level (possible options: error, warning, info, debug, trace)")
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createUserCmd)
 	rootCmd.AddCommand(createTokenCmd)
@@ -321,7 +355,14 @@ func init() {
 	listenCmd.Flags().Uint("smtp-send-timeout", 10, "SMTP send timeout (seconds)")
 	listenCmd.Flags().Uint("smtp-connection-timeout", 5, "SMTP connection timeout (seconds)")
 
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initialize)
+}
+
+func initialize() {
+	initConfig()
+	initLog()
+	log.Debug().Msg("Config initialization complete")
+	log.Debug().Msg("Logging initialization complete")
 }
 
 func initConfig() {
@@ -331,8 +372,9 @@ func initConfig() {
 		fmt.Println("Failed to initialize config:", err)
 		os.Exit(2)
 	}
-	if b, _ := rootCmd.PersistentFlags().GetBool("debug"); b {
-		cfg.App.Debug = true
+	if l, _ := rootCmd.PersistentFlags().GetString("log-level"); l != "" && (rootCmd.Flags().Changed("log-level") || cfg.App.LogLevel == "") {
+		fmt.Println("YO")
+		cfg.App.LogLevel = l
 	}
 }
 

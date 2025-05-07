@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -24,6 +23,7 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -201,16 +201,16 @@ func createBookmark(c *gin.Context) {
 		jsPath := path.Join(cfg.(*config.Config).App.StaticDir, "js", "snapshot.js")
 		b, err := os.ReadFile(jsPath)
 		if err != nil {
-			log.Fatal(err)
+			log.Error().Err(err).Msg("Failed to read snapshot.js")
 		}
 		snapshotJS = string(b)
 	}
 
 	ctx, cancel := chromedp.NewContext(
 		context.Background(),
-		chromedp.WithLogf(log.Printf),
+		//chromedp.WithLogf(log.Printf),
 		//chromedp.WithDebugf(log.Printf),
-		chromedp.WithErrorf(log.Printf),
+		//chromedp.WithErrorf(log.Printf),
 	)
 	defer cancel()
 	to := cfg.(*config.Config).App.WebappSnapshotterTimeout

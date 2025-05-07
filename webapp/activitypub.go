@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -173,7 +173,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	baseU := getFullURLPrefix(c)
 	u, err := parseURL(baseU + c.Request.URL.String())
 	if err != nil {
-		log.Println("ActivityPub URL parse error", err)
+		log.Error().Err(err).Msg("Failed to parse URL")
 		return
 	}
 
@@ -192,11 +192,11 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 
 	j, err := json.Marshal(resp)
 	if err != nil {
-		log.Println("ActivityPub JSON serialization error", err)
+		log.Error().Err(err).Msg("Failed to serialize JSON")
 	}
 	_, err = c.Writer.Write(j)
 	if err != nil {
-		log.Println("ActivityPub ident write error", err)
+		log.Error().Err(err).Msg("Failed to write response")
 	}
 }
 
@@ -246,13 +246,13 @@ func apIdentityResponse(c *gin.Context) {
 	id := getFullURL(c, c.Request.URL.String())
 	u, err := parseURL(id)
 	if err != nil {
-		log.Println("ActivityPub URL parse error", err)
+		log.Error().Err(err).Msg("Failed to parse URL")
 		return
 	}
 	cfg, _ := c.Get("config")
 	pk, err := cfg.(*config.Config).ActivityPub.ExportPubKey()
 	if err != nil {
-		log.Println("ActivityPub JSON serialization error", err)
+		log.Error().Err(err).Msg("Failed to serialize JSON")
 		return
 	}
 	inbox := getFullURL(c, URLFor("ActivityPub inbox"))
@@ -288,11 +288,11 @@ func apIdentityResponse(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		log.Println("ActivityPub JSON serialization error", err)
+		log.Error().Err(err).Msg("Failed to serialize JSON")
 	}
 	_, err = c.Writer.Write(j)
 	if err != nil {
-		log.Println("ActivityPub ident write error")
+		log.Error().Err(err).Msg("Failed to write response")
 	}
 }
 
@@ -300,7 +300,7 @@ func apInboxResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	body, err := c.GetRawData()
 	if err != nil {
-		log.Println("Can't get Inbox request body:", err)
+		log.Error().Err(err).Msg("Failed to fetch Inbox request body")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -309,14 +309,15 @@ func apInboxResponse(c *gin.Context) {
 	d := &apInboxRequest{}
 	err = json.Unmarshal(body, d)
 	if err != nil {
-		log.Println("Can't parse request json:", err, string(body))
+		log.Error().Err(err).Msg("Failed to parse JSON")
+		log.Debug().Msg(string(body))
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 	if d.Object.ID == "" || d.Actor == "" {
-		log.Println("Inbox request has missing objectID or actor:", string(body))
+		log.Error().Bytes("body", body).Msg("Inbox request has missing objectID or actor")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Missing attributes",
 		})
@@ -328,7 +329,7 @@ func apInboxResponse(c *gin.Context) {
 	case unfollowAction:
 		go apInboxUnfollowResponse(c, d, body)
 	default:
-		log.Println("Unhandled ActivityPub inbox message type: " + d.Type)
+		log.Info().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message type")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Unknown action type",
 		})
@@ -341,16 +342,16 @@ func apInboxResponse(c *gin.Context) {
 
 func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
-		log.Println("Inbox request objectID points to different host:", string(payload))
+		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
 		return
 	}
 	actor, err := apFetchActor(d.Actor)
 	if err != nil {
-		log.Println("Failed to fetch actor information:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
 		return
 	}
 	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
-		log.Println("Failed to validate actor signature:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
 	cfg, _ := c.Get("config")
@@ -367,37 +368,37 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		},
 	})
 	if err != nil {
-		log.Println("Failed to serialize AP inbox response:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to serialize AP inbox response")
 		return
 	}
 	err = apSendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
 	if err != nil {
-		log.Println("Failed to send HTTP request:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to send HTTP request")
 		return
 	}
 	u, err := url.Parse(d.Object.ID)
 	if err != nil {
-		log.Println("Invalid subscription url:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to parse URL")
 		return
 	}
 	err = model.CreateAPFollower(d.Actor, u.RawQuery)
 	if err != nil {
-		log.Println("Failed to create AP follower", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to create AP follower")
 		return
 	}
 }
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 	if !strings.HasPrefix(d.Object.Object, getFullURLPrefix(c)) {
-		log.Println("Inbox request objectID points to different host:", string(payload))
+		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
 		return
 	}
 	actor, err := apFetchActor(d.Actor)
 	if err != nil {
-		log.Println("Failed to fetch actor information:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
 		return
 	}
 	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
-		log.Println("Failed to validate actor signature:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
 	cfg, _ := c.Get("config")
@@ -414,22 +415,22 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		},
 	})
 	if err != nil {
-		log.Println("Failed to serialize AP inbox response:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to serialize AP inbox response")
 		return
 	}
 	err = apSendSignedPostRequest(actor.Inbox, d.Object.Object+"#key", data, key)
 	if err != nil {
-		log.Println("Failed to send HTTP request:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to send HTTP request")
 		return
 	}
 	u, err := url.Parse(d.Object.Object)
 	if err != nil {
-		log.Println("Invalid subscription url:", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to parse URL")
 		return
 	}
 	err = model.DB.Delete(&model.APFollower{}, "name = ? and filter = ?", d.Actor, u.RawQuery).Error
 	if err != nil {
-		log.Println("Failed to delete AP follower", d.Actor, err)
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to delete AP follower")
 		return
 	}
 }
@@ -441,7 +442,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 	var followers []*model.APFollower
 	err := model.DB.Model(&model.APFollower{}).Find(&followers).Error
 	if err != nil {
-		log.Println("Failed to fetch followers", err)
+		log.Error().Err(err).Msg("Failed to fetch followers")
 		return
 	}
 	cfg, _ := c.Get("config")
@@ -449,7 +450,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 	for _, f := range followers {
 		kv, err := url.ParseQuery(f.Filter)
 		if err != nil {
-			log.Println("Failed to parse URL", err)
+			log.Error().Err(err).Msg("Failed to parse URL")
 			return
 		}
 		match := true
@@ -501,20 +502,20 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 		}
 		data, err := json.Marshal(item)
 		if err != nil {
-			log.Println("Failed to marshal bookmark:", err)
+			log.Error().Err(err).Msg("Failed to marshal bookmark")
 			continue
 		}
 		actor, err := apFetchActor(f.Name)
 		if err != nil {
-			log.Println("Failed to fetch actor:", err)
+			log.Error().Err(err).Msg("Failed to fetch actor")
 			continue
 		}
 		err = apSendSignedPostRequest(actor.Inbox, item.Object.ID+"#key", data, key)
 		if err != nil {
-			log.Println("Failed to send HTTP request:", f.Name, err)
+			log.Error().Err(err).Str("actor", f.Name).Msg("Failed to send HTTP request")
 			continue
 		}
-		log.Println("Bookmark sent to inbox", f.Name, err)
+		log.Debug().Str("actor", f.Name).Msg("Bookmark sent to inbox")
 	}
 	return
 }
@@ -600,14 +601,14 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	sigHash := sha256.Sum256(sigData)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
 	if err != nil {
-		log.Println("Can't sign request data:", err)
+		log.Error().Err(err).Msg("Failed to sign request data")
 		return err
 	}
 	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date digest",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
 	cli := &http.Client{Timeout: apRequestTimeout}
 	req, err := http.NewRequest("POST", us, bytes.NewReader(data))
 	if err != nil {
-		log.Println("Can't create signed POST request:", err)
+		log.Error().Err(err).Msg("Failed to create signed POST request")
 		return err
 	}
 	req.Header.Set("Host", u.Host)
@@ -618,13 +619,13 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	req.Header.Set("Accept", "application/activity+json; charset=utf-8")
 	r, err := cli.Do(req)
 	if err != nil {
-		log.Println("Failed to send follow accept response:", err)
+		log.Error().Err(err).Msg("Failed to send accept response")
 		return err
 	}
 	defer r.Body.Close()
 	rb, _ := io.ReadAll(r.Body)
 	if bytes.Contains(rb, []byte("error")) {
-		log.Println("Follow accept response contains error:", string(rb))
+		log.Error().Bytes("payload", rb).Msg("Accept response contains error")
 		return errors.New("invalid response")
 	}
 	return nil
@@ -660,11 +661,11 @@ func apWebfingerResponse(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		log.Println("Webfinger JSON serialization error", err)
+		log.Error().Err(err).Msg("Failed to serialize JSON")
 	}
 	_, err = c.Writer.Write(j)
 	if err != nil {
-		log.Println("ActivityPub webfinger write error")
+		log.Error().Msg("Failed to write response")
 	}
 }
 

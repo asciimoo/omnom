@@ -8,15 +8,16 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/oauth"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 func oauthHandler(c *gin.Context) {
@@ -85,14 +86,14 @@ func oauthRedirectHandler(c *gin.Context) {
 		tok, _ := t.(string)
 		if tok != oauthToken {
 			setNotification(c, nError, "Invalid OAuth response", false)
-			log.Println("OAuth handler: token mismatch ")
+			log.Error().Msg("OAuth handler: token mismatch")
 			c.Redirect(http.StatusFound, URLFor("Login"))
 
 			return
 		}
 	} else {
 		setNotification(c, nError, "Invalid OAuth response", false)
-		log.Println("OAuth handler: missing token")
+		log.Error().Msg("OAuth handler: missing token")
 		c.Redirect(http.StatusFound, URLFor("Login"))
 
 		return
@@ -109,7 +110,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	req, err := p.GetTokenRequest(ctx, pCfg.ClientID, pCfg.ClientSecret, code, redirectURI)
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
-		log.Println("OAuth handler http request error:", err)
+		log.Error().Err(err).Msg("Invalid OAuth response")
 		c.Redirect(http.StatusFound, URLFor("Login"))
 
 		return
@@ -120,7 +121,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	resp, err := client.Do(req)
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", true)
-		log.Println("OAuth handler http response error:", err)
+		log.Error().Err(err).Msg("Invalid OAuth HTTP response")
 		c.Redirect(http.StatusFound, URLFor("Login"))
 
 		return
@@ -130,7 +131,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
-		log.Println("OAuth handler response error:", err)
+		log.Error().Err(err).Msg("Invalid OAuth response body")
 		c.Redirect(http.StatusFound, URLFor("Login"))
 
 		return
@@ -139,7 +140,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	uid, err := p.GetUniqueUserID(ctx, body)
 	if err != nil {
 		setNotification(c, nError, "Invalid OAuth response", false)
-		log.Println("OAuth provider response parse error:", err)
+		log.Error().Err(err).Msg("Invalid OAuth response data")
 		c.Redirect(http.StatusFound, URLFor("Login"))
 
 		return

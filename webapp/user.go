@@ -7,7 +7,6 @@ package webapp
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
@@ -145,9 +145,7 @@ func login(c *gin.Context) {
 				return
 			}
 		}
-		cfg, _ := c.Get("config")
-		addr := cfg.(*config.Config).Server.Address
-		log.Printf("Visit %s/login?token=%s to sign in as %s", addr, u.LoginToken, u.Username)
+		log.Debug().Str("username", u.Username).Msgf("Visit %s?token=%s to sign in", getFullURL(c, "login"), u.LoginToken)
 		render(c, http.StatusOK, "login-confirm", nil)
 		return
 	}
@@ -251,7 +249,7 @@ func deleteAddonToken(c *gin.Context) {
 
 func checkAddonToken(c *gin.Context) {
 	tok := c.PostForm("token")
-	log.Printf("'%v'\n", tok)
+	log.Debug().Msgf("token: '%v'", tok)
 	var t model.Token
 	err := model.DB.Where("text = ?", tok).First(&t).Error
 	if err != nil {

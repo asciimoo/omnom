@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/css"
 )
@@ -122,7 +122,7 @@ func downloadSnapshot(c *gin.Context) {
 			if errors.Is(err, io.EOF) {
 				return
 			}
-			log.Println("Error: unexpected error while parsing")
+			log.Error().Err(err).Msg("Failed to parse HTML")
 			return
 		case html.SelfClosingTagToken:
 		case html.StartTagToken:
@@ -175,7 +175,7 @@ func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 						err = writeB64(gres, out)
 					}
 					if err != nil {
-						log.Println("Error: IO error", href, err)
+						log.Error().Err(err).Str("href", href).Msg("IO error")
 					}
 				}
 			} else {
@@ -215,7 +215,7 @@ func generateCSS(in io.Reader) io.Reader {
 					writeBytes(out, []byte(fmt.Sprintf("url(\"data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])))
 					err := writeB64(res, out)
 					if err != nil {
-						log.Println("Error: CSS IO error", err)
+						log.Error().Err(err).Msg("CSS IO error")
 					}
 					writeBytes(out, []byte("\")"))
 				} else {
@@ -236,7 +236,7 @@ func writeB64(in io.Reader, out io.Writer) error {
 	bw := base64.NewEncoder(base64.StdEncoding, out)
 	// TODO configure file size
 	if _, err := io.CopyN(bw, in, 1024*1024); err != nil && !errors.Is(err, io.EOF) {
-		log.Println("Error: IO copy error", err)
+		log.Error().Err(err).Msg("IO copy error")
 		return err
 	}
 	defer bw.Close()
@@ -252,7 +252,7 @@ func attributeHasResource(tag, name, val []byte) bool {
 
 func writeBytes(w io.Writer, data []byte) bool {
 	if l, err := w.Write(data); err != nil || l != len(data) {
-		log.Println("Error: IO error")
+		log.Error().Err(err).Msg("IO error")
 		return false
 	}
 	return true
