@@ -77,7 +77,6 @@ func initLog() {
 	}
 	log.Logger = log.With().Caller().Logger()
 	log.Logger = log.Output(out)
-
 }
 
 func initMail() error {
