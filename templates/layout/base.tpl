@@ -125,13 +125,13 @@
 <div class="media bookmark__container">
     <div class="bookmark__header">
       <div class="bookmark__title">
-        {{ if .Bookmark.Favicon }}
         <div class="bookmark__favicon">
             <span class="icon">
+            {{ if .Bookmark.Favicon }}
               <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
+            {{ end }}
             </span>
         </div>
-        {{ end }}
           <h4 class="title">
               <a href="{{ .Bookmark.URL }}" target="_blank">
                 {{ .Bookmark.Title }}
