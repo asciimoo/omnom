@@ -24,22 +24,27 @@ type Bookmark struct {
 	User      User       `json:"-"`
 }
 
-func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon string) (*Bookmark, error) {
+func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon string) (*Bookmark, bool, error) {
 	url, err := url.Parse(urlString)
+	new := false
 	if err != nil || url.Hostname() == "" || url.Scheme == "" {
-		return nil, errors.New("invalid URL")
+		return nil, new, errors.New("invalid URL")
 	}
 	var b *Bookmark = nil
 	r := DB.
 		Model(&Bookmark{}).
 		Preload("Snapshots").
+		Preload("Tags").
+		Preload("User").
 		Where("url = ? and user_id = ?", url.String(), u.ID).
 		First(&b)
 	if r.RowsAffected >= 1 {
-		return b, nil
+		return b, new, nil
+	} else {
+		new = true
 	}
 	if title == "" {
-		return nil, errors.New("missing title")
+		return nil, new, errors.New("missing title")
 	}
 	b = &Bookmark{
 		Title:     title,
@@ -64,7 +69,7 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 		}
 	}
 	if err := DB.Save(b).Error; err != nil {
-		return nil, err
+		return nil, new, err
 	}
-	return b, nil
+	return b, new, nil
 }

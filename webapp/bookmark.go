@@ -236,7 +236,7 @@ func createBookmark(c *gin.Context) {
 		return
 	}
 
-	b, err := model.GetOrCreateBookmark(
+	b, new, err := model.GetOrCreateBookmark(
 		u,
 		c.PostForm("url"),
 		c.PostForm("title"),
@@ -286,6 +286,9 @@ func createBookmark(c *gin.Context) {
 		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
 		return
 	}
+	if new {
+		go apNotifyFollowers(c, b, s)
+	}
 
 	setNotification(c, nInfo, "Bookmark successfully created", true)
 	c.Redirect(http.StatusFound, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
@@ -302,7 +305,7 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	b, err := model.GetOrCreateBookmark(
+	b, new, err := model.GetOrCreateBookmark(
 		u,
 		c.PostForm("url"),
 		c.PostForm("title"),
@@ -358,6 +361,9 @@ func addBookmark(c *gin.Context) {
 				"error": err.Error(),
 			})
 			return
+		}
+		if new {
+			go apNotifyFollowers(c, b, s)
 		}
 		sSize = s.Size
 		sKey = key

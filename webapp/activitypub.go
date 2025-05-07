@@ -35,12 +35,12 @@ const (
 var apSigHeaderRe = regexp.MustCompile(`keyId="([^"]+)".*,headers="([^"]+)",.*signature="([^"]+)"`)
 
 type apOutbox struct {
-	Context      string         `json:"@context"`
-	ID           string         `json:"id"`
-	Type         string         `json:"type"`
-	Summary      string         `json:"summary"`
-	TotalItems   int64          `json:"totalItems"`
-	OrderedItems []apOutboxItem `json:"orderedItems"`
+	Context      string          `json:"@context"`
+	ID           string          `json:"id"`
+	Type         string          `json:"type"`
+	Summary      string          `json:"summary"`
+	TotalItems   int64           `json:"totalItems"`
+	OrderedItems []*apOutboxItem `json:"orderedItems"`
 }
 
 type apOutboxItem struct {
@@ -183,45 +183,10 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 		Type:         "OrderedCollection",
 		Summary:      "Recent bookmarks of " + u.String(),
 		TotalItems:   bc,
-		OrderedItems: make([]apOutboxItem, len(bs)),
+		OrderedItems: make([]*apOutboxItem, len(bs)),
 	}
 	for i, b := range bs {
-		id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
-		actor := fmt.Sprintf("%s/bookmarks?owner=%s", baseU, b.User.Username)
-		published := b.CreatedAt.Format(time.RFC3339)
-		item := apOutboxItem{
-			ID:    id + "#activity",
-			Type:  "Create",
-			Actor: actor,
-			To: []string{
-				"https://www.w3.org/ns/activitystreams#Public",
-			},
-			Cc:        []string{},
-			Published: published,
-			Object: apOutboxObject{
-				ID:           id,
-				Type:         "Note",
-				Summary:      fmt.Sprintf("Bookmark of \"%s\"", b.Title),
-				Content:      fmt.Sprintf(contentTpl, b.URL, b.Title, b.Notes, id),
-				URL:          b.URL,
-				AttributedTo: actor,
-				To: []string{
-					"https://www.w3.org/ns/activitystreams#Public",
-				},
-				Cc:        []string{},
-				Published: published,
-				Tag:       make([]apTag, len(b.Tags)),
-				Replies:   map[string]string{},
-			},
-		}
-		for i, t := range b.Tags {
-			tagBase := getFullURL(c, fmt.Sprintf("%s?tag=", URLFor("Public bookmarks")))
-			item.Object.Tag[i] = apTag{
-				Type: "Hashtag",
-				Href: tagBase + t.Text,
-				Name: t.Text,
-			}
-		}
+		item := apCreateBookmarkItem(c, b)
 		resp.OrderedItems[i] = item
 	}
 
@@ -233,6 +198,47 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	if err != nil {
 		log.Println("ActivityPub ident write error", err)
 	}
+}
+
+func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark) *apOutboxItem {
+	baseU := getFullURLPrefix(c)
+	id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
+	actor := fmt.Sprintf("%s/bookmarks?owner=%s", baseU, b.User.Username)
+	published := b.CreatedAt.Format(time.RFC3339)
+	item := &apOutboxItem{
+		ID:    id + "#activity",
+		Type:  "Create",
+		Actor: actor,
+		To: []string{
+			"https://www.w3.org/ns/activitystreams#Public",
+		},
+		Cc:        []string{},
+		Published: published,
+		Object: apOutboxObject{
+			ID:           id,
+			Type:         "Note",
+			Summary:      fmt.Sprintf("Bookmark of \"%s\"", b.Title),
+			Content:      fmt.Sprintf(contentTpl, b.URL, b.Title, b.Notes, id),
+			URL:          b.URL,
+			AttributedTo: actor,
+			To: []string{
+				"https://www.w3.org/ns/activitystreams#Public",
+			},
+			Cc:        []string{},
+			Published: published,
+			Tag:       make([]apTag, len(b.Tags)),
+			Replies:   map[string]string{},
+		},
+	}
+	for i, t := range b.Tags {
+		tagBase := getFullURL(c, fmt.Sprintf("%s?tag=", URLFor("Public bookmarks")))
+		item.Object.Tag[i] = apTag{
+			Type: "Hashtag",
+			Href: tagBase + t.Text,
+			Name: t.Text,
+		}
+	}
+	return item
 }
 
 func apIdentityResponse(c *gin.Context) {
@@ -426,6 +432,89 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		log.Println("Failed to delete AP follower", d.Actor, err)
 		return
 	}
+}
+
+func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) error {
+	if !b.Public {
+		return nil
+	}
+	var followers []*model.APFollower
+	err := model.DB.Model(&model.APFollower{}).Find(&followers).Error
+	if err != nil {
+		return err
+	}
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	for _, f := range followers {
+		kv, err := url.ParseQuery(f.Filter)
+		if err != nil {
+			return err
+		}
+		match := true
+		if kv.Get("query") != "" {
+			q := strings.ToLower(kv.Get("query"))
+			textFound := false
+			if kv.Get("search_in_note") != "" && strings.Contains(strings.ToLower(b.Notes), q) {
+				textFound = true
+			}
+			if kv.Get("search_in_snapshot") != "" && strings.Contains(strings.ToLower(s.Text), q) {
+				textFound = true
+			}
+			if strings.Contains(strings.ToLower(b.Title), q) {
+				textFound = true
+			}
+			if !textFound {
+				match = false
+			}
+		}
+		if kv.Get("owner") != "" {
+			if kv.Get("owner") != b.User.Username {
+				match = false
+			}
+		}
+		if kv.Get("domain") != "" {
+			if kv.Get("domain") != b.Domain {
+				match = false
+			}
+		}
+		if kv.Get("tag") != "" {
+			tagFound := false
+			for _, t := range b.Tags {
+				if t.Text == kv.Get("tag") {
+					tagFound = true
+					break
+				}
+			}
+			if !tagFound {
+				match = false
+			}
+		}
+		if !match {
+			continue
+		}
+
+		item := apCreateBookmarkItem(c, b)
+		if item == nil {
+			continue
+		}
+		data, err := json.Marshal(item)
+		if err != nil {
+			log.Println("Failed to marshal bookmark:", err)
+			continue
+		}
+		actor, err := apFetchActor(f.Name)
+		if err != nil {
+			log.Println("Failed to fetch actor:", err)
+			continue
+		}
+		err = apSendSignedPostRequest(actor.Inbox, item.Object.ID+"#key", data, key)
+		if err != nil {
+			log.Println("Failed to send HTTP request:", f.Name, err)
+			continue
+		}
+		log.Println("Bookmark sent to inbox", f.Name, err)
+	}
+	return nil
 }
 
 func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
