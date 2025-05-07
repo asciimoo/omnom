@@ -434,21 +434,23 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 	}
 }
 
-func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) error {
+func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 	if !b.Public {
-		return nil
+		return
 	}
 	var followers []*model.APFollower
 	err := model.DB.Model(&model.APFollower{}).Find(&followers).Error
 	if err != nil {
-		return err
+		log.Println("Failed to fetch followers", err)
+		return
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
 	for _, f := range followers {
 		kv, err := url.ParseQuery(f.Filter)
 		if err != nil {
-			return err
+			log.Println("Failed to parse URL", err)
+			return
 		}
 		match := true
 		if kv.Get("query") != "" {
@@ -514,7 +516,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) err
 		}
 		log.Println("Bookmark sent to inbox", f.Name, err)
 	}
-	return nil
+	return
 }
 
 func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
