@@ -329,7 +329,7 @@ func apInboxResponse(c *gin.Context) {
 	case unfollowAction:
 		go apInboxUnfollowResponse(c, d, body)
 	default:
-		log.Info().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message")
+		log.Debug().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Unknown action type",
 		})
@@ -510,12 +510,13 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 			log.Error().Err(err).Msg("Failed to fetch actor")
 			continue
 		}
-		err = apSendSignedPostRequest(actor.Inbox, item.Object.ID+"#key", data, key)
+		k := fmt.Sprintf("%s?%s#key", getFullURL(c, URLFor("Public bookmarks")), f.Filter)
+		err = apSendSignedPostRequest(actor.Inbox, k, data, key)
 		if err != nil {
 			log.Error().Err(err).Str("actor", f.Name).Msg("Failed to send HTTP request")
 			continue
 		}
-		log.Debug().Str("actor", f.Name).Msg("Bookmark sent to inbox")
+		log.Debug().Str("actor", f.Name).Str("filter", f.Filter).Msg("Bookmark sent to inbox")
 	}
 	return
 }
