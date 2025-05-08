@@ -5,7 +5,7 @@
     {{ else }}
     <div class="is-pulled-right">
         <a href="{{ AddURLParam .URL "format=rss" }}">RSS<span class="icon"><i class="fas fa-rss"></i></span></a>
-        <a href="{{ AddURLParam .URL "format=ap-identity" }}">ActivityPub<span class="icon"><i class="fas fa-share-alt"></i></span></a>
+        <a href="{{ .URL }}">ActivityPub<span class="icon"><i class="fas fa-share-alt"></i></span></a>
     </div>
     <h3 class="title">Public bookmarks ({{ .BookmarkCount }})</h3>
     {{ end }}

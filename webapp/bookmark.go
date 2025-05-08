@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/asciimoo/omnom/config"
@@ -83,7 +84,7 @@ func bookmarks(c *gin.Context) {
 		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	if c.Query("format") == "ap-identity" {
+	if c.Query("format") == "ap-identity" || strings.HasPrefix(c.Request.Header.Get("Accept"), "application/activity+json") {
 		apIdentityResponse(c)
 		return
 	}

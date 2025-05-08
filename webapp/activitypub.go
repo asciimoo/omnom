@@ -170,8 +170,7 @@ func parseURL(us string) (*url.URL, error) {
 
 func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
-	baseU := getFullURLPrefix(c)
-	u, err := parseURL(baseU + c.Request.URL.String())
+	u, err := parseURL(getFullURL(c, c.Request.URL.String()))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse URL")
 		return
@@ -186,7 +185,7 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 		OrderedItems: make([]*apOutboxItem, len(bs)),
 	}
 	for i, b := range bs {
-		item := apCreateBookmarkItem(c, b)
+		item := apCreateBookmarkItem(c, b, u.String())
 		resp.OrderedItems[i] = item
 	}
 
@@ -200,10 +199,8 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 	}
 }
 
-func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark) *apOutboxItem {
-	baseU := getFullURLPrefix(c)
+func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOutboxItem {
 	id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
-	actor := fmt.Sprintf("%s/bookmarks?owner=%s", baseU, b.User.Username)
 	published := b.CreatedAt.Format(time.RFC3339)
 	item := &apOutboxItem{
 		ID:    id + "#activity",
@@ -496,7 +493,8 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 			continue
 		}
 
-		item := apCreateBookmarkItem(c, b)
+		u := fmt.Sprintf("%s?%s#key", getFullURL(c, URLFor("Public bookmarks")), f.Filter)
+		item := apCreateBookmarkItem(c, b, u)
 		if item == nil {
 			continue
 		}
@@ -510,8 +508,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 			log.Error().Err(err).Msg("Failed to fetch actor")
 			continue
 		}
-		k := fmt.Sprintf("%s?%s#key", getFullURL(c, URLFor("Public bookmarks")), f.Filter)
-		err = apSendSignedPostRequest(actor.Inbox, k, data, key)
+		err = apSendSignedPostRequest(actor.Inbox, u+"#key", data, key)
 		if err != nil {
 			log.Error().Err(err).Str("actor", f.Name).Msg("Failed to send HTTP request")
 			continue
@@ -657,7 +654,7 @@ func apWebfingerResponse(c *gin.Context) {
 		Subject: s,
 		Aliases: []string{},
 		Links: []apLink{
-			apLink{Rel: "self", Type: "application/activity+json", Href: getFullURL(c, addURLParam(u, "format=ap-identity"))},
+			apLink{Rel: "self", Type: "application/activity+json", Href: u},
 			apLink{Rel: "http://webfinger.net/rel/profile-page", Type: "text/html", Href: u},
 		},
 	})
