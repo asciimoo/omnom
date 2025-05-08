@@ -3,6 +3,7 @@ package oauth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,54 +19,52 @@ const (
 )
 
 type OIDCOAuth struct {
-	AuthURL     AuthURL     `json:"authorization_endpoint"`
-	TokenURL    TokenURL    `json:"token_endpoint"`
-	UserInfoURL UserInfoURL `json:"userinfo_endpoint"`
+	AuthURL     string `json:"authorization_endpoint"`
+	TokenURL    string `json:"token_endpoint"`
+	UserInfoURL string `json:"userinfo_endpoint"`
 
 	Scopes       []ScopeValue   `json:"scopes_supported"`
 	ResponseType []ResponseType `json:"response_types_supported"`
 	GrantType    []GrantType    `json:"grant_types_supported"`
 
-	ConfigurationURL ConfigurationURL
+	ConfigurationURL string
 }
 
 func (o *OIDCOAuth) fetch(ctx context.Context) error {
-	client := &http.Client{}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, o.ConfigurationURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, o.ConfigurationURL, nil)
 	if err != nil {
-		return fmt.Errorf("oidc: failed to make request: %w", err)
+		return fmt.Errorf("oidc: failed to create request: %w", err)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("oidc: failed to fetch configuration: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("oidc: unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("oidc: unexpected configuration response status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("oidc: failed to read OIDC configuration response: %w", err)
+		return fmt.Errorf("oidc: failed to read configuration response: %w", err)
 	}
 
 	err = json.Unmarshal(body, &o)
 	if err != nil {
-		return fmt.Errorf("oidc: failed to parse OIDC configuration: %w", err)
+		return fmt.Errorf("oidc: failed to parse configuration: %w", err)
 	}
 
 	return nil
 }
 
-func (o *OIDCOAuth) Prepare(ctx context.Context, cURL ConfigurationURL) error {
-	if cURL == "" {
+func (o *OIDCOAuth) Prepare(ctx context.Context, req *PrepareRequest) error {
+	if req.configurationURL == "" {
 		return fmt.Errorf("oidc: missing configuration URL")
 	}
 
-	o.ConfigurationURL = cURL
+	o.ConfigurationURL = req.configurationURL
 
 	if err := o.fetch(ctx); err != nil {
 		return err
@@ -90,83 +89,83 @@ func (o *OIDCOAuth) Prepare(ctx context.Context, cURL ConfigurationURL) error {
 	return nil
 }
 
-func (o *OIDCOAuth) GetRedirectURL(clientID ClientID, redirectURI RedirectURI) string {
+func (o *OIDCOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	params := &url.Values{}
-	params.Add("client_id", clientID.String())
-	params.Add("response_type", responseTypeCode.String())
-	params.Add("redirect_uri", redirectURI.String())
 
-	return o.AuthURL.String() + "?" + params.Encode()
+	params.Add("client_id", req.clientID)
+	params.Add("response_type", responseTypeCode.String())
+	params.Add("redirect_uri", req.redirectURI)
+
+	return o.AuthURL + "?" + params.Encode()
 }
 
-func (o *OIDCOAuth) GetTokenRequest(
-	ctx context.Context,
-	clientID ClientID,
-	clientSecret ClientSecret,
-	code Code,
-	redirectURI RedirectURI,
-) (*http.Request, error) {
-	data := &url.Values{}
-	data.Set("grant_type", grantTypeAuthorizationCode.String())
-	data.Set("code", code.String())
-	data.Set("redirect_uri", redirectURI.String())
-	data.Set("client_id", clientID.String())
-	data.Set("client_secret", clientSecret.String())
+func (o *OIDCOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Response, error) {
+	params := &url.Values{}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, o.TokenURL.String(), strings.NewReader(data.Encode()))
+	params.Set("grant_type", grantTypeAuthorizationCode.String())
+	params.Set("code", req.code)
+	params.Set("redirect_uri", req.redirectURI)
+	params.Set("client_id", req.clientID)
+	params.Set("client_secret", req.clientSecret)
+
+	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPost, o.TokenURL, strings.NewReader(params.Encode()))
 	if err != nil {
+		return nil, errors.New("oidc: failed to create token request")
+	}
+
+	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return http.DefaultClient.Do(tokenReq)
+}
+
+func (o *OIDCOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*UserInfoResponse, error) {
+	var bearer tokenData
+
+	if err := json.Unmarshal(response, &bearer); err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	return req, nil
-}
-
-func (o *OIDCOAuth) GetUniqueUserID(ctx context.Context, token []byte) (string, error) {
-	client := &http.Client{}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, o.UserInfoURL.String(), nil)
-	if err != nil {
-		return "", err
+	if len(bearer.AccessToken) < 1 {
+		return nil, fmt.Errorf("oidc: failed to get access token")
 	}
 
-	var bearerToken tokenData
-
-	err = json.Unmarshal(token, &bearerToken)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, o.UserInfoURL, nil)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("oidc: failed to create UserInfo request: %w", err)
 	}
 
-	if len(bearerToken.AccessToken) < 1 {
-		return "", fmt.Errorf("oidc: failed to get access token")
-	}
+	req.Header.Set("Authorization", "Bearer "+bearer.AccessToken)
 
-	req.Header.Set("Authorization", "Bearer "+bearerToken.AccessToken)
-
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("oidc: failed to fetch UserInfo response: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("oidc: unexpected UserInfo response status code: %d", resp.StatusCode)
+	}
+
+	uBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("oidc: failed to read UserInfo response: %w", err)
 	}
 
 	var uData userData
 
-	err = json.Unmarshal(body, &uData)
-	if err != nil {
-		return "", err
+	if err := json.Unmarshal(uBody, &uData); err != nil {
+		return nil, fmt.Errorf("oidc: failed to parse UserInfo response: %w", err)
 	}
 
 	if len(uData.Email) < 1 {
-		return "", fmt.Errorf("failed to extract user ID from UserInfo response")
+		return nil, fmt.Errorf("oidc: failed to parse email from UserInfo response")
 	}
 
-	return fmt.Sprintf("oidc-%s", uData.Email), nil
+	return &UserInfoResponse{
+		UID:      "oidc-" + uData.Email,
+		Email:    uData.Email,
+		Username: uData.PreferredUsername,
+	}, nil
 }
 
 func (o *OIDCOAuth) GetScope() (ScopeName, ScopeValue) {

@@ -13,7 +13,7 @@
     <div class="field">
       <label class="label">Username</label>
       <div class="control has-icons-left">
-        <input class="input" type="text" name="username" placeholder="username.." />
+        <input class="input" type="text" name="username" placeholder="username.."{{ if .OAuthUsername }} value="{{ .OAuthUsername }}"{{ end} } />
         <span class="icon is-small is-left">
           <i class="fas fa-user"></i>
         </span>
@@ -22,7 +22,7 @@
     <div class="field">
       <label class="label">Email</label>
       <div class="control has-icons-left">
-        <input class="input" type="email" name="email" placeholder="email..">
+        <input class="input" type="email" name="email" placeholder="email.."{{ if .OAuthEmail }} value="{{ .OAuthEmail }}"{{ end }} />
         <span class="icon is-small is-left">
           <i class="fas fa-envelope"></i>
         </span>
