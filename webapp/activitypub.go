@@ -493,7 +493,10 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 			continue
 		}
 
-		u := fmt.Sprintf("%s?%s#key", getFullURL(c, URLFor("Public bookmarks")), f.Filter)
+		u := getFullURL(c, URLFor("Public bookmarks"))
+		if f.Filter != "" {
+			u = u + "?" + f.Filter
+		}
 		item := apCreateBookmarkItem(c, b, u)
 		if item == nil {
 			continue
