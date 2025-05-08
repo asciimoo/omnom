@@ -329,7 +329,7 @@ func apInboxResponse(c *gin.Context) {
 	case unfollowAction:
 		go apInboxUnfollowResponse(c, d, body)
 	default:
-		log.Info().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message type")
+		log.Info().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Unknown action type",
 		})

@@ -28,9 +28,6 @@ html {
   .bookmark-wrapper {
     padding: 2em;
   }
-  .bookmark__actions {
-    min-width: 100%;
-  }
   .bookmark__actions details > div {
     left: 0;
   }
@@ -267,7 +264,7 @@ iframe {
         align-items: flex-start;
         justify-content: space-between;
         width: 100%;
-        gap: 1rem;
+        gap: 0;
         flex-wrap: wrap;
     }
 
@@ -300,7 +297,7 @@ iframe {
     }
 
     &__tags {
-        .tag:not(body).is-info {
+        .tag:not(body) {
           height: 1.4em;
         }
     }
@@ -354,6 +351,8 @@ iframe {
         @include respond('tab-port'){
             text-align: left;
             justify-content: flex-start;
+            min-width: 100%;
+            margin-left: 2.3rem;
         }
 
         i {

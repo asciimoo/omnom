@@ -119,6 +119,7 @@ func bookmarks(c *gin.Context) {
 		"SearchParams":  sp,
 		"HasSearch":     hasSearch,
 		"OrderBy":       orderBy,
+		"FrequentTags":  model.GetFrequentPublicTags(20),
 	}
 	if c.Query("format") == "activitypub" {
 		apOutboxResponse(c, bs, bookmarkCount)

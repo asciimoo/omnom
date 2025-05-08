@@ -143,7 +143,7 @@
                 {{ if .Bookmark.Tags }}
                 <span class="bookmark__tags">
                     {{ range .Bookmark.Tags }}
-                        <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
+                        <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-primary">{{ .Text }}</span></a>
                     {{ end }}
                 </span>
                 {{ end }}

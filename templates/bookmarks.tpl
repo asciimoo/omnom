@@ -35,6 +35,19 @@
                                     </div>
                             </details>
                 </form>
+                <div class="mt-5 is-hidden-mobile">
+                    <h3>Frequent Tags</h3>
+                    <div class="field is-grouped is-grouped-multiline ">
+                        {{ range .FrequentTags }}
+                        <div class="control">
+                            <a class="tags has-addons" href="{{ URLFor "Bookmarks" }}?tag={{ .Tag }}">
+                                <span class="tag is-primary is-medium">{{ .Tag }}</span>
+                                <span class="tag is-dark is-medium">{{ .Count }}</span>
+                            </a>
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
             </div>
         </div>
         {{ $uid := 0 }}
