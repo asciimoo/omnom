@@ -34,10 +34,12 @@ html {
 }
 
 
-.bookmark-filter {
+.bookmark-sidebar {
   position: sticky;
   top: 5em;
   align-self: flex-start;
+  height: calc(100vh - 5em);
+  overflow: auto;
   background: white;
   z-index: 2000;
   @include respond(phone) {

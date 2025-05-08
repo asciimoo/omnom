@@ -7,7 +7,7 @@
     <h3 class="title">My bookmarks ({{ .BookmarkCount }})</h3>
     {{ end }}
     <div class="columns">
-        <div class="column is-2-fullhd is-one-quarter-desktop is-one-third-tablet bookmark-filter">
+        <div class="column is-2-fullhd is-one-quarter-desktop is-one-third-tablet bookmark-sidebar">
             <div class="content">
                 <form action="" method="get">
                             {{ block "textFilter" .}}{{ end }}
