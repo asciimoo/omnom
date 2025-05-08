@@ -40,7 +40,7 @@
                     <div class="field is-grouped is-grouped-multiline ">
                         {{ range .FrequentTags }}
                         <div class="control">
-                            <a class="tags has-addons" href="{{ URLFor "Bookmarks" }}?tag={{ .Tag }}">
+                            <a class="tags has-addons" href="{{ URLFor "Public bookmarks" }}?tag={{ .Tag }}">
                                 <span class="tag is-primary is-medium">{{ .Tag }}</span>
                                 <span class="tag is-dark is-medium">{{ .Count }}</span>
                             </a>
