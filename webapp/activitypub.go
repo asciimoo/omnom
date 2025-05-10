@@ -264,7 +264,7 @@ func apIdentityResponse(c *gin.Context) {
 		Outbox:            getFullURL(c, addURLParam(u.String(), "format=activitypub")),
 		PreferredUsername: "omnom" + feedID,
 		Name:              getFullURL(c, "/"+feedID),
-		URL:               getFullURL(c, "/"),
+		URL:               id,
 		Discoverable:      true,
 		Icon: apImage{
 			Type:      "Image",
@@ -357,6 +357,7 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
 		Type:    "Accept",
+		Actor:   d.Object.ID,
 		Object: apFollowResponseObject{
 			ID:     d.ID,
 			Type:   followAction,
@@ -404,6 +405,7 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
 		Type:    "Accept",
+		Actor:   d.Object.ID,
 		Object: apFollowResponseObject{
 			ID:     d.ID,
 			Type:   unfollowAction,
@@ -501,14 +503,16 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 		if item == nil {
 			continue
 		}
-		data, err := json.Marshal(item)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to marshal bookmark")
-			continue
-		}
 		actor, err := apFetchActor(f.Name)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to fetch actor")
+			continue
+		}
+		item.To = append(item.To, actor.ID)
+		item.Object.To = append(item.Object.To, actor.ID)
+		data, err := json.Marshal(item)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to marshal bookmark")
 			continue
 		}
 		err = apSendSignedPostRequest(actor.Inbox, u+"#key", data, key)
