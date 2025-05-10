@@ -33,20 +33,6 @@ html {
   }
 }
 
-
-.bookmark-sidebar {
-  position: sticky;
-  top: 5em;
-  align-self: flex-start;
-  height: calc(100vh - 5em);
-  overflow: auto;
-  background: white;
-  z-index: 2000;
-  @include respond(phone) {
-    position: initial;
-  }
-}
-
 #omnom-webapp {
     height: 100%;
     background-color: #f1f2ee;
