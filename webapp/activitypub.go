@@ -32,6 +32,10 @@ const (
 	unfollowAction   = "Undo"
 )
 
+const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
+%[3]s
+Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[4]s">view bookmark</a>`
+
 var apSigHeaderRe = regexp.MustCompile(`keyId="([^"]+)".*,headers="([^"]+)",.*signature="([^"]+)"`)
 
 type apOutbox struct {
@@ -161,10 +165,6 @@ type apSignature struct {
 	Sig     string `json:"signatureValue"`
 }
 
-const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
-<p>%[3]s</p>
-<small>Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[4]s">view bookmark</a></small>`
-
 func parseURL(us string) (*url.URL, error) {
 	u, err := url.Parse(us)
 	if err != nil {
@@ -211,6 +211,11 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOutboxItem {
 	id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
 	published := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	title := truncate(b.Title, 300)
+	body := ""
+	if b.Notes != "" {
+		body = fmt.Sprintf("<p>%s</p>", truncate(b.Notes, 350-len(title)))
+	}
 	item := &apOutboxItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      id + "#activity",
@@ -225,7 +230,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 			ID:           id,
 			Type:         "Note",
 			Summary:      fmt.Sprintf("Bookmark of \"%s\"", b.Title),
-			Content:      fmt.Sprintf(contentTpl, b.URL, b.Title, b.Notes, id),
+			Content:      fmt.Sprintf(contentTpl, b.URL, title, body, id),
 			URL:          b.URL,
 			URI:          b.URL,
 			AttributedTo: actor,
