@@ -44,6 +44,7 @@ type apOutbox struct {
 }
 
 type apOutboxItem struct {
+	Context   string         `json:"@context"`
 	ID        string         `json:"id"`
 	Type      string         `json:"type"`
 	Actor     string         `json:"actor"`
@@ -51,6 +52,7 @@ type apOutboxItem struct {
 	Cc        []string       `json:"cc"`
 	Published string         `json:"published"`
 	Object    apOutboxObject `json:"object"`
+	//Signature *apSignature   `json:"signature,omitempty"`
 }
 
 type apOutboxObject struct {
@@ -58,6 +60,7 @@ type apOutboxObject struct {
 	Type         string            `json:"type"`
 	Content      string            `json:"content"`
 	URL          string            `json:"url"`
+	URI          string            `json:"uri"`
 	Summary      string            `json:"summary"`
 	AttributedTo string            `json:"attributedTo"`
 	To           []string          `json:"to"`
@@ -77,8 +80,8 @@ type apIdentity struct {
 	Context           *apContext `json:"@context"`
 	ID                string     `json:"id"`
 	Type              string     `json:"type"`
-	Following         string     `json:"following"`
-	Followers         string     `json:"followers"`
+	Following         *string    `json:"following,omitempty"`
+	Followers         *string    `json:"followers,omitempty"`
 	Inbox             string     `json:"inbox"`
 	Outbox            string     `json:"outbox"`
 	PreferredUsername string     `json:"preferredUsername"`
@@ -99,9 +102,7 @@ type apImage struct {
 }
 
 type apPubKey struct {
-	Context      string `json:"@context"`
 	ID           string `json:"id"`
-	Type         string `json:"type"`
 	Owner        string `json:"owner"`
 	PublicKeyPem string `json:"publicKeyPem"`
 }
@@ -150,6 +151,14 @@ type apFollowResponseObject struct {
 	Type   string `json:"type"`
 	Actor  string `json:"actor"`
 	Object string `json:"object"`
+}
+
+// https://docs.joinmastodon.org/spec/security/#ld
+type apSignature struct {
+	Type    string `json:"type"`
+	Creator string `json:"creator"`
+	Created string `json:"created"`
+	Sig     string `json:"signatureValue"`
 }
 
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
@@ -201,11 +210,12 @@ func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
 
 func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOutboxItem {
 	id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
-	published := b.CreatedAt.Format(time.RFC3339)
+	published := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	item := &apOutboxItem{
-		ID:    id + "#activity",
-		Type:  "Create",
-		Actor: actor,
+		Context: "https://www.w3.org/ns/activitystreams",
+		ID:      id + "#activity",
+		Type:    "Create",
+		Actor:   actor,
 		To: []string{
 			"https://www.w3.org/ns/activitystreams#Public",
 		},
@@ -217,6 +227,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 			Summary:      fmt.Sprintf("Bookmark of \"%s\"", b.Title),
 			Content:      fmt.Sprintf(contentTpl, b.URL, b.Title, b.Notes, id),
 			URL:          b.URL,
+			URI:          b.URL,
 			AttributedTo: actor,
 			To: []string{
 				"https://www.w3.org/ns/activitystreams#Public",
@@ -254,16 +265,20 @@ func apIdentityResponse(c *gin.Context) {
 	}
 	inbox := getFullURL(c, URLFor("ActivityPub inbox"))
 	feedID := apCreateFeedID(id)
+	uname := "omnom" + feedID
 	j, err := json.Marshal(apIdentity{
 		Context: &apContext{
-			ID: "https://www.w3.org/ns/activitystreams",
+			Parts: []interface{}{
+				"https://www.w3.org/ns/activitystreams",
+				"https://w3id.org/security/v1",
+			},
 		},
 		ID:                id,
 		Type:              "Person",
 		Inbox:             inbox,
 		Outbox:            getFullURL(c, addURLParam(u.String(), "format=activitypub")),
-		PreferredUsername: "omnom" + feedID,
-		Name:              getFullURL(c, "/"+feedID),
+		PreferredUsername: uname,
+		Name:              uname,
 		URL:               id,
 		Discoverable:      true,
 		Icon: apImage{
@@ -277,9 +292,7 @@ func apIdentityResponse(c *gin.Context) {
 			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
 		},
 		PubKey: apPubKey{
-			Context:      "https://w3id.org/security/v1",
 			ID:           id + "#key",
-			Type:         "Key",
 			Owner:        id,
 			PublicKeyPem: string(pk),
 		},
@@ -621,7 +634,7 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	req.Header.Set("Digest", digest)
 	req.Header.Set("Signature", sigHeader)
 	req.Header.Set("Content-Type", "application/activity+json; charset=utf-8")
-	req.Header.Set("Accept", "application/activity+json; charset=utf-8")
+	req.Header.Set("Accept", "application/activity+json")
 	r, err := cli.Do(req)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to send accept response")
@@ -659,7 +672,7 @@ func apWebfingerResponse(c *gin.Context) {
 	u := getFullURL(c, URLFor("Public bookmarks"))
 	j, err := json.Marshal(apWebfinger{
 		Subject: s,
-		Aliases: []string{},
+		Aliases: []string{u},
 		Links: []apLink{
 			apLink{Rel: "self", Type: "application/activity+json", Href: u},
 			apLink{Rel: "http://webfinger.net/rel/profile-page", Type: "text/html", Href: u},
@@ -729,5 +742,8 @@ func (c *apContext) UnmarshalJSON(data []byte) error {
 }
 
 func (c *apContext) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%s"`, strings.ReplaceAll(c.ID, `"`, `\"`))), nil
+	if c.ID != "" {
+		return json.Marshal(c.ID)
+	}
+	return json.Marshal(c.Parts)
 }

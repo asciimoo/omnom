@@ -151,7 +151,7 @@ func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
 	privkeyBytes := x509.MarshalPKCS1PrivateKey(ap.PrivK)
 	privkeyPem := pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "RSA PRIVATE KEY",
+			Type:  "PRIVATE KEY",
 			Bytes: privkeyBytes,
 		},
 	)
@@ -176,7 +176,7 @@ func (ap *ActivityPub) ExportPubKey() ([]byte, error) {
 	}
 	pubkeyPem := pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "RSA PUBLIC KEY",
+			Type:  "PUBLIC KEY",
 			Bytes: pubkeyBytes,
 		},
 	)
