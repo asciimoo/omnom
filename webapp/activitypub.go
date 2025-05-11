@@ -158,12 +158,12 @@ type apFollowResponseObject struct {
 }
 
 // https://docs.joinmastodon.org/spec/security/#ld
-type apSignature struct {
-	Type    string `json:"type"`
-	Creator string `json:"creator"`
-	Created string `json:"created"`
-	Sig     string `json:"signatureValue"`
-}
+//type apSignature struct {
+//	Type    string `json:"type"`
+//	Creator string `json:"creator"`
+//	Created string `json:"created"`
+//	Sig     string `json:"signatureValue"`
+//}
 
 func parseURL(us string) (*url.URL, error) {
 	u, err := url.Parse(us)
