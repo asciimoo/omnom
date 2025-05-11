@@ -59,13 +59,7 @@ var tplFuncMap = template.FuncMap{
 		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
 	},
 	"AddURLParam": addURLParam,
-	"Truncate": func(s string, maxLen int) string {
-		if len(s) > maxLen {
-			return s[:maxLen] + "[..]"
-		} else {
-			return s
-		}
-	},
+	"Truncate":    truncate,
 	"KVData": func(values ...interface{}) (map[string]interface{}, error) {
 		if len(values)%2 != 0 {
 			return nil, errors.New("invalid dict call")
@@ -129,6 +123,14 @@ func getFullURL(c *gin.Context, u string) string {
 		return getFullURLPrefix(c) + u
 	}
 	return u
+}
+
+func truncate(s string, maxLen int) string {
+	if len(s) > maxLen {
+		return s[:maxLen] + "[..]"
+	} else {
+		return s
+	}
 }
 
 func addTemplate(r multitemplate.DynamicRender, rootDir string, hasBase bool, name, filename string) {
