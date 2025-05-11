@@ -229,7 +229,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 		Object: apOutboxObject{
 			ID:           id,
 			Type:         "Note",
-			Summary:      fmt.Sprintf("Bookmark of \"%s\"", b.Title),
+			Summary:      "",
 			Content:      fmt.Sprintf(contentTpl, b.URL, title, body, id),
 			URL:          b.URL,
 			URI:          b.URL,
