@@ -174,12 +174,12 @@ func apOutboxResponse(c *gin.Context) {
 	}
 	var bs []*model.Bookmark
 	var bc int64
-	if err := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1 && bookmarks.user_id = ?", user.ID).Count(&bc).Error; err != nil {
+	if err := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1 AND bookmarks.user_id = ?", user.ID).Count(&bc).Error; err != nil {
 		log.Error().Err(err).Msg("Failed to fetch bookmarks")
 		notFoundView(c)
 		return
 	}
-	if err := model.DB.Limit(int(resultsPerPage)).Where("bookmarks.public = 1 && bookmarks.user_id = ?", user.ID).Preload("Tags").Find(&bs).Error; err != nil {
+	if err := model.DB.Limit(int(resultsPerPage)).Where("bookmarks.public = 1 AND bookmarks.user_id = ?", user.ID).Preload("Tags").Find(&bs).Error; err != nil {
 		log.Error().Err(err).Msg("Failed to count bookmarks")
 		notFoundView(c)
 		return
