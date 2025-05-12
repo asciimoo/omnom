@@ -330,7 +330,7 @@ func Run(cfg *config.Config) {
 	// TODO handle GET arguments as well
 	URLFor = func(e string, paths ...string) string {
 		for _, ep := range Endpoints {
-			if ep.Name == e {
+			if strings.ToLower(ep.Name) == strings.ToLower(e) {
 				return baseURL(resolveDynamicPath(ep.Path, paths))
 			}
 		}
