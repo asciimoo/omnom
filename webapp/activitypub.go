@@ -452,7 +452,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark) {
 		return
 	}
 	var followers []*model.APFollower
-	err := model.DB.Model(&model.APFollower{}).Where("user_id = ?", b.User.ID).Find(&followers).Error
+	err := model.DB.Model(&model.APFollower{}).Where("user_id = ?", b.UserID).Find(&followers).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch followers")
 		return

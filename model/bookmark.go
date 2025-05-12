@@ -53,6 +53,7 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 		Notes:     notes,
 		Favicon:   favicon,
 		UserID:    u.ID,
+		User:      *u,
 		Snapshots: make([]Snapshot, 0, 8),
 	}
 	if !strings.HasPrefix(b.Favicon, "data:image") {
