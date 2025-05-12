@@ -11,7 +11,8 @@ import (
 )
 
 var migrationFunctions = []func() error{
-	addSnapshotSizes, // db version 1
+	addSnapshotSizes,             // db version 1
+	removeUnusedAPFollowerFields, // db version 2
 }
 
 func migrate() error {
@@ -52,6 +53,17 @@ func addSnapshotSizes() error {
 		}
 		size := storage.GetSnapshotSize(s)
 		DB.Model(&Snapshot{}).Where("key = ?", s).Update("size", size)
+	}
+	return nil
+}
+
+func removeUnusedAPFollowerFields() error {
+	log.Debug().Msg("Removing unused ActivityPub follower fields")
+	for _, col := range []string{"filter", "name"} {
+		err := DB.Migrator().DropColumn(&APFollower{}, col)
+		if err != nil {
+			log.Debug().Str("column", col).Msg("Failed to delete")
+		}
 	}
 	return nil
 }

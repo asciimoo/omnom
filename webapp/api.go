@@ -128,6 +128,14 @@ func init() {
 			RSS: "Snapshots",
 		},
 		&Endpoint{
+			Name:         "User",
+			Path:         "/users/:username",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      userProfile,
+			Description:  "User profile page",
+		},
+		&Endpoint{
 			Name:         "Public bookmarks",
 			Path:         "/bookmarks",
 			Method:       GET,
@@ -448,7 +456,7 @@ func init() {
 		},
 		&Endpoint{
 			Name:         "ActivityPub inbox",
-			Path:         "/ap_inbox",
+			Path:         "/inbox/:username",
 			Method:       POST,
 			AuthRequired: false,
 			Handler:      apInboxResponse,
@@ -461,6 +469,14 @@ func init() {
 					Description: "ActivityPub message",
 				},
 			},
+		},
+		&Endpoint{
+			Name:         "ActivityPub outbox",
+			Path:         "/outbox/:username",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      apOutboxResponse,
+			Description:  "Outbox of ActivityPub messages",
 		},
 		&Endpoint{
 			Name:         "ActivityPub webfinger",

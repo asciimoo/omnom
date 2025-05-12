@@ -6,14 +6,14 @@ package model
 
 type APFollower struct {
 	CommonFields
-	Name   string `gorm:"uniqueIndex:uidx" json:"name"`
-	Filter string `gorm:"uniqueIndex:uidx" json:"filter"`
+	UserID   uint   `gorm:"uniqueIndex:uidx" json:"uid"`
+	Follower string `gorm:"uniqueIndex:uidx" json:"follower"`
 }
 
-func CreateAPFollower(name, filter string) error {
+func CreateAPFollower(uid uint, follower string) error {
 	f := APFollower{
-		Name:   name,
-		Filter: filter,
+		UserID:   uid,
+		Follower: follower,
 	}
 	return DB.Create(&f).Error
 }

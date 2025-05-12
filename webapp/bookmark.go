@@ -13,7 +13,6 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/asciimoo/omnom/config"
@@ -84,10 +83,6 @@ func bookmarks(c *gin.Context) {
 		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	if c.Query("format") == "ap-identity" || strings.HasPrefix(c.Request.Header.Get("Accept"), "application/activity+json") {
-		apIdentityResponse(c)
-		return
-	}
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
 	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User")
 	if !reflect.DeepEqual(*sp, searchParams{}) {
@@ -121,10 +116,6 @@ func bookmarks(c *gin.Context) {
 		"HasSearch":     hasSearch,
 		"OrderBy":       orderBy,
 		"FrequentTags":  model.GetFrequentPublicTags(20),
-	}
-	if c.Query("format") == "activitypub" {
-		apOutboxResponse(c, bs, bookmarkCount)
-		return
 	}
 	render(c, http.StatusOK, "bookmarks", args)
 }
@@ -252,6 +243,9 @@ func createBookmark(c *gin.Context) {
 		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
 		return
 	}
+	if new {
+		go apNotifyFollowers(c, b)
+	}
 
 	key, err := storeSnapshot([]byte(res.DOM))
 	if err != nil {
@@ -288,9 +282,6 @@ func createBookmark(c *gin.Context) {
 		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
 		return
 	}
-	if new {
-		go apNotifyFollowers(c, b, s)
-	}
 
 	setNotification(c, nInfo, "Bookmark successfully created", true)
 	c.Redirect(http.StatusFound, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
@@ -322,6 +313,9 @@ func addBookmark(c *gin.Context) {
 			"error": err.Error(),
 		})
 		return
+	}
+	if new {
+		go apNotifyFollowers(c, b)
 	}
 	snapshotFile, _, err := c.Request.FormFile("snapshot")
 	if err != nil {
@@ -363,9 +357,6 @@ func addBookmark(c *gin.Context) {
 				"error": err.Error(),
 			})
 			return
-		}
-		if new {
-			go apNotifyFollowers(c, b, s)
 		}
 		sSize = s.Size
 		sKey = key

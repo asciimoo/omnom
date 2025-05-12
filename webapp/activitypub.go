@@ -165,36 +165,37 @@ type apFollowResponseObject struct {
 //	Sig     string `json:"signatureValue"`
 //}
 
-func parseURL(us string) (*url.URL, error) {
-	u, err := url.Parse(us)
-	if err != nil {
-		return nil, err
-	}
-	q := u.Query()
-	q.Del("format")
-	q.Del("pageno")
-	u.RawQuery = q.Encode()
-	return u, nil
-}
-
-func apOutboxResponse(c *gin.Context, bs []*model.Bookmark, bc int64) {
-	c.Header("Content-Type", "application/activity+json; charset=utf-8")
-	u, err := parseURL(getFullURL(c, c.Request.URL.String()))
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse URL")
+func apOutboxResponse(c *gin.Context) {
+	user := model.GetUser(c.Param("username"))
+	if user == nil {
+		log.Debug().Msg("Unknown user")
+		notFoundView(c)
 		return
 	}
-
+	var bs []*model.Bookmark
+	var bc int64
+	if err := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1 && bookmarks.user_id = ?", user.ID).Count(&bc).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to fetch bookmarks")
+		notFoundView(c)
+		return
+	}
+	if err := model.DB.Limit(int(resultsPerPage)).Where("bookmarks.public = 1 && bookmarks.user_id = ?", user.ID).Preload("Tags").Find(&bs).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to count bookmarks")
+		notFoundView(c)
+		return
+	}
+	c.Header("Content-Type", "application/activity+json; charset=utf-8")
+	u := getFullURL(c, URLFor("user", user.Username))
 	resp := apOutbox{
 		Context:      "https://www.w3.org/ns/activitystreams",
-		ID:           u.String(),
+		ID:           u,
 		Type:         "OrderedCollection",
-		Summary:      "Recent bookmarks of " + u.String(),
+		Summary:      "Recent bookmarks of " + u,
 		TotalItems:   bc,
 		OrderedItems: make([]*apOutboxItem, len(bs)),
 	}
 	for i, b := range bs {
-		item := apCreateBookmarkItem(c, b, u.String())
+		item := apCreateBookmarkItem(c, b, u)
 		resp.OrderedItems[i] = item
 	}
 
@@ -254,23 +255,15 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 	return item
 }
 
-func apIdentityResponse(c *gin.Context) {
+func apIdentityResponse(c *gin.Context, user *model.User) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	id := getFullURL(c, c.Request.URL.String())
-	u, err := parseURL(id)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse URL")
-		return
-	}
 	cfg, _ := c.Get("config")
 	pk, err := cfg.(*config.Config).ActivityPub.ExportPubKey()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to serialize JSON")
 		return
 	}
-	inbox := getFullURL(c, URLFor("ActivityPub inbox"))
-	feedID := apCreateFeedID(id)
-	uname := "omnom" + feedID
 	j, err := json.Marshal(apIdentity{
 		Context: &apContext{
 			Parts: []interface{}{
@@ -280,10 +273,10 @@ func apIdentityResponse(c *gin.Context) {
 		},
 		ID:                id,
 		Type:              "Person",
-		Inbox:             inbox,
-		Outbox:            getFullURL(c, addURLParam(u.String(), "format=activitypub")),
-		PreferredUsername: uname,
-		Name:              uname,
+		Inbox:             getFullURL(c, URLFor("ActivityPub inbox", user.Username)),
+		Outbox:            getFullURL(c, URLFor("ActivityPub outbox", user.Username)),
+		PreferredUsername: user.Username,
+		Name:              user.Username,
 		URL:               id,
 		Discoverable:      true,
 		Icon: apImage{
@@ -356,6 +349,12 @@ func apInboxResponse(c *gin.Context) {
 }
 
 func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+	user := model.GetUser(c.Param("username"))
+	if user == nil {
+		log.Debug().Msg("Unknown user")
+		notFoundView(c)
+		return
+	}
 	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
 		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
 		return
@@ -392,18 +391,19 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to send HTTP request")
 		return
 	}
-	u, err := url.Parse(d.Object.ID)
-	if err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to parse URL")
-		return
-	}
-	err = model.CreateAPFollower(d.Actor, u.RawQuery)
+	err = model.CreateAPFollower(user.ID, d.Actor)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to create AP follower")
 		return
 	}
 }
 func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+	user := model.GetUser(c.Param("username"))
+	if user == nil {
+		log.Debug().Msg("Unknown user")
+		notFoundView(c)
+		return
+	}
 	if !strings.HasPrefix(d.Object.Object, getFullURLPrefix(c)) {
 		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
 		return
@@ -440,24 +440,19 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to send HTTP request")
 		return
 	}
-	u, err := url.Parse(d.Object.Object)
-	if err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to parse URL")
-		return
-	}
-	err = model.DB.Delete(&model.APFollower{}, "name = ? and filter = ?", d.Actor, u.RawQuery).Error
+	err = model.DB.Delete(&model.APFollower{}, "user_id= ? and follower = ?", user.ID, d.Actor).Error
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to delete AP follower")
 		return
 	}
 }
 
-func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
+func apNotifyFollowers(c *gin.Context, b *model.Bookmark) {
 	if !b.Public {
 		return
 	}
 	var followers []*model.APFollower
-	err := model.DB.Model(&model.APFollower{}).Find(&followers).Error
+	err := model.DB.Model(&model.APFollower{}).Where("user_id = ?", b.User.ID).Find(&followers).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch followers")
 		return
@@ -465,63 +460,12 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
 	for _, f := range followers {
-		kv, err := url.ParseQuery(f.Filter)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse URL")
-			return
-		}
-		match := true
-		if kv.Get("query") != "" {
-			q := strings.ToLower(kv.Get("query"))
-			textFound := false
-			if kv.Get("search_in_note") != "" && strings.Contains(strings.ToLower(b.Notes), q) {
-				textFound = true
-			}
-			if kv.Get("search_in_snapshot") != "" && strings.Contains(strings.ToLower(s.Text), q) {
-				textFound = true
-			}
-			if strings.Contains(strings.ToLower(b.Title), q) {
-				textFound = true
-			}
-			if !textFound {
-				match = false
-			}
-		}
-		if kv.Get("owner") != "" {
-			if kv.Get("owner") != b.User.Username {
-				match = false
-			}
-		}
-		if kv.Get("domain") != "" {
-			if kv.Get("domain") != b.Domain {
-				match = false
-			}
-		}
-		if kv.Get("tag") != "" {
-			tagFound := false
-			for _, t := range b.Tags {
-				if t.Text == kv.Get("tag") {
-					tagFound = true
-					break
-				}
-			}
-			if !tagFound {
-				match = false
-			}
-		}
-		if !match {
-			continue
-		}
-
-		u := getFullURL(c, URLFor("Public bookmarks"))
-		if f.Filter != "" {
-			u = u + "?" + f.Filter
-		}
+		u := getFullURL(c, URLFor("user", b.User.Username))
 		item := apCreateBookmarkItem(c, b, u)
 		if item == nil {
 			continue
 		}
-		actor, err := apFetchActor(f.Name)
+		actor, err := apFetchActor(f.Follower)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to fetch actor")
 			continue
@@ -535,10 +479,10 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark, s *model.Snapshot) {
 		}
 		err = apSendSignedPostRequest(actor.Inbox, u+"#key", data, key)
 		if err != nil {
-			log.Error().Err(err).Str("actor", f.Name).Msg("Failed to send HTTP request")
+			log.Error().Err(err).Str("actor", f.Follower).Msg("Failed to send HTTP request")
 			continue
 		}
-		log.Debug().Str("actor", f.Name).Str("filter", f.Filter).Msg("Bookmark sent to inbox")
+		log.Debug().Str("actor", f.Follower).Msg("Bookmark sent to inbox")
 	}
 	return
 }
@@ -674,7 +618,12 @@ func apFetchActor(u string) (*apIdentity, error) {
 func apWebfingerResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	s := c.Query("resource")
-	u := getFullURL(c, URLFor("Public bookmarks"))
+	sParts := strings.Split(strings.TrimPrefix(s, "acct:"), "@")
+	uname := sParts[0]
+	if uname == "" && len(sParts) > 1 {
+		uname = sParts[1]
+	}
+	u := getFullURL(c, URLFor("User", uname))
 	j, err := json.Marshal(apWebfinger{
 		Subject: s,
 		Aliases: []string{u},
@@ -690,28 +639,6 @@ func apWebfingerResponse(c *gin.Context) {
 	if err != nil {
 		log.Error().Msg("Failed to write response")
 	}
-}
-
-func apCreateFeedID(us string) string {
-	u, err := url.Parse(us)
-	if err != nil {
-		return ""
-	}
-	q := u.Query()
-	s := ""
-	if q.Get("owner") != "" {
-		s += "@user." + q.Get("owner")
-	}
-	if q.Get("domain") != "" {
-		s += "@domain." + q.Get("domain")
-	}
-	if q.Get("tag") != "" {
-		s += "@tag." + strings.ReplaceAll(q.Get("tag"), " ", "_")
-	}
-	if q.Get("query") != "" {
-		s += "@query." + strings.ReplaceAll(q.Get("query"), " ", "_")
-	}
-	return s
 }
 
 func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {

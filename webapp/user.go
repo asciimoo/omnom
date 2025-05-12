@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -21,6 +22,43 @@ import (
 )
 
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
+
+func userProfile(c *gin.Context) {
+	user := model.GetUser(c.Param("username"))
+	if user == nil {
+		setNotification(c, nError, "Unknown user", false)
+		log.Debug().Msg("Unknown user")
+		notFoundView(c)
+		return
+	}
+
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "application/activity+json") {
+		apIdentityResponse(c, user)
+		return
+	}
+
+	u, err := url.Parse(getFullURL(c, "/"))
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to parse URL")
+		notFoundView(c)
+		return
+	}
+	fName := fmt.Sprintf("%s@%s", user.Username, u.Host)
+	var bc int64
+	if err := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ? and bookmarks.public = 1", user.ID).Count(&bc).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to count bookmarks")
+	}
+	var fc int64
+	if err := model.DB.Model(&model.APFollower{}).Where("ap_followers.user_id = ?", user.ID).Count(&fc).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to count bookmarks")
+	}
+	render(c, http.StatusOK, "user", gin.H{
+		"User":          user,
+		"FediName":      fName,
+		"BookmarkCount": bc,
+		"FollowerCount": fc,
+	})
+}
 
 func validateUsername(username string) error {
 	if strings.ToLower(username) == "admin" {

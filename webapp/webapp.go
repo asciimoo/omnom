@@ -41,7 +41,7 @@ const (
 
 var e *gin.Engine
 var baseURL func(string) string
-var URLFor func(string) string
+var URLFor func(string, ...string) string
 
 var tplFuncMap = template.FuncMap{
 	"HasPrefix":  strings.HasPrefix,
@@ -158,6 +158,7 @@ func createRenderer(rootDir string) multitemplate.Renderer {
 	addTemplate(r, rootDir, true, "view-bookmark", "view_bookmark.tpl")
 	addTemplate(r, rootDir, true, "edit-bookmark", "edit_bookmark.tpl")
 	addTemplate(r, rootDir, true, "create-bookmark", "create_bookmark.tpl")
+	addTemplate(r, rootDir, true, "user", "user.tpl")
 	addTemplate(r, rootDir, true, "api", "api.tpl")
 	addTemplate(r, rootDir, true, "error", "error.tpl")
 	addTemplate(r, rootDir, false, "rss", "rss.xml")
@@ -278,6 +279,27 @@ func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
 	}
 }
 
+func resolveDynamicPath(p string, v []string) string {
+	if len(v) == 0 {
+		return p
+	}
+	if !strings.Contains(p, ":") {
+		return p
+	}
+	pParts := strings.Split(p, "/")
+	vRef := 0
+	for i, f := range pParts {
+		if vRef >= len(v) {
+			break
+		}
+		if strings.HasPrefix(f, ":") {
+			pParts[i] = v[vRef]
+			vRef += 1
+		}
+	}
+	return strings.Join(pParts, "/")
+}
+
 func Run(cfg *config.Config) {
 	gin.SetMode(gin.ReleaseMode)
 	e = gin.Default()
@@ -306,10 +328,10 @@ func Run(cfg *config.Config) {
 		return bu + u
 	}
 	// TODO handle GET arguments as well
-	URLFor = func(e string) string {
+	URLFor = func(e string, paths ...string) string {
 		for _, ep := range Endpoints {
 			if ep.Name == e {
-				return baseURL(ep.Path)
+				return baseURL(resolveDynamicPath(ep.Path, paths))
 			}
 		}
 		log.Error().Str("Endpoint", e).Msg("Not found")
