@@ -185,7 +185,7 @@ func apOutboxResponse(c *gin.Context) {
 		return
 	}
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
-	u := getFullURL(c, URLFor("user", user.Username))
+	u := getFullURL(c, URLFor("User", user.Username))
 	resp := apOutbox{
 		Context:      "https://www.w3.org/ns/activitystreams",
 		ID:           u,
@@ -460,7 +460,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark) {
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
 	for _, f := range followers {
-		u := getFullURL(c, URLFor("user", b.User.Username))
+		u := getFullURL(c, URLFor("User", b.User.Username))
 		item := apCreateBookmarkItem(c, b, u)
 		if item == nil {
 			continue
