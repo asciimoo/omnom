@@ -27,7 +27,7 @@ func userProfile(c *gin.Context) {
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
 		setNotification(c, nError, "Unknown user", false)
-		log.Debug().Msg("Unknown user")
+		log.Debug().Str("username", c.Param("username")).Msg("Unknown user")
 		notFoundView(c)
 		return
 	}

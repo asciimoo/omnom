@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: 20
       - run: go get
+      - run: go test ./...
       - run: ./manage.sh start_test_server&
       - run: ./manage.sh install_js_deps
       - run: ./manage.sh install_test_deps

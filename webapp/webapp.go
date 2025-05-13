@@ -39,7 +39,6 @@ const (
 	nError
 )
 
-var e *gin.Engine
 var baseURL func(string) string
 var URLFor func(string, ...string) string
 
@@ -300,17 +299,16 @@ func resolveDynamicPath(p string, v []string) string {
 	return strings.Join(pParts, "/")
 }
 
-func Run(cfg *config.Config) {
-	gin.SetMode(gin.ReleaseMode)
-	e = gin.Default()
-	if cfg.App.ResultsPerPage > 0 {
-		resultsPerPage = cfg.App.ResultsPerPage
-	}
-	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
+func createEngine(cfg *config.Config) *gin.Engine {
+	e := gin.Default()
 	store := cookie.NewStore([]byte("secret"))
 	store.Options(sessions.Options{
 		Secure: cfg.Server.SecureCookie,
 	})
+	if cfg.App.ResultsPerPage > 0 {
+		resultsPerPage = cfg.App.ResultsPerPage
+	}
+	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
 	e.Use(sessions.Sessions("SID", store))
 	e.Use(SessionMiddleware(cfg))
 	e.Use(ConfigMiddleware(cfg))
@@ -339,8 +337,6 @@ func Run(cfg *config.Config) {
 	}
 	tplFuncMap["BaseURL"] = baseURL
 	tplFuncMap["URLFor"] = URLFor
-	e.HTMLRender = createRenderer(cfg.App.TemplateDir)
-
 	// ROUTES
 	e.Static("/static", cfg.App.StaticDir)
 	for _, ep := range Endpoints {
@@ -351,9 +347,16 @@ func Run(cfg *config.Config) {
 		}
 	}
 	e.NoRoute(notFoundView)
+	e.HTMLRender = createRenderer(cfg.App.TemplateDir)
+	return e
+}
 
+func Run(cfg *config.Config) {
+	gin.SetMode(gin.ReleaseMode)
+
+	engine := createEngine(cfg)
 	log.Info().Str("Address", cfg.Server.Address).Msg("Starting server")
-	err := e.Run(cfg.Server.Address)
+	err := engine.Run(cfg.Server.Address)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot start server")
 	}
