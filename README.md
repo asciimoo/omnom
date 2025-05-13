@@ -15,6 +15,7 @@ Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more informatio
  - Self hosted
  - Web interface with multiuser support
  - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
+ - [Fediverse/ActivityPub support](https://github.com/asciimoo/omnom/wiki/Fediverse-support)
  - Private & public bookmarks
  - Multiple snapshots of the same URL
  - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
