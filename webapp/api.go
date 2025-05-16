@@ -128,6 +128,28 @@ func init() {
 			RSS: "Snapshots",
 		},
 		&Endpoint{
+			Name:         "Snapshot diff",
+			Path:         "/snapshot_diff",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      snapshotDiff,
+			Description:  "Compare two snapshots and display the differences",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "s1",
+					Type:        "string",
+					Required:    true,
+					Description: "ID of the first snapshot",
+				},
+				&EndpointArg{
+					Name:        "s2",
+					Type:        "string",
+					Required:    true,
+					Description: "ID of the second snapshot",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "User",
 			Path:         "/users/:username",
 			Method:       GET,

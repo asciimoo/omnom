@@ -8,27 +8,21 @@
             - <a href="{{ URLFor "Download snapshot" }}?sid={{ .Snapshot.Key }}"><small>Download</small></a>
             - <a href="{{ URLFor "Snapshot details" }}?sid={{ .Snapshot.Key }}"><small>Details</small></a>
         </p>
-    </div>
-    {{ if .OtherSnapshots }}
-    <div class="accordion-tabs">
-        <div class="accordion-tab">
-            <input class="accordion-tab__control" type="checkbox" id="chck2">
-            <label class="accordion-tab-label" for="chck2">
-                <div class="my-bookmarks__section-header">
-                    <h3>
-                        Other snapshots of this URL
-                    </h3>
-                    <i class="fas fa-angle-down"></i>
-                </div>
-            </label>
-            <div class="accordion-tab-content">
+        {{ if .OtherSnapshots }}
+        <details>
+            <summary>Other snapshots of this URL</summary>
+            <div>
+                {{ $os := .Snapshot }}
                 {{ range $i,$s := .OtherSnapshots }}
-                <span class="tag"><a href="{{ URLFor "Snapshot" }}?sid={{ $s.Sid }}&bid={{ $s.Bid }}">{{ if $s.Title }}{{ $s.Title }}{{ else }}#{{ $i }}{{ end }}</a></span>
+                <div class="level"><div class="level-left">
+                    <a href="{{ URLFor "Snapshot" }}?sid={{ $s.Key }}&bid={{ $s.Bid }}">{{ if $s.Title }}{{ $s.Title }}{{ else }}#{{ $i }} - {{ $s.CreatedAt | ToDate }}{{ end }}</a>
+                    <a href="{{ URLFor "Snapshot diff" }}?s1={{ $os.Key }}&s2={{ $s.Key }}" class="button is-small">Compare</a>
+                </div></div>
                 {{ end }}
             </div>
-        </div>
+        </details>
+        {{ end }}
     </div>
-    {{ end }}
 </div>
 <iframe src="{{ SnapshotURL .Snapshot.Key }}" title="snapshot of {{ .Bookmark.URL }}" class="snapshot-iframe"></iframe>
 {{ end }}

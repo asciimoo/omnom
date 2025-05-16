@@ -14,3 +14,11 @@ type Snapshot struct {
 	Size       uint       `json:"size"`
 	Resources  []Resource `gorm:"many2many:snapshot_resources;" json:"resources"`
 }
+
+func GetSnapshotWithResources(key string) (*Snapshot, error) {
+	var s *Snapshot
+	if err := DB.Where("key = ?", key).Preload("Resources").First(&s).Error; err != nil {
+		return nil, err
+	}
+	return s, nil
+}

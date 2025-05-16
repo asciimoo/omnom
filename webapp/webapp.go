@@ -157,6 +157,8 @@ func createRenderer(rootDir string) multitemplate.Renderer {
 	addTemplate(r, rootDir, true, "view-bookmark", "view_bookmark.tpl")
 	addTemplate(r, rootDir, true, "edit-bookmark", "edit_bookmark.tpl")
 	addTemplate(r, rootDir, true, "create-bookmark", "create_bookmark.tpl")
+	addTemplate(r, rootDir, true, "snapshot-diff-form", "snapshot_diff_form.tpl")
+	addTemplate(r, rootDir, true, "snapshot-diff", "snapshot_diff.tpl")
 	addTemplate(r, rootDir, true, "user", "user.tpl")
 	addTemplate(r, rootDir, true, "api", "api.tpl")
 	addTemplate(r, rootDir, true, "error", "error.tpl")

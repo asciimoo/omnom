@@ -1,5 +1,5 @@
 {{ define "full-content" }}
-<div class="bookmark-wrapper">
+<div class="fullscreen-wrapper">
     {{ if not .Bookmarks }}
     <h3 class="title">No public bookmarks found</h3>
     {{ else }}

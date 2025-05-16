@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"golang.org/x/net/html"
 
@@ -72,13 +73,14 @@ func snapshotWrapper(c *gin.Context) {
 		}
 	}
 	var otherSnapshots []struct {
-		Title string
-		Bid   int64
-		Sid   string
+		Title     string
+		Bid       int64
+		Key       string
+		CreatedAt time.Time
 	}
 	err = model.DB.
 		Model(&model.Snapshot{}).
-		Select("bookmarks.id as bid, snapshots.key as sid, snapshots.title as title").
+		Select("bookmarks.id as bid, snapshots.key as key, snapshots.title as title, snapshots.created_at as created_at").
 		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
 		Where("bookmarks.url = ? and snapshots.key != ?", b.URL, s.Key).Find(&otherSnapshots).Error
 	if err != nil {

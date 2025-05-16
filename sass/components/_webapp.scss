@@ -58,7 +58,7 @@ html {
     }
 }
 
-.bookmark-wrapper {
+.fullscreen-wrapper {
   background: $color-white;
   padding: 2em 1em;
   flex: 1 0 auto;
@@ -482,4 +482,12 @@ iframe {
 }
 .resources .tag {
   margin: 0 1em;
+}
+
+.imgdiff {
+  margin-bottom: 1em;
+  img {
+    margin: 1em;
+    max-width: 80%;
+  }
 }
