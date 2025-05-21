@@ -23,6 +23,10 @@ import (
 
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 
+func isActivityPubHeader(s string) bool {
+	return strings.HasPrefix(s, "application/activity+json") || strings.HasPrefix(`application/ld+json; profile="https://www.w3.org/ns/activitystreams"`)
+}
+
 func userProfile(c *gin.Context) {
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
@@ -32,7 +36,7 @@ func userProfile(c *gin.Context) {
 		return
 	}
 
-	if strings.HasPrefix(c.Request.Header.Get("Accept"), "application/activity+json") {
+	if isActivityPubHeader(c.Request.Header.Get("Accept")) {
 		apIdentityResponse(c, user)
 		return
 	}
