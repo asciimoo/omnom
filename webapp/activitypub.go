@@ -30,6 +30,7 @@ const (
 	apRequestTimeout = 10 * time.Second
 	followAction     = "Follow"
 	unfollowAction   = "Undo"
+	jsonNull         = "null"
 )
 
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
@@ -612,6 +613,9 @@ func apFetchActor(us string, keyID string, key *rsa.PrivateKey) (*apIdentity, er
 	sigData := []byte(fmt.Sprintf("(request-target): get %s\nhost: %s\ndate: %s", u.Path, u.Host, d))
 	sigHash := sha256.Sum256(sigData)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
+	if err != nil {
+		return nil, errors.New("failed to sign data")
+	}
 	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
 	req.Header.Set("Host", u.Host)
 	req.Header.Set("Date", d)
@@ -658,7 +662,7 @@ func apWebfingerResponse(c *gin.Context) {
 }
 
 func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 || string(data) == "null" {
+	if len(data) == 0 || string(data) == jsonNull {
 		return nil
 	}
 	if data[0] == '"' && data[len(data)-1] == '"' {
@@ -697,7 +701,7 @@ func (c *apContext) MarshalJSON() ([]byte, error) {
 }
 
 func (i *apImage) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 || string(data) == "null" {
+	if len(data) == 0 || string(data) == jsonNull {
 		return nil
 	}
 	if data[0] == '"' && data[len(data)-1] == '"' {
