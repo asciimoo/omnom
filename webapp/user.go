@@ -24,7 +24,7 @@ import (
 var userRe = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 
 func isActivityPubHeader(s string) bool {
-	return strings.HasPrefix(s, "application/activity+json") || strings.HasPrefix(`application/ld+json; profile="https://www.w3.org/ns/activitystreams"`)
+	return strings.HasPrefix(s, "application/activity+json") || strings.HasPrefix(s, `application/ld+json; profile="https://www.w3.org/ns/activitystreams"`)
 }
 
 func userProfile(c *gin.Context) {
