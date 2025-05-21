@@ -2,9 +2,11 @@ package webapp
 
 import (
 	"encoding/json"
+	//"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	//"os"
 	"testing"
 
 	"github.com/asciimoo/omnom/config"
@@ -184,3 +186,24 @@ func TestAPActorParse(t *testing.T) {
 		return
 	}
 }
+
+//func TestAPActorFetch(t *testing.T) {
+//	cfg, err := config.Load("../config.yml")
+//	if !assert.Nil(t, err) {
+//		log.Debug().Msg("failed to load config")
+//		return
+//	}
+//	privBytes, err := os.ReadFile("../" + cfg.ActivityPub.PrivKeyPath)
+//	if !assert.Nil(t, err) {
+//		log.Debug().Msg("failed to read privk")
+//		return
+//	}
+//	err = cfg.ActivityPub.ParsePrivKey(privBytes)
+//	k := cfg.ActivityPub.PrivK
+//	a, err := apFetchActor("https://merveilles.town/users/bouncepaw", "https://omnom.zone/users/testuser#key", k)
+//	if !assert.Nil(t, err) {
+//		log.Debug().Msg("failed to fetch actor")
+//		return
+//	}
+//	fmt.Println(a.ID, a.Inbox)
+//}

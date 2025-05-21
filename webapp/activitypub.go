@@ -359,7 +359,9 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
 		return
 	}
-	actor, err := apFetchActor(d.Actor)
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	actor, err := apFetchActor(d.Actor, d.Object.ID+"#key", key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
 		return
@@ -368,8 +370,6 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
-	cfg, _ := c.Get("config")
-	key := cfg.(*config.Config).ActivityPub.PrivK
 	data, err := json.Marshal(apFollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
@@ -408,7 +408,9 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
 		return
 	}
-	actor, err := apFetchActor(d.Actor)
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	actor, err := apFetchActor(d.Actor, d.Object.ID+"#key", key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
 		return
@@ -417,8 +419,6 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
-	cfg, _ := c.Get("config")
-	key := cfg.(*config.Config).ActivityPub.PrivK
 	data, err := json.Marshal(apFollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
@@ -465,7 +465,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark) {
 		if item == nil {
 			continue
 		}
-		actor, err := apFetchActor(f.Follower)
+		actor, err := apFetchActor(f.Follower, u+"#key", key)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to fetch actor")
 			continue
@@ -598,13 +598,26 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	return nil
 }
 
-func apFetchActor(u string) (*apIdentity, error) {
-	c := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", u, nil)
+func apFetchActor(us string, keyID string, key *rsa.PrivateKey) (*apIdentity, error) {
+	u, err := url.Parse(us)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Accept", "application/activity+json; charset=utf-8")
+	c := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest("GET", us, nil)
+	if err != nil {
+		return nil, err
+	}
+	d := time.Now().UTC().Format(http.TimeFormat)
+	sigData := []byte(fmt.Sprintf("(request-target): get %s\nhost: %s\ndate: %s", u.Path, u.Host, d))
+	sigHash := sha256.Sum256(sigData)
+	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
+	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
+	req.Header.Set("Host", u.Host)
+	req.Header.Set("Date", d)
+	req.Header.Set("Signature", sigHeader)
+	req.Header.Set("Content-Type", "application/activity+json; charset=utf-8")
+	req.Header.Set("Accept", "application/activity+json")
 	r, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -612,6 +625,9 @@ func apFetchActor(u string) (*apIdentity, error) {
 	defer r.Body.Close()
 	i := &apIdentity{}
 	err = json.NewDecoder(r.Body).Decode(i)
+	if i.ID == "" || i.Inbox == "" || i.Outbox == "" {
+		return nil, errors.New("mandatory actor data is missing")
+	}
 	return i, err
 }
 
