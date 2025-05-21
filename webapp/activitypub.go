@@ -94,8 +94,8 @@ type apIdentity struct {
 	URL               string     `json:"url"`
 	Discoverable      bool       `json:"discoverable"`
 	Memorial          bool       `json:"memorial"`
-	Icon              apImage    `json:"icon"`
-	Image             apImage    `json:"image"`
+	Icon              *apImage   `json:"icon"`
+	Image             *apImage   `json:"image"`
 	PubKey            apPubKey   `json:"publicKey"`
 }
 
@@ -279,12 +279,12 @@ func apIdentityResponse(c *gin.Context, user *model.User) {
 		Name:              user.Username,
 		URL:               id,
 		Discoverable:      true,
-		Icon: apImage{
+		Icon: &apImage{
 			Type:      "Image",
 			MediaType: "image/png",
 			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
 		},
-		Image: apImage{
+		Image: &apImage{
 			Type:      "Image",
 			MediaType: "image/png",
 			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
@@ -678,4 +678,22 @@ func (c *apContext) MarshalJSON() ([]byte, error) {
 		return json.Marshal(c.ID)
 	}
 	return json.Marshal(c.Parts)
+}
+
+func (i *apImage) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		return nil
+	}
+	if data[0] == '"' && data[len(data)-1] == '"' {
+		return json.Unmarshal(data, &i.URL)
+	}
+	if data[0] == '{' && data[len(data)-1] == '}' {
+		type T struct {
+			Type      string `json:"type"`
+			MediaType string `json:"mediaType"`
+			URL       string `json:"url"`
+		}
+		return json.Unmarshal(data, (*T)(i))
+	}
+	return nil
 }
