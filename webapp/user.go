@@ -83,10 +83,14 @@ func signup(c *gin.Context) {
 	if cfg.(*config.Config).App.DisableSignup {
 		c.Redirect(http.StatusFound, baseURL("/"))
 	}
+
 	session := sessions.Default(c)
 	tplVars := map[string]interface{}{
-		"OAuthID": session.Get("oauth_id"),
+		"OAuthID":       session.Get("oauth_id"),
+		"OAuthEmail":    session.Get("oauth_email"),
+		"OAuthUsername": session.Get("oauth_username"),
 	}
+
 	if c.Request.Method == http.MethodPost {
 		username := c.PostForm("username")
 		email := c.PostForm("email")
@@ -118,14 +122,18 @@ func signup(c *gin.Context) {
 				return
 			}
 			session.Delete("oauth_id")
-			err = session.Save()
-			if err != nil {
+			session.Delete("oauth_email")
+			session.Delete("oauth_username")
+
+			if err := session.Save(); err != nil {
 				setNotification(c, nError, err.Error(), false)
 				render(c, http.StatusOK, "signup", tplVars)
 				return
 			}
+
 			setNotification(c, nInfo, "Successful registration", false)
 			c.Redirect(http.StatusFound, baseURL("/"))
+
 			return
 		} else {
 			err = mail.Send(
