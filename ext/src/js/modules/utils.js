@@ -5,7 +5,6 @@
 const browser = chrome;
 
 let siteUrl = '';
-let debug = false;
 let omnomUrl = '';
 let omnomToken = '';
 let defaultPublic = false;
@@ -98,7 +97,6 @@ async function setOmnomSettings() {
     await setSiteUrl();
     setOmnomUrl(omnomData.omnom_url || '');
     setOmnomToken(omnomData.omnom_token || '');
-    setDebug(omnomData.omnom_debug || false);
     setDefaultPublic(omnomData.omnom_public || false);
     if (omnomToken == '') {
         return Promise.reject('Token not found. Specify it in the extension\'s options');
@@ -111,7 +109,7 @@ async function setOmnomSettings() {
 
 function getOmnomDataFromLocal() {
     return new Promise((resolve, reject) => {
-        browser.storage.local.get(['omnom_url', 'omnom_token', 'omnom_debug', 'omnom_public'], (data) => {
+        browser.storage.local.get(['omnom_url', 'omnom_token', 'omnom_public'], (data) => {
             data ? resolve(data) : reject('Could not get Data');
         });
     });
