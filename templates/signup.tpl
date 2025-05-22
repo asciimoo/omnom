@@ -13,7 +13,7 @@
     <div class="field">
       <label class="label">Username</label>
       <div class="control has-icons-left">
-        <input class="input" type="text" name="username" placeholder="username.."{{ if .OAuthUsername }} value="{{ .OAuthUsername }}"{{ end} } />
+        <input class="input" type="text" name="username" placeholder="username.."{{ if .OAuthUsername }} value="{{ .OAuthUsername }}"{{ end }} />
         <span class="icon is-small is-left">
           <i class="fas fa-user"></i>
         </span>
