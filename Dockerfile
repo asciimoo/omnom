@@ -27,7 +27,6 @@ RUN chmod +x /entrypoint.sh
 
 # Copy binary and static files
 COPY static ./static
-COPY templates ./templates
 COPY config.yml_sample config.yml
 
 # Modify config.yml to provide some needed default values for running inside the container
