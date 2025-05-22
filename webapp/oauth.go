@@ -100,7 +100,7 @@ func oauthRedirectHandler(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	redirectURI := fmt.Sprintf("%s?provider=%s", getFullURLPrefix(c)+URLFor("Oauth verification"), c.Query("provider"))
+	redirectURI := fmt.Sprintf("%s?provider=%s", getFullURL(c, URLFor("Oauth verification")), c.Query("provider"))
 	code := c.Query("code")
 
 	resp, err := p.GetToken(ctx, oauth.NewTokenRequest(pCfg.ClientID, pCfg.ClientSecret, code, redirectURI))
