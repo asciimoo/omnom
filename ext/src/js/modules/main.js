@@ -15,7 +15,6 @@ import {
     getOmnomToken,
     getOmnomUrl,
     getSiteUrl,
-    isDebug,
     isOmnomDefaultPublic,
     renderError,
     renderSuccess,
@@ -229,9 +228,6 @@ async function saveBookmark() {
     console.time('createSnapshot');
     const snapshotData = await createSnapshot(doc);
     console.timeEnd('createSnapshot');
-    if (isDebug()) {
-        debugPopup(snapshotData['dom']);
-    }
     const snapshotBlob = new Blob([snapshotData['dom']], { type: 'text/html' });
     form.append('snapshot', snapshotBlob);
     form.append('snapshot_text', doc.text);

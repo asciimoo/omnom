@@ -129,14 +129,6 @@ function isOmnomDefaultPublic() {
     return defaultPublic;
 }
 
-function isDebug() {
-    return debug;
-}
-
-function setDebug(isDebug) {
-    debug = isDebug;
-}
-
 function setOmnomUrl(url) {
     omnomUrl = url;
 }
@@ -215,7 +207,6 @@ export {
     getOmnomToken,
     getOmnomUrl,
     getSiteUrl,
-    isDebug,
     isOmnomDefaultPublic,
     queryTabsToPromise,
     renderError,

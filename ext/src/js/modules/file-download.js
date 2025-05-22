@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPLv3+
 
 import { Subject } from 'rxjs';
-import { arrayBufferToBase64, checkStatus, fullURL, isDebug } from './utils';
+import { arrayBufferToBase64, checkStatus, fullURL } from './utils';
 
 const downloadStatus = {
     DOWNLOADING: 'downloading',
@@ -32,7 +32,7 @@ async function downloadFile(url) {
     console.log('fetching ', url);
     const options = {
         method: 'GET',
-        cache: isDebug ? 'no-cache' : 'default',
+        cache: 'default',
     };
     const request = new Request(url, options);
     updateStatus(downloadStatus.DOWNLOADING);
@@ -59,7 +59,7 @@ async function downloadFile(url) {
 async function fetchURL(url) {
     const options = {
         method: 'GET',
-        cache: isDebug ? 'no-cache' : 'default',
+        cache: 'default',
     };
     updateStatus(downloadStatus.DOWNLOADING);
     const request = new Request(url, options);
