@@ -12,6 +12,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/asciimoo/omnom/oauth"
 
@@ -135,6 +136,9 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 		if _, ok := oauth.Providers[pn]; !ok {
 			return nil, errors.New("invalid oauth provider: " + pn)
 		}
+	}
+	if strings.HasSuffix(c.Server.BaseURL, "/") {
+		c.Server.BaseURL = c.Server.BaseURL[:len(c.Server.BaseURL)-1]
 	}
 	return c, nil
 }
