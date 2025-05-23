@@ -372,7 +372,6 @@ func initConfig() {
 		os.Exit(2)
 	}
 	if l, _ := rootCmd.PersistentFlags().GetString("log-level"); l != "" && (rootCmd.Flags().Changed("log-level") || cfg.App.LogLevel == "") {
-		fmt.Println("YO")
 		cfg.App.LogLevel = l
 	}
 }
