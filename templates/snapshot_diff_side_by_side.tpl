@@ -129,24 +129,27 @@
 <script>
  var s1 = document.getElementById('sn1');
  var s2 = document.getElementById('sn2');
- function scroll_1(e) { s2.contentWindow.scrollTo(0, s1.contentWindow.scrollY); }
- function scroll_2(e) { s1.contentWindow.scrollTo(0, s2.contentWindow.scrollY); }
- s1.contentWindow.onscroll = scroll_1;
+ function resizeIFrameToFitContent(iFrame) {
+     iFrame.style.height = iFrame.contentWindow.document.body.scrollHeight+"px";
+     iFrame.parentNode.style.height = iFrame.contentWindow.document.body.scrollHeight+"px";
+     console.log(iFrame.contentWindow.document.body.scrollHeight);
+ }
+ s1.contentWindow.addEventListener('DOMContentLoaded', function(e) {
+     resizeIFrameToFitContent(s1);
+ });
 
  let s2URL = "{{ SnapshotURL .S2.Key }}";
- let se = document.getElementById("sn2");
  let hl = document.getElementById("highlighter").cloneNode(true);
  fetch(s2URL).then(r => {
      return r.text();
  }).then(html => {
      hl.removeAttribute("nomodule");
-     console.log(hl.outerHTML);
-     let d = se.contentWindow.document;
+     let d = s2.contentWindow.document;
      d.open();
      d.write(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl.outerHTML);
      d.close();
-     s2.contentWindow.onscroll = scroll_2;
-     //se.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
+     resizeIFrameToFitContent(s2);
+     //s1.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
  }).catch(err => console.log(err));
 </script>
 {{ end }}

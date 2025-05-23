@@ -159,8 +159,6 @@ iframe {
   padding: 0;
   margin: 0;
   flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
   h2 {
     padding: 1em 1em 0 1em;
   }
@@ -168,7 +166,6 @@ iframe {
     a {
       padding: 0 1em;
     }
-    flex: 1 1 auto;
   }
 }
 
