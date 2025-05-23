@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
 	"syscall"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	text "text/template"
 
 	"github.com/asciimoo/omnom/config"
+	templatesfs "github.com/asciimoo/omnom/templates"
 
 	smtp "github.com/xhit/go-simple-mail/v2"
 )
@@ -34,13 +34,13 @@ var templates = &Templates{}
 
 func Init(c *config.Config) error {
 	var err error
-	templates.HTML, err = html.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*html.tpl"))
+	templates.HTML, err = html.New("mail").ParseFS(templatesfs.FS, "mail/*html.tpl")
 	if err != nil {
-		return errors.New("failed to parse mail templates. Check your template path")
+		return errors.New("failed to parse mail html templates")
 	}
-	templates.Text, err = text.New("mail").ParseGlob(filepath.Join(c.App.TemplateDir, "mail/*txt.tpl"))
+	templates.Text, err = text.New("mail").ParseFS(templatesfs.FS, "mail/*txt.tpl")
 	if err != nil {
-		return errors.New("failed to parse mail templates. Set a valid template path in your config file")
+		return errors.New("failed to parse mail text templates")
 	}
 
 	sc := c.SMTP
