@@ -3,6 +3,7 @@ module github.com/asciimoo/omnom
 go 1.24
 
 require (
+	filippo.io/csrf v0.0.0-20250517103426-cfb6fbb0fbe3
 	github.com/chromedp/cdproto v0.0.0-20250401022514-c504a7d7a18f
 	github.com/chromedp/chromedp v0.13.3
 	github.com/gin-contrib/multitemplate v1.1.0
