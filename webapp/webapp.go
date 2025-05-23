@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"net/http"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -323,7 +325,6 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
 	e.Use(ErrorLoggerMiddleware())
-	e.Use(GzipMiddleware())
 	authorized := e.Group("/")
 	authorized.Use(authRequiredMiddleware)
 
@@ -347,34 +348,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	tplFuncMap["BaseURL"] = baseURL
 	tplFuncMap["URLFor"] = URLFor
 	// ROUTES
-
-	// These static routes are a hack to deal with static/data containing snapshot
-	// content. The actual static content uses "embed" which can only embed files that
-	// exist at compile time. Snapshot content isn't known until runtime so we have to
-	// handle it differently.
-	for _, dir := range []string{
-		"css",
-		"docs",
-		"icons",
-		"images",
-		"js",
-		"test",
-		"webfonts",
-	} {
-		sub, err := fs.Sub(static.FS, dir)
-		if err != nil {
-			panic(err)
-		}
-		e.StaticFS(fmt.Sprintf("/static/%s", dir), http.FS(sub))
-	}
-	for _, f := range []string{
-		"omnom.svg",
-		"placeholder-image.png",
-	} {
-		e.StaticFileFS(fmt.Sprintf("/static/%s", f), f, http.FS(static.FS))
-	}
-	// Snapshot content
-	e.Static("/static/data", cfg.Storage.RootDir)
+	staticFS(e, "/static", static.FS, storage.FS())
 	for _, ep := range Endpoints {
 		if ep.AuthRequired {
 			registerEndpoint(authorized, ep)
@@ -385,6 +359,55 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	e.NoRoute(notFoundView)
 	e.HTMLRender = createRenderer(templates.FS)
 	return e
+}
+
+func openStaticFS(name string, staticfs fs.FS, snapshotfs fs.FS) (fs.File, bool, error) {
+	if strings.HasPrefix(name, "data/") {
+		name := strings.TrimPrefix(name, "data/")
+		f, err := snapshotfs.Open(name)
+		return f, true, err
+	}
+	f, err := staticfs.Open(name)
+	return f, false, err
+}
+
+// staticFS returns files without any directory indexing and can apply
+// various content settings for snapshots. This exists because Gin's
+// filesystem handling isn't a good match for our needs and webapp statics
+// that come from "embed" don't play nicely with filesytem snapshot content
+// that's only known at run-time.
+func staticFS(e *gin.Engine, prefix string, staticfs fs.FS, snapshotfs fs.FS) {
+	handler := func(c *gin.Context) {
+		name := strings.TrimPrefix(c.Param("filepath"), "/")
+		f, snapshotContent, err := openStaticFS(name, staticfs, snapshotfs)
+		if err != nil {
+			notFoundView(c)
+			return
+		}
+		defer f.Close()
+		info, err := f.Stat()
+		if err != nil || info.IsDir() {
+			notFoundView(c)
+			return
+		}
+		seeker, ok := f.(io.ReadSeeker)
+		if !ok {
+			notFoundView(c)
+			return
+		}
+		// Don't add gzip or content-type headers until after we've handled
+		// all of the error cases so that 404 pages get rendered correctly.
+		if snapshotContent {
+			if strings.HasPrefix(name, "data/snapshots/") {
+				c.Header("Content-Type", "text/html; charset=utf-8")
+			}
+			c.Header("Content-Encoding", "gzip")
+		}
+		http.ServeContent(c.Writer, c.Request, name, info.ModTime(), seeker)
+	}
+	pattern := path.Join(prefix, "/*filepath")
+	e.GET(pattern, handler)
+	e.HEAD(pattern, handler)
 }
 
 func Run(cfg *config.Config) {
@@ -576,18 +599,6 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 		if ok {
 			log.Error().Str("Error", err.(string)).Msg("webapp error")
 		}
-	}
-}
-
-func GzipMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if strings.Contains(c.Request.URL.Path, "/static/data/") {
-			if strings.Contains(c.Request.URL.Path, "/static/data/snapshots") {
-				c.Header("Content-Type", "text/html; charset=utf-8")
-			}
-			c.Header("Content-Encoding", "gzip")
-		}
-		c.Next()
 	}
 }
 

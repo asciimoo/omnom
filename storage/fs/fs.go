@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -29,6 +30,14 @@ func (s *FSStorage) Init(sCfg config.Storage) error {
 		return err
 	}
 	return mkdir(filepath.Join(s.baseDir, "snapshots"))
+}
+
+func (s *FSStorage) FS() (fs.FS, error) {
+	root, err := os.OpenRoot(s.baseDir)
+	if err != nil {
+		return nil, err
+	}
+	return root.FS(), nil
 }
 
 func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {

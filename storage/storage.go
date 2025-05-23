@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	iofs "io/fs"
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/storage/fs"
@@ -16,6 +17,7 @@ import (
 
 type Storage interface {
 	Init(sCfg config.Storage) error
+	FS() (iofs.FS, error)
 	GetSnapshot(string) io.ReadCloser
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
@@ -46,6 +48,17 @@ func Init(sCfg config.Storage) error {
 		return nil
 	}
 	return ErrUnknownStorage
+}
+
+func FS() iofs.FS {
+	if store == nil {
+		panic(ErrUninitialized)
+	}
+	storeFS, err := store.FS()
+	if err != nil {
+		panic(err)
+	}
+	return storeFS
 }
 
 func GetSnapshot(key string) (io.ReadCloser, error) {
