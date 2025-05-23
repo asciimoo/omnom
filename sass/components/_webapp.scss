@@ -150,6 +150,26 @@ iframe {
 .snapshot-iframe {
   border-top: 0.4em solid $primary-color;
   background: white;
+  width: 100%;
+  height: 100%;
+}
+
+.iframe-diff-wrapper {
+  background: $color-white;
+  padding: 0;
+  margin: 0;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  h2 {
+    padding: 1em 1em 0 1em;
+  }
+  .columns {
+    a {
+      padding: 0 1em;
+    }
+    flex: 1 1 auto;
+  }
 }
 
 .navbar {

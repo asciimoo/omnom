@@ -150,6 +150,28 @@ func init() {
 			},
 		},
 		&Endpoint{
+			Name:         "Snapshot diff side by side",
+			Path:         "/snapshot_diff_side_by_side",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      snapshotDiffSideBySide,
+			Description:  "Display two snapshots and their differences side by side",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "s1",
+					Type:        "string",
+					Required:    true,
+					Description: "ID of the first snapshot",
+				},
+				&EndpointArg{
+					Name:        "s2",
+					Type:        "string",
+					Required:    true,
+					Description: "ID of the second snapshot",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "User",
 			Path:         "/users/:username",
 			Method:       GET,
