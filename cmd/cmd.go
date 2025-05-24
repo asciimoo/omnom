@@ -66,17 +66,6 @@ func initLog() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Warn().Str("Invalid config log level", cfg.App.LogLevel)
 	}
-	out := zerolog.ConsoleWriter{
-		Out: os.Stderr,
-		FormatTimestamp: func(i interface{}) string {
-			return i.(string)
-		},
-		FormatLevel: func(i interface{}) string {
-			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
-		},
-	}
-	log.Logger = log.With().Caller().Logger()
-	log.Logger = log.Output(out)
 }
 
 func initMail() error {
@@ -91,76 +80,54 @@ var rootCmd = &cobra.Command{
 	Version: "v0.2.0",
 }
 
+func setStrArg(cmd *cobra.Command, arg string, dest *string) {
+	if v, err := cmd.Flags().GetString(arg); err == nil && (cmd.Flags().Changed(arg) || *dest == "") {
+		*dest = v
+	}
+}
+
+func setBoolArg(cmd *cobra.Command, arg string, dest *bool) {
+	if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
+		*dest = v
+	}
+}
+
+func setIntArg(cmd *cobra.Command, arg string, dest *int) {
+	if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
+		//nolint: gosec // conversion is safe. TODO use uint by default
+		*dest = int(v)
+	}
+}
+
+func setInt64Arg(cmd *cobra.Command, arg string, dest *int64) {
+	if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
+		//nolint: gosec // conversion is safe. TODO use uint by default
+		*dest = int64(v)
+	}
+}
+
 var listenCmd = &cobra.Command{
 	Use:    "listen",
 	Short:  "start server",
 	Long:   ``,
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
-		arg := "address"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.Server.Address = v
-		}
-		arg = "results-per-page"
-		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.App.ResultsPerPage = int64(v)
-		}
-		arg = "webapp-snapshotter-timeout"
-		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.App.WebappSnapshotterTimeout = int(v)
-		}
-		arg = "create-bookmark-from-webapp"
-		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.App.CreateBookmarkFromWebapp = v
-		}
-		arg = "secure-cookie"
-		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.Server.SecureCookie = v
-		}
-		arg = "db-type"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.DB.Type = v
-		}
-		arg = "db-connection"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.DB.Connection = v
-		}
-		arg = "smtp-host"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.Host = v
-		}
-		arg = "smtp-port"
-		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.Port = int(v)
-		}
-		arg = "smtp-username"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.Username = v
-		}
-		arg = "smtp-password"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.Password = v
-		}
-		arg = "smtp-sender"
-		if v, err := cmd.Flags().GetString(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.Sender = v
-		}
-		arg = "smtp-tls"
-		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.TLS = v
-		}
-		arg = "smtp-tls-allow-insecure"
-		if v, err := cmd.Flags().GetBool(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.TLSAllowInsecure = v
-		}
-		arg = "smtp-send-timeout"
-		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.SendTimeout = int(v)
-		}
-		arg = "smtp-connection-timeout"
-		if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
-			cfg.SMTP.ConnectionTimeout = int(v)
-		}
+		setStrArg(cmd, "address", &cfg.Server.Address)
+		setInt64Arg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
+		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
+		setBoolArg(cmd, "create-bookmark-from-webapp", &cfg.App.CreateBookmarkFromWebapp)
+		setBoolArg(cmd, "secure-cookie", &cfg.Server.SecureCookie)
+		setStrArg(cmd, "db-type", &cfg.DB.Type)
+		setStrArg(cmd, "db-connection", &cfg.DB.Connection)
+		setStrArg(cmd, "smtp-host", &cfg.SMTP.Host)
+		setIntArg(cmd, "smtp-port", &cfg.SMTP.Port)
+		setStrArg(cmd, "smtp-username", &cfg.SMTP.Username)
+		setStrArg(cmd, "smtp-password", &cfg.SMTP.Password)
+		setStrArg(cmd, "smtp-sender", &cfg.SMTP.Sender)
+		setBoolArg(cmd, "smtp-tls", &cfg.SMTP.TLS)
+		setBoolArg(cmd, "smtp-tls-allow-insecure", &cfg.SMTP.TLSAllowInsecure)
+		setIntArg(cmd, "smtp-send-timeout", &cfg.SMTP.SendTimeout)
+		setIntArg(cmd, "smtp-connection-timeout", &cfg.SMTP.ConnectionTimeout)
 		err := initMail()
 		if err != nil {
 			fmt.Println("Failed to initialize mailing:", err)
@@ -337,24 +304,42 @@ func init() {
 	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(generateAPIDocsMD)
 
-	listenCmd.Flags().StringP("address", "a", "127.0.0.1:7331", "Listen address")
-	listenCmd.Flags().Uint("results-per-page", 20, "Number of bookmarks/snapshots per page")
-	listenCmd.Flags().Uint("webapp-snapshotter-timeout", 15, "Timeout duration for webapp snapshotter (seconds)")
-	listenCmd.Flags().Bool("create-bookmark-from-webapp", false, "Allow creating bookmarks from webapp (requires chromium)")
-	listenCmd.Flags().Bool("secure-cookie", false, "Use secure cookies")
-	listenCmd.Flags().String("db-type", "sqlite", "Database type")
-	listenCmd.Flags().String("db-connection", "db.sqlite", "Database connection string (path for sqlite)")
-	listenCmd.Flags().String("smtp-host", "", "Host of the SMTP server (leave it blank to disable SMTP)")
-	listenCmd.Flags().Uint("smtp-port", 25, "Port of the SMTP server")
-	listenCmd.Flags().String("smtp-username", "", "SMTP username")
-	listenCmd.Flags().String("smtp-password", "", "SMTP password")
-	listenCmd.Flags().String("smtp-sender", "Omnom <omnom@127.0.0.1>", "SMTP sender")
-	listenCmd.Flags().Bool("smtp-tls", false, "Use TLS for SMTP")
-	listenCmd.Flags().Bool("smtp-tls-allow-insecure", false, "Allow insecure TLS connections for SMTP")
-	listenCmd.Flags().Uint("smtp-send-timeout", 10, "SMTP send timeout (seconds)")
-	listenCmd.Flags().Uint("smtp-connection-timeout", 5, "SMTP connection timeout (seconds)")
+	dcfg := config.CreateDefaultConfig()
+	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
+	//nolint: gosec // conversion is safe. TODO use uint by default
+	listenCmd.Flags().Uint("results-per-page", uint(dcfg.App.ResultsPerPage), "Number of bookmarks/snapshots per page")
+	//nolint: gosec // conversion is safe. TODO use uint by default
+	listenCmd.Flags().Uint("webapp-snapshotter-timeout", uint(dcfg.App.WebappSnapshotterTimeout), "Timeout duration for webapp snapshotter (seconds)")
+	listenCmd.Flags().Bool("create-bookmark-from-webapp", dcfg.App.CreateBookmarkFromWebapp, "Allow creating bookmarks from webapp (requires chromium)")
+	listenCmd.Flags().Bool("secure-cookie", dcfg.Server.SecureCookie, "Use secure cookies")
+	listenCmd.Flags().String("db-type", dcfg.DB.Type, "Database type")
+	listenCmd.Flags().String("db-connection", dcfg.DB.Connection, "Database connection string (path for sqlite)")
+	listenCmd.Flags().String("smtp-host", dcfg.SMTP.Host, "Host of the SMTP server (leave it blank to disable SMTP)")
+	//nolint: gosec // conversion is safe. TODO use uint by default
+	listenCmd.Flags().Uint("smtp-port", uint(dcfg.SMTP.Port), "Port of the SMTP server")
+	listenCmd.Flags().String("smtp-username", dcfg.SMTP.Username, "SMTP username")
+	listenCmd.Flags().String("smtp-password", dcfg.SMTP.Password, "SMTP password")
+	listenCmd.Flags().String("smtp-sender", dcfg.SMTP.Sender, "SMTP sender")
+	listenCmd.Flags().Bool("smtp-tls", dcfg.SMTP.TLS, "Use TLS for SMTP")
+	listenCmd.Flags().Bool("smtp-tls-allow-insecure", dcfg.SMTP.TLSAllowInsecure, "Allow insecure TLS connections for SMTP")
+	//nolint: gosec // conversion is safe. TODO use uint by default
+	listenCmd.Flags().Uint("smtp-send-timeout", uint(dcfg.SMTP.SendTimeout), "SMTP send timeout (seconds)")
+	//nolint: gosec // conversion is safe. TODO use uint by default
+	listenCmd.Flags().Uint("smtp-connection-timeout", uint(dcfg.SMTP.ConnectionTimeout), "SMTP connection timeout (seconds)")
 
 	cobra.OnInitialize(initialize)
+
+	out := zerolog.ConsoleWriter{
+		Out: os.Stderr,
+		FormatTimestamp: func(i interface{}) string {
+			return i.(string)
+		},
+		FormatLevel: func(i interface{}) string {
+			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
+		},
+	}
+	log.Logger = log.With().Caller().Logger()
+	log.Logger = log.Output(out)
 }
 
 func initialize() {

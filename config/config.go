@@ -16,6 +16,7 @@ import (
 
 	"github.com/asciimoo/omnom/oauth"
 
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -111,14 +112,54 @@ func readConfigFile(filename string) ([]byte, error) {
 func Load(filename string) (*Config, error) {
 	b, err := readConfigFile(filename)
 	if err != nil {
-		return nil, err
+		log.Debug().Msg("No config file found, using default config")
+		//lint:ignore nilerr // no need to check error
+		return CreateDefaultConfig(), nil
 	}
 	c, err := parseConfig(b)
 	return c, err
 }
 
+func CreateDefaultConfig() *Config {
+	return &Config{
+		App: App{
+			ResultsPerPage:           30,
+			CreateBookmarkFromWebapp: false,
+			WebappSnapshotterTimeout: 15,
+			LogLevel:                 "info",
+			StaticDir:                "./static",
+		},
+		Server: Server{
+			Address:      "127.0.0.1:7331",
+			SecureCookie: false,
+		},
+		DB: DB{
+			Type:       "sqlite",
+			Connection: "db.sqlite3",
+		},
+		Storage: Storage{
+			Type: "fs",
+		},
+		ActivityPub: &ActivityPub{
+			PubKeyPath:  "./public.pem",
+			PrivKeyPath: "./private.pem",
+		},
+		SMTP: SMTP{
+			Host:              "",
+			Port:              25,
+			Username:          "",
+			Password:          "",
+			Sender:            "Omnom <omnom@127.0.0.1>",
+			TLS:               false,
+			TLSAllowInsecure:  false,
+			SendTimeout:       10,
+			ConnectionTimeout: 5,
+		},
+	}
+}
+
 func parseConfig(rawConfig []byte) (*Config, error) {
-	var c *Config
+	c := CreateDefaultConfig()
 	err := yaml.Unmarshal(rawConfig, &c)
 	if err != nil {
 		return nil, err
