@@ -113,6 +113,7 @@ var listenCmd = &cobra.Command{
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
 		setStrArg(cmd, "address", &cfg.Server.Address)
+		setStrArg(cmd, "static-directory", &cfg.App.StaticDir)
 		setInt64Arg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
 		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
 		setBoolArg(cmd, "create-bookmark-from-webapp", &cfg.App.CreateBookmarkFromWebapp)
@@ -306,6 +307,7 @@ func init() {
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
+	listenCmd.Flags().String("static-directory", dcfg.App.StaticDir, "Static directory location")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("results-per-page", uint(dcfg.App.ResultsPerPage), "Number of bookmarks/snapshots per page")
 	//nolint: gosec // conversion is safe. TODO use uint by default
