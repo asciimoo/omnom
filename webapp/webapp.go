@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/localization"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/templates"
@@ -173,6 +174,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	u, _ := c.Get("user")
 	cfg, _ := c.Get("config")
 	csrf, _ := c.Get("_csrf")
+	l, _ := c.Get("localizer")
 	tplVars := gin.H{
 		"Page":                  page,
 		"User":                  u,
@@ -180,6 +182,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 		"AllowBookmarkCreation": cfg.(*config.Config).App.CreateBookmarkFromWebapp,
 		"CSRF":                  csrf,
 		"OAuth":                 cfg.(*config.Config).OAuth,
+		"Tr":                    l.(*localization.Localizer),
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {
@@ -315,6 +318,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
 	e.Use(sessions.Sessions("SID", store))
 	e.Use(SessionMiddleware(cfg))
+	e.Use(LocalizationMiddleware(cfg))
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
 	e.Use(ErrorLoggerMiddleware())
@@ -471,6 +475,30 @@ func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
 func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("config", cfg)
+		c.Next()
+	}
+}
+
+func LocalizationMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		if c.PostForm("lang") != "" {
+			session.Set("lang", c.PostForm("lang"))
+			_ = session.Save()
+		}
+		lang := ""
+		if session.Get("lang") != nil {
+			lang = session.Get("lang").(string)
+		}
+		if c.Query("lang") != "" {
+			lang = c.Query("lang")
+		}
+		aLang := c.Request.Header.Get("Accept-Language")
+		if lang != "" {
+			c.Set("localizer", localization.NewLocalizer(lang, aLang))
+		} else {
+			c.Set("localizer", localization.NewLocalizer(aLang))
+		}
 		c.Next()
 	}
 }
