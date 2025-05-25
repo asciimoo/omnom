@@ -27,25 +27,25 @@
 
     <div id="navbar-menu" class="navbar-menu is-size-5">
       <div class="navbar-start">
-        <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">Home</a>
+        <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">{{ .Tr.Msg "home" }}</a>
         {{ if .User }}
-          <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">My bookmarks</a>
+          <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "my bookmarks" }}</a>
         {{ end }}
-        <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">Public bookmarks</a>
+        <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "public bookmarks" }}</a>
         {{ if (and .User .AllowBookmarkCreation) }}
-          <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">Create bookmark</a>
+          <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">{{ .Tr.Msg "create bookmark" }}</a>
         {{ end }}
-        <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">Snapshots</a>
+        <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">{{ .Tr.Msg "snapshots" }}</a>
       </div>
       <div class="navbar-end">
         {{ if .User }}
             <a href="{{ URLFor "Profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
               {{ if .AllowManualLogin }}
-                <div class="navbar-item"><a href="{{ URLFor "Logout" }}" class="button is-outlined is-info">Logout</a></div>
+                <div class="navbar-item"><a href="{{ URLFor "Logout" }}" class="button is-outlined is-info">{{ .Tr.Msg "logout" }}</a></div>
               {{ end }}
         {{ else if .AllowManualLogin }}
-            <div class="navbar-item"><a href="{{ URLFor "Login" }}" class="button is-outlined is-info">Login</a></div>
-            {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ URLFor "Signup" }}" class="button is-outlined is-info">Signup</a></div>{{ end }}
+            <div class="navbar-item"><a href="{{ URLFor "Login" }}" class="button is-outlined is-info">{{ .Tr.Msg "login" }}</a></div>
+            {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ URLFor "Signup" }}" class="button is-outlined is-info">{{ .Tr.Msg "sign up" }}</a></div>{{ end }}
         {{ end }}
       </div>
     </div>
@@ -76,11 +76,11 @@
       <span>
           <a href="{{ URLFor "API" }}">API</a>
           &#8226; <a href="https://github.com/asciimoo/omnom">GitHub</a>
-          &#8226; <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">Firefox extension</a>
-          &#8226; <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">Chrome extension</a>
+          &#8226; <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">{{ .Tr.Msg "firefox ext" }}</a>
+          &#8226; <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">{{ .Tr.Msg "chrome ext" }}</a>
           &#8226; <a href="https://github.com/asciimoo/omnom/wiki">Wiki</a>
           <br />
-          <a href="{{ AddURLParam .URL "format=json" }}">View as JSON</a>
+          <a href="{{ AddURLParam .URL "format=json" }}">{{ .Tr.Msg "json view" }}</a>
       </span>
     </div>
   </div>
@@ -92,6 +92,9 @@
 
 {{ define "error" }}
 <article class="message is-danger container is-size-5">
+  <div class="message-header">
+    <p>{{ .Tr.Msg "error" }}</p>
+  </div>
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
 {{ end }}
@@ -99,7 +102,7 @@
 {{ define "warning" }}
 <article class="message is-warning container is-size-5">
   <div class="message-header">
-    <p>Warning</p>
+    <p>{{ .Tr.Msg "warning" }}</p>
   </div>
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
@@ -115,7 +118,7 @@
 {{ define "note" }}
 <article class="message is-info container is-size-5">
   <div class="message-header">
-    <p>Note</p>
+    <p>{{ .Tr.Msg "note" }}</p>
   </div>
   <div class="message-body">{{ . | ToHTML }}</div>
 </article>
@@ -171,7 +174,7 @@
           </div>
         </details>
         {{ end }}
-          <span class="tag is-light">{{ if .Bookmark.Public }}public{{ else }}private{{ end }}</span>
+          <span class="tag is-light">{{ if .Bookmark.Public }}{{ .Tr.Msg "public" }}{{ else }}{{ .Tr.Msg "private" }}{{ end }}</span>
           <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-eye"></i>
           </a>
@@ -180,7 +183,7 @@
               <i class="fas fa-pencil-alt"></i>
           </a>
           <form method="post" action="{{ URLFor "Delete bookmark" }}">
-              <button class="button is-white" type="submit" value="Delete this bookmark" >
+              <button class="button is-white" type="submit" value="{{ .Tr.Msg "delete bookmark" }}">
                   <span class="icon is-small"><i class="fas fa-trash"></i></span>
               </button>
               <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
@@ -226,10 +229,10 @@
 <div class="columns is-centered">
     <div class="column is-narrow">
         {{ if and .Pageno (gt .Pageno 1) }}
-        <a href="{{ AddURLParam .URL (printf "pageno=%d" (dec .Pageno)) }}" class="button is-primary is-medium"><span class="icon"><i class="fas fa-angle-left"></i></span><span>Previous page</span></a>
+        <a href="{{ AddURLParam .URL (printf "pageno=%d" (dec .Pageno)) }}" class="button is-primary is-medium"><span class="icon"><i class="fas fa-angle-left"></i></span><span>{{ .Tr.Msg "previous page" }}</span></a>
         {{ end }}
         {{ if .HasNextPage }}
-        <a href="{{ AddURLParam .URL (printf "pageno=%d" (inc .Pageno)) }}" class="button is-primary is-medium"><span>Next page</span><span class="icon"><i class="fas fa-angle-right"></i></span></a>
+        <a href="{{ AddURLParam .URL (printf "pageno=%d" (inc .Pageno)) }}" class="button is-primary is-medium"><span>{{ .Tr.Msg "next page" }}</span><span class="icon"><i class="fas fa-angle-right"></i></span></a>
         {{ end }}
     </div>
 </div>
@@ -240,7 +243,7 @@
     <div class="field-body">
         <div class="field">
             <div class="control has-icons-left has-icons-right">
-                <input class="input" type="text" placeholder="Search" name="query" value="{{ .SearchParams.Q }}">
+                <input class="input" type="text" placeholder="{{ .Tr.Msg "search" }}" name="query" value="{{ .SearchParams.Q }}">
                  <span class="icon is-small is-left">
                 <i class="fas fa-search"></i>
                 </span>
@@ -256,16 +259,16 @@
 <div class="checkboxes">
     <label class="label" for="search_in_snapshot">
         <input class="switch is-rounded" value="true" type="checkbox" id="search_in_snapshot"  name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
-        Search in snapshot content
+        {{ .Tr.Msg "snapshot content search" }}
     </label>
     <label class="label">
         <input class="switch is-rounded" value="true" type="checkbox" id="search_in_note" name="search_in_note"{{ if .SearchParams.SearchInNote }} checked="checked"{{ end }}>
-        Search in notes
+        {{ .Tr.Msg "note search" }}
     </label>
     {{ if eq .Page "my-bookmarks" }}
     <label class="label">
         <input class="switch is-rounded" value="true" type="checkbox" id="public" name="public"{{ if .SearchParams.IsPublic }} checked="checked"{{ end }}>
-        Only public bookmarks
+        {{ .Tr.Msg "only public bm" }}
     </label>
     {{ end }}
 </div>
@@ -273,27 +276,27 @@
 
 {{ define "domainFilter" }}
 <div class="field">
-    <label class="label">Domain</label>
+    <label class="label">{{ .Tr.Msg "domain" }}</label>
     <div class="control">
-        <input class="input" type="text" placeholder="Domain.." name="domain" value="{{ .SearchParams.Domain }}">
+        <input class="input" type="text" placeholder="{{ .Tr.Msg "domain" }}.." name="domain" value="{{ .SearchParams.Domain }}">
     </div>
 </div>
 {{ end }}
 
 {{ define "ownerFilter" }}
 <div class="field">
-<label class="label">Owner</label>
+<label class="label">{{ .Tr.Msg "owner" }}</label>
     <div class="control">
-        <input class="input" type="text" placeholder="Username.." name="owner" value="{{ .SearchParams.Owner }}">
+        <input class="input" type="text" placeholder="{{ .Tr.Msg "username" }}.." name="owner" value="{{ .SearchParams.Owner }}">
     </div>
 </div>
 {{ end }}
 
 {{ define "tagFilter" }}
 <div class="field">
-<label class="label">Tags</label>
+<label class="label">{{ .Tr.Msg "tags" }}</label>
     <div class="control">
-        <input class="input" type="text" placeholder="Tag.." name="tag" value="{{ .SearchParams.Tag }}">
+        <input class="input" type="text" placeholder="{{ .Tr.Msg "tag" }}.." name="tag" value="{{ .SearchParams.Tag }}">
     </div>
 </div>
 {{ end }}
@@ -302,7 +305,7 @@
 <div class="field is-grouped is-grouped-multiline">
     <div class="control">
     <div class="field">
-        <label class="label">Date from</label>
+        <label class="label">{{ .Tr.Msg "date from" }}</label>
             <p class="control is-expanded">
                 <input class="input" type="date" placeholder="YYYY.MM.DD" name="from" value="{{ .SearchParams.FromDate }}">
             </p>
@@ -310,7 +313,7 @@
     </div>
     <div class="control">
         <div class="field">
-        <label class="label">Date to</label>
+        <label class="label">{{ .Tr.Msg "date to" }}</label>
             <p class="control is-expanded">
                 <input class="input" type="date" placeholder="YYYY.MM.DD" name="to" value="{{ .SearchParams.ToDate }}">
             </p>

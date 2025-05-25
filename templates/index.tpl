@@ -7,10 +7,10 @@
             </div>
             <div class="column is-10">
                 <h2 class="title is-2">
-                    Bookmarking and snapshotting websites made easy
+                    {{ .Tr.Msg "landing page slogan" }}
                 </h2>
                 <p class="big">
-                    Create self-contained snapshots for every bookmark you save.<br/> Access &amp; share previously visited pages without worrying about modifications or availability.
+                    {{ .Tr.Msg "landing page subslogan 1" }}<br/>{{ .Tr.Msg "landing page subslogan 2" }}
                 </p>
             </div>
         </div>
@@ -18,7 +18,7 @@
             <div class="column is-offset-2 is-10">
             {{ if not .DisableSignup }}
                 <form method="get" action="{{ URLFor "Signup" }}">
-                    <button class="button is-link is-large">Sign me up</button>
+                    <button class="button is-link is-large">{{ .Tr.Msg "sign up" }}</button>
                 </form>
             {{ end }}
             </div>
@@ -26,9 +26,9 @@
     </div>
 </div>
 <div class="container mt-6 has-text-centered">
-            <h3 class="title is-3">Download extension</h3>
+            <h3 class="title is-3">{{ .Tr.Msg "download extension" }}</h3>
             <p>
-                Browser extensions are required to create bookmarks & snapshots. Install the extension to your browser and enjoy Omnoming.
+                {{ .Tr.Msg "landing page ext desc" }}
             </p>
             <div class="landing-page__extensions">
                 <div class="buttons is-centered">
