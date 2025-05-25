@@ -14,13 +14,13 @@ Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more informatio
 
 ## Features
 
- - Websites are captured as your browser renders it - saves the displayed content of heavily JS driven dynamic pages
+ - Websites are captured as your browser renders it - saves the displayed content of dynamic pages as well
  - Self hosted
  - Web interface with multiuser support
  - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
  - [Fediverse/ActivityPub support](https://github.com/asciimoo/omnom/wiki/Fediverse-support)
  - Private & public bookmarks
- - Multiple snapshots of the same URL
+ - Multiple snapshots of the same URL with resource summary and compare/diff views
  - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
 
 
