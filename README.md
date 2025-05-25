@@ -1,5 +1,8 @@
 # Omnom
 
+[![Translation status](https://translate.codeberg.org/widget/omnom/svg-badge.svg)](https://translate.codeberg.org/engage/omnom/)
+
+
 Bookmarking with website snapshots.
 
 
@@ -19,6 +22,13 @@ Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more informatio
  - Private & public bookmarks
  - Multiple snapshots of the same URL
  - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
+
+
+## Browser addon
+
+Omnom browser addon is available for
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnom/)
+- [Chrome/Chromium](https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei)
 
 
 ## Requirements
@@ -59,11 +69,12 @@ Basic management actions are available using the command line tool (`go run omno
   completion           Generate the autocompletion script for the specified shell
 ```
 
-### Browser addon
 
-Omnom browser addon is available for
-- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/omnom/)
-- [Chrome/Chromium](https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei)
+## Translations
+
+To contribute to localizations, please visit our [weblate](https://translate.codeberg.org/projects/omnom/)
+
+[![Translation status](https://translate.codeberg.org/widget/omnom/multi-auto.svg)](https://translate.codeberg.org/engage/omnom/)
 
 ## Docker
 
