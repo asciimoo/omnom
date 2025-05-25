@@ -76,57 +76,9 @@ To contribute to localizations, please visit our [weblate](https://translate.cod
 
 [![Translation status](https://translate.codeberg.org/widget/omnom/multi-auto.svg)](https://translate.codeberg.org/engage/omnom/)
 
-## Docker
 
-Run Omnom with Docker using the following command:
+## [Docker](https://github.com/asciimoo/omnom/wiki/Docker)
 
-```bash
-docker run -p 7331:7331/tcp ghcr.io/asciimoo/omnom:master
-```
-
-### Configuration
-
-#### Port Mapping
-The container exposes port 7331. Map it to your host port:
-```bash
--p <host_port>:7331/tcp
-```
-
-#### Volumes
-Persist your data using these volumes:
-
-| Container Path        | Description                                                                 | Recommended Mount Type |
-|-----------------------|-----------------------------------------------------------------------------|------------------------|
-| `/omnom/config`       | Database (SQLite), ActivityPub keys, and configuration files                | Bind mount or volume   |
-| `/omnom/static/data`  | Snapshot data and user-uploaded content                                     | Bind mount or volume   |
-
-Example with volumes:
-```bash
-docker run -p 7331:7331/tcp \
-  -v ./omnom_config:/omnom/config \
-  -v ./omnom_data:/omnom/static/data \
-  ghcr.io/asciimoo/omnom:master
-```
-
-#### Custom Configuration
-You can modify the default `config.yml` by mounting your own version:
-```bash
--v ./custom_config.yml:/omnom/config.yml
-```
-
-### Advanced Usage
-
-#### Custom Commands
-Run any Omnom command directly:
-```bash
-docker run ghcr.io/asciimoo/omnom:master /omnom/omnom --help
-```
-
-#### Environment Variables
-| Variable | Description                | Default |
-|----------|----------------------------|---------|
-| `UID`    | User ID for Omnom process  | 1000    |
-| `GID`    | Group ID for Omnom process | 1000    |
 
 ## Bugs
 
