@@ -41,11 +41,12 @@
       {{ $uid := .User.ID }}
       {{ $page := .Page }}
       {{ $csrf := .CSRF }}
+      {{ $Tr := .Tr }}
       {{ range .Bookmarks }}
-        {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "CSRF" $csrf }}{{ end }}
+        {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "CSRF" $csrf "Tr" $Tr }}{{ end }}
       {{ end }}
     {{ else }}
-      {{ block "warning" "No bookmarks added yet"}}{{ end }}
+      {{ block "warning" KVData "Warning" "No bookmarks added yet" "Tr" .Tr }}{{ end }}
     {{ end }}
 </div>
 {{ end }}

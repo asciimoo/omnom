@@ -55,9 +55,10 @@
         {{ end }}
         {{ $page := .Page }}
         {{ $csrf := .CSRF }}
+        {{ $Tr := .Tr }}
         <div class="column bookmark-list">
             {{ range .Bookmarks }}
-                {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "CSRF" $csrf }}{{ end }}
+                {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "CSRF" $csrf "Tr" $Tr }}{{ end }}
             {{ end }}
         </div>
     </div>

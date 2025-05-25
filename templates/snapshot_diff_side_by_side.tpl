@@ -1,7 +1,7 @@
 {{ define "full-content" }}
 <div class="iframe-diff-wrapper">
     <h2 class="title">Side by side snapshot diff of {{ Truncate .SURL 250 }}</h2>
-    <noscript>{{ block "warning" "this feature requires javascript" }}{{ end }}</noscript>
+    <noscript>{{ block "warning" KVData "Warning" "this feature requires javascript" "Tr" .Tr }}{{ end }}</noscript>
     <div class="columns">
         <div class="column">
             <a href="{{ URLFor "Snapshot" }}?sid={{ .S1.Key }}&bid={{ .S1.BookmarkID }}">{{ .S1.CreatedAt | ToDate }}</a>
@@ -132,10 +132,12 @@
  function resizeIFrameToFitContent(iFrame) {
      iFrame.style.height = iFrame.contentWindow.document.body.scrollHeight+"px";
      iFrame.parentNode.style.height = iFrame.contentWindow.document.body.scrollHeight+"px";
-     console.log(iFrame.contentWindow.document.body.scrollHeight);
  }
  s1.contentWindow.addEventListener('DOMContentLoaded', function(e) {
      resizeIFrameToFitContent(s1);
+ });
+ s2.contentWindow.addEventListener('DOMContentLoaded', function(e) {
+     resizeIFrameToFitContent(s2);
  });
 
  let s2URL = "{{ SnapshotURL .S2.Key }}";

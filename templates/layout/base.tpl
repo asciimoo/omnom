@@ -53,13 +53,13 @@
 </nav>
 
     {{ if .Error }}
-    <div class="section">{{ block "error" .Error }}{{ end }}</div>
+    <div class="section">{{ block "error" . }}{{ end }}</div>
     {{ end }}
     {{ if .Warning }}
-    <div class="section">{{ block "warning" .Warning }}{{ end }}</div>
+    <div class="section">{{ block "warning" . }}{{ end }}</div>
     {{ end }}
     {{ if .Info }}
-    <div class="section">{{ block "info" .Info }}{{ end }}</div>
+    <div class="section">{{ block "info" . }}{{ end }}</div>
     {{ end }}
 {{block "full-content" . }}
 <div class="section webapp__main-container">
@@ -95,7 +95,7 @@
   <div class="message-header">
     <p>{{ .Tr.Msg "error" }}</p>
   </div>
-  <div class="message-body">{{ . | ToHTML }}</div>
+  <div class="message-body">{{ .Error | ToHTML }}</div>
 </article>
 {{ end }}
 
@@ -104,13 +104,13 @@
   <div class="message-header">
     <p>{{ .Tr.Msg "warning" }}</p>
   </div>
-  <div class="message-body">{{ . | ToHTML }}</div>
+  <div class="message-body">{{ .Warning | ToHTML }}</div>
 </article>
 {{ end }}
 
 {{ define "info" }}
 <article class="message is-info container is-size-5">
-  <div class="message-body">{{ . | ToHTML }}</div>
+  <div class="message-body">{{ .Info | ToHTML }}</div>
 </article>
 {{ end }}
 
@@ -120,7 +120,7 @@
   <div class="message-header">
     <p>{{ .Tr.Msg "note" }}</p>
   </div>
-  <div class="message-body">{{ . | ToHTML }}</div>
+  <div class="message-body">{{ .Note | ToHTML }}</div>
 </article>
 {{ end }}
 

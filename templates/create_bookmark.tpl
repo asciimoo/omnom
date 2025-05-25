@@ -1,5 +1,5 @@
 {{ define "content" }}
-{{ block "warning" "This is an experimental feature, always check the output"}}{{ end }}
+{{ block "warning" KVData "Warning" "This is an experimental feature, always check the output" "Tr" .Tr }}{{ end }}
 <div class="content">
     <h3 class="title">Create new bookmark</h3>
     <form action="" method="post">
