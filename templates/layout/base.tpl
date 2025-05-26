@@ -322,6 +322,17 @@
 </div>
 {{ end }}
 
+
+{{ define "sortBy" }}
+<span class="select">
+    <select name="order_by">
+        <option value="date_desc"{{ if eq .OrderBy "date_desc" }} selected="selected"{{ end }}>{{ .Tr.Msg "date desc" }}</option>
+        <option value="date_asc"{{ if eq .OrderBy "date_asc" }} selected="selected"{{ end }}>{{ .Tr.Msg "date asc" }}</option>
+    </select>
+</span>
+<input type="submit" value="{{ .Tr.Msg "sort" }}" class="button" />
+{{ end }}
+
 {{ define "submit" }}
 <div class="control">
     <input type="submit" name="submit" value="{{ . }}" class="button is-primary" />

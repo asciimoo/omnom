@@ -3,12 +3,12 @@
 <div class="columns">
 <div class="column is-half is-offset-one-quarter">
 <div class="card"><div class="card-content">
-  <h3 class="title">Login</h3>
+  <h3 class="title">{{ .Tr.Msg "login" }}</h3>
   <div class="content">
     <div class="field">
-      <label class="label">Username</label>
+      <label class="label">{{ .Tr.Msg "username" }}</label>
       <div class="control has-icons-left">
-        <input class="input" type="text" name="username" placeholder="username.." />
+        <input class="input" type="text" name="username" placeholder="{{ .Tr.Msg "username" }}.." />
         <span class="icon is-small is-left">
           <i class="fas fa-user"></i>
         </span>
@@ -21,7 +21,7 @@
 </div></div>
 {{ if .OAuth }}
 <div class="card"><div class="card-content has-text-centered">
-    <h3 class="title">or sign in with</h3>
+    <h3 class="title">{{ .Tr.Msg "or sign in with" }}</h3>
     {{ range $name, $attrs := .OAuth }}
     <a href="{{ URLFor "Oauth" }}?provider={{ $name }}"><i class="{{ $attrs.Icon }} fa-6x px-4"></i>
     {{ end }}
