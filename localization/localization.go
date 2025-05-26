@@ -47,6 +47,9 @@ func init() {
 			log.Error().Err(err).Str("file", f.Name()).Msg("Failed to load translation file")
 			panic(err)
 		}
+		if len(m.Messages) == 0 {
+			continue
+		}
 		lang := strings.TrimSuffix(f.Name(), ".json")
 		t, err := language.Parse(lang)
 		if err != nil {
