@@ -147,9 +147,9 @@ var listenCmd = &cobra.Command{
 }
 
 var showUserCmd = &cobra.Command{
-	Use:    "show-user [username]",
+	Use:    "show-user USERNAME",
 	Short:  "show user details",
-	Long:   `show-user [username]`,
+	Long:   `show-user USERNAME`,
 	Args:   cobra.ExactArgs(1),
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -173,9 +173,9 @@ var showUserCmd = &cobra.Command{
 }
 
 var createUserCmd = &cobra.Command{
-	Use:    "create-user [username] [email]",
+	Use:    "create-user USERNAME EMAIL",
 	Short:  "create new user",
-	Long:   `create-user [username] [email]`,
+	Long:   `create-user USERNAME EMAIL`,
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -191,32 +191,32 @@ var createUserCmd = &cobra.Command{
 }
 
 var createTokenCmd = &cobra.Command{
-	Use:    "create-token [username] [token type (login/addon)]",
+	Use:    "create-token USERNAME (addon|login)",
 	Short:  "create new login/addon token for a user",
-	Long:   `create-token [username] [token type (login/addon)]`,
+	Long:   `create-token USERNAME <token type: login | addon>`,
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
 	Run:    createToken,
 }
 
 var createConfigCmd = &cobra.Command{
-	Use:   "create-config [filename]",
+	Use:   "create-config FILENAME",
 	Short: "create default configuration file",
-	Long:  `create-config [filename]`,
+	Long:  `create-config FILENAME`,
 	Args:  cobra.ExactArgs(1),
 	Run:   createConfig,
 }
 
 var setTokenCmd = &cobra.Command{
-	Use:    "set-token [username] [token type (login/addon)] [token]",
+	Use:    "set-token USERNAME (addon|login) TOKEN",
 	Short:  "set new login/addon token for a user",
-	Long:   `set-token [username] [token type (login/addon)] [token]`,
+	Long:   `set-token USERNAME <token type: login | addon> TOKEN`,
 	Args:   cobra.ExactArgs(3),
 	PreRun: initDB,
 	Run:    setToken,
 }
 
-var generateAPIDocsMD = &cobra.Command{
+var generateAPIDocsMDCmd = &cobra.Command{
 	Use:   "generate-api-docs-md",
 	Short: "Generate Markdown API documentation",
 	Long:  `generate-api-docs-md`,
@@ -333,7 +333,7 @@ func init() {
 	rootCmd.AddCommand(createTokenCmd)
 	rootCmd.AddCommand(setTokenCmd)
 	rootCmd.AddCommand(showUserCmd)
-	rootCmd.AddCommand(generateAPIDocsMD)
+	rootCmd.AddCommand(generateAPIDocsMDCmd)
 	rootCmd.AddCommand(createConfigCmd)
 
 	dcfg := config.CreateDefaultConfig()
