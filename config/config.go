@@ -21,6 +21,7 @@ import (
 )
 
 type Config struct {
+	fname       string
 	App         App          `yaml:"app"`
 	Server      Server       `yaml:"server"`
 	DB          DB           `yaml:"db"`
@@ -87,36 +88,39 @@ type OAuthEntry struct {
 	Scopes           []string `yaml:"scopes"`
 }
 
-func readConfigFile(filename string) ([]byte, error) {
+func readConfigFile(filename string) ([]byte, string, error) {
 	// try config file provided by the user
 	b, err := os.ReadFile(filename)
 	if err == nil {
-		return b, nil
+		return b, filename, nil
 	}
 	// try $HOME/.omnomrc
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		b, err = os.ReadFile(filepath.Join(homeDir, ".omnomrc"))
+		filename = filepath.Join(homeDir, ".omnomrc")
+		b, err = os.ReadFile(filename)
 		if err == nil {
-			return b, nil
+			return b, filename, nil
 		}
+		filename = filepath.Join(homeDir, ".config/omnom/config.yml")
 		// try $HOME/.config/omnom/config.yml
-		b, err = os.ReadFile(filepath.Join(homeDir, ".config/omnom/config.yml"))
+		b, err = os.ReadFile(filename)
 		if err == nil {
-			return b, nil
+			return b, filename, nil
 		}
 	}
-	return b, errors.New("configuration file not found. Use --config to specify a custom config file")
+	return b, "", errors.New("configuration file not found. Use --config to specify a custom config file")
 }
 
 func Load(filename string) (*Config, error) {
-	b, err := readConfigFile(filename)
+	b, fn, err := readConfigFile(filename)
 	if err != nil {
 		log.Debug().Msg("No config file found, using default config")
 		//lint:ignore nilerr // no need to check error
 		return CreateDefaultConfig(), nil
 	}
 	c, err := parseConfig(b)
+	c.fname = fn
 	return c, err
 }
 
@@ -181,6 +185,13 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 		c.Server.BaseURL = c.Server.BaseURL[:len(c.Server.BaseURL)-1]
 	}
 	return c, nil
+}
+
+func (c *Config) Filename() string {
+	if c.fname == "" {
+		return "*Default Config*"
+	}
+	return c.fname
 }
 
 func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {

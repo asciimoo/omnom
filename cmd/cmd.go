@@ -310,7 +310,7 @@ func createConfig(cmd *cobra.Command, args []string) {
 		fmt.Println(`Cannot read sample config:`, err.Error())
 		os.Exit(1)
 	}
-	if err := os.WriteFile(fname, fc, 0644); err != nil {
+	if err := os.WriteFile(fname, fc, 0600); err != nil {
 		fmt.Println(`Failed to create config file:`, err.Error())
 		os.Exit(1)
 	}
@@ -378,7 +378,7 @@ func init() {
 func initialize() {
 	initConfig()
 	initLog()
-	log.Debug().Msg("Config initialization complete")
+	log.Debug().Str("filename", cfg.Filename()).Msg("Config initialization complete")
 	log.Debug().Msg("Logging initialization complete")
 }
 
