@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"embed"
 	"errors"
 	"fmt"
 	"os"
@@ -21,6 +22,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
+
+var fs embed.FS
 
 const (
 	loginCmd = "login"
@@ -196,6 +199,14 @@ var createTokenCmd = &cobra.Command{
 	Run:    createToken,
 }
 
+var createConfigCmd = &cobra.Command{
+	Use:   "create-config [filename]",
+	Short: "create default configuration file",
+	Long:  `create-config [filename]`,
+	Args:  cobra.ExactArgs(1),
+	Run:   createConfig,
+}
+
 var setTokenCmd = &cobra.Command{
 	Use:    "set-token [username] [token type (login/addon)] [token]",
 	Short:  "set new login/addon token for a user",
@@ -288,9 +299,28 @@ func changeToken(args []string, tok string) {
 	}
 }
 
+func createConfig(cmd *cobra.Command, args []string) {
+	fname := args[0]
+	if _, err := os.Stat(fname); err == nil {
+		fmt.Printf(`File "%s" already exists\n`, fname)
+		os.Exit(1)
+	}
+	fc, err := fs.ReadFile("config.yml_sample")
+	if err != nil {
+		fmt.Println(`Cannot read sample config:`, err.Error())
+		os.Exit(1)
+	}
+	if err := os.WriteFile(fname, fc, 0644); err != nil {
+		fmt.Println(`Failed to create config file:`, err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("Config file created")
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(f embed.FS) {
+	fs = f
 	cobra.CheckErr(rootCmd.Execute())
 }
 
@@ -304,6 +334,7 @@ func init() {
 	rootCmd.AddCommand(setTokenCmd)
 	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(generateAPIDocsMD)
+	rootCmd.AddCommand(createConfigCmd)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
