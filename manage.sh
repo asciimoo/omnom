@@ -40,6 +40,9 @@ build_addon          - Build addon
 build_test_addon     - Build test addon
 build_addon_artifact - Build addon artifacts to distribute to addon stores
 
+Other
+-----
+sync_translations    - Synchronize translations from weblate
 ========
 
 Execute 'go run omnom.go' or 'go build && ./omnom' for application related actions
@@ -98,6 +101,18 @@ build_test_addon() {
     cd ext
     npm run build-test
     cd ..
+}
+
+sync_translations() {
+    DIR="/tmp/tr"
+    mkdir $DIR
+    cd $DIR
+    wget "https://translate.codeberg.org/download/omnom/?format=zip" -O tr.zip
+    unzip tr.zip
+    cd -
+    cp "$DIR/omnom/glossary/localization/locales/"*json localization/locales/
+    git commit localization/locales/ -m '[enh] synchronize translations from weblate'
+    rm -r "$DIR"
 }
 
 build_addon_artifact() {
