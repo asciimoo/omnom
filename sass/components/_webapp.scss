@@ -163,8 +163,16 @@ iframe {
     padding: 1em 1em 0 1em;
   }
   .columns {
+    width: 100%;
     a {
       padding: 0 1em;
+    }
+    .column {
+      padding: 0 !important;
+      iframe {
+        display: block;
+        overflow: hidden;
+      }
     }
   }
 }

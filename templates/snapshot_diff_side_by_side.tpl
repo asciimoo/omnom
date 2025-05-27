@@ -5,11 +5,11 @@
     <div class="columns">
         <div class="column">
             <a href="{{ URLFor "Snapshot" }}?sid={{ .S1.Key }}&bid={{ .S1.BookmarkID }}">{{ .S1.CreatedAt | ToDate }}</a>
-            <iframe src="{{ SnapshotURL .S1.Key }}" id="sn1" title="snapshot 1" class="snapshot-iframe"></iframe>
+            <iframe src="{{ SnapshotURL .S1.Key }}" id="sn1" title="snapshot 1" scrolling="no" class="snapshot-iframe"></iframe>
         </div>
         <div class="column">
             <a href="{{ URLFor "Snapshot" }}?sid={{ .S2.Key }}&bid={{ .S2.BookmarkID }}">{{ .S2.CreatedAt | ToDate }}</a>
-            <iframe title="snapshot 2" id="sn2" class="snapshot-iframe"></iframe>
+            <iframe title="snapshot 2" id="sn2" class="snapshot-iframe" scrolling="no"></iframe>
         </div>
     </div>
 </div>
@@ -117,11 +117,11 @@
 
  let additions = {{ .Additions }};
  let deletions = {{ .Deletions }};
- for(a of additions) {
-    highlightString(a["s"], a["idx"]);
+ for(d of deletions.reverse()) {
+     insertString(d["preStr"], d["idx"], d["s"]);
  }
- for(d of deletions) {
-    insertString(d["preStr"], d["idx"], d["s"]);
+ for(a of additions) {
+     highlightString(a["s"], a["idx"]);
  }
  //insertString("yolo", 1, "bolo");
  //highlightString("hai world", 3);
@@ -129,28 +129,35 @@
 <script>
  var s1 = document.getElementById('sn1');
  var s2 = document.getElementById('sn2');
+ function getMaxHeight(win) {
+     let body = win.document.body;
+     let html = win.document.documentElement;
+     let bodyH = parseInt(win.getComputedStyle(body).height);
+     return Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight, bodyH)+"px";
+ }
  function resizeIFrameToFitContent(iFrame) {
-     iFrame.style.height = iFrame.contentWindow.document.body.scrollHeight+"px";
-     iFrame.parentNode.style.height = iFrame.contentWindow.document.body.scrollHeight+"px";
+     let h = getMaxHeight(iFrame.contentWindow);
+     iFrame.style.height = h;
+     iFrame.parentNode.style.height = h;
  }
  s1.contentWindow.addEventListener('DOMContentLoaded', function(e) {
      resizeIFrameToFitContent(s1);
  });
- s2.contentWindow.addEventListener('DOMContentLoaded', function(e) {
+ s2.addEventListener('load', function(e) {
+
      resizeIFrameToFitContent(s2);
  });
 
  let s2URL = "{{ SnapshotURL .S2.Key }}";
- let hl = document.getElementById("highlighter").cloneNode(true);
  fetch(s2URL).then(r => {
      return r.text();
  }).then(html => {
+    let hl = document.getElementById("highlighter").cloneNode(true);
      hl.removeAttribute("nomodule");
-     let d = s2.contentWindow.document;
-     d.open();
-     d.write(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl.outerHTML);
-     d.close();
-     resizeIFrameToFitContent(s2);
+     s2.srcdoc = html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl.outerHTML;
+     //d.open();
+     //d.write();
+     //d.close();
      //s1.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
  }).catch(err => console.log(err));
 </script>

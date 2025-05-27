@@ -112,13 +112,16 @@ func snapshotDiffSideBySide(c *gin.Context) {
 		case "-":
 			idx := 1
 			var preS string
-			if len(b.String()) < 5 {
+			if len(b.String()) < 7 {
 				preS = b.String()
 			} else {
 				preS := b.String()[b.Len()-5:]
 				idx = strings.Count(b.String(), preS) + 1
 			}
 			dels = append(dels, Edit{S: d.Text, Idx: idx, PreS: preS})
+		}
+		if d.Type == "+" || d.Type == "0" {
+			b.WriteString(d.Text)
 		}
 	}
 	as, err := json.Marshal(adds)
