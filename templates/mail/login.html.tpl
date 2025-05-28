@@ -3,7 +3,7 @@
 {{ define "content" }}
 Hello {{ .Username }},<br />
 <p>
-You can log in to Omnom <a href="{{ .BaseURL }}?token={{ .Token }}">here</a>.
+You can log in to Omnom <a href="{{ .URL }}">here</a>.
 </p>
 Happy Omnoming
 {{ end }}

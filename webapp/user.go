@@ -143,7 +143,7 @@ func signup(c *gin.Context) {
 				map[string]interface{}{
 					"Token":    u.LoginToken,
 					"Username": u.Username,
-					"BaseURL":  baseURL("/login"),
+					"URL":      fmt.Sprintf("%s?token=%s", getFullURL(c, URLFor("Login")), u.LoginToken),
 				},
 			)
 			if err != nil {
@@ -186,7 +186,7 @@ func login(c *gin.Context) {
 				map[string]interface{}{
 					"Token":    u.LoginToken,
 					"Username": u.Username,
-					"BaseURL":  baseURL("/login"),
+					"URL":      fmt.Sprintf("%s?token=%s", getFullURL(c, URLFor("Login")), u.LoginToken),
 				},
 			)
 			if err != nil {
