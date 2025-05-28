@@ -12,7 +12,7 @@ server:
   # e.g. https://mydomain.tld/xy/
   # leave blank if you don't have custom base URL
   base_url: ""
-  secure_cookie: true
+  secure_cookie: false
   # Trust any username sent in this header. Only for use behind an authenticating proxy!
   # remote_user_header: "Remote-User"
 db:
