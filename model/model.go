@@ -10,7 +10,6 @@ import (
 
 	"github.com/asciimoo/omnom/config"
 
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -22,7 +21,6 @@ var DB *gorm.DB
 
 func Init(c *config.Config) error {
 	dbCfg := &gorm.Config{}
-	log.Debug().Str("Database", c.DB.Connection).Msg("")
 	if c.App.DebugSQL {
 		dbCfg.Logger = logger.Default.LogMode(logger.Info)
 	} else {

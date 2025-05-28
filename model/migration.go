@@ -21,7 +21,10 @@ func migrate() error {
 		Select("version").
 		First(&dbVer).Error
 	if err != nil {
+		// cannot query the version -> uninitialized database -> no need to migrate
 		DB.Save(&Database{Version: 0})
+		//lint:ignore nilerr // no need to check error
+		return nil
 	}
 	migCount := 0
 	for i, m := range migrationFunctions {
@@ -36,7 +39,9 @@ func migrate() error {
 			migCount += 1
 		}
 	}
-	log.Debug().Int("Migrations performed", migCount).Msg("DB migrations completed")
+	if migCount > 0 {
+		log.Debug().Int("Migrations performed", migCount).Msg("DB migrations completed")
+	}
 	return nil
 }
 
