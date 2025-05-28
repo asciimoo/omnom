@@ -1,14 +1,15 @@
 {{ define "full-content" }}
 <div class="iframe-diff-wrapper">
     <h2 class="title">Side by side snapshot diff of {{ Truncate .SURL 250 }}</h2>
+    <div class="container is-fluid content"><a href="{{ URLFor "Snapshot diff side by side" }}?s1={{ .S2.Key }}&s2={{ .S1.Key }}">swap sides</a></div>
     <noscript>{{ block "warning" KVData "Warning" "this feature requires javascript" "Tr" .Tr }}{{ end }}</noscript>
     <div class="columns">
         <div class="column">
-            <a href="{{ URLFor "Snapshot" }}?sid={{ .S1.Key }}&bid={{ .S1.BookmarkID }}">{{ .S1.CreatedAt | ToDate }}</a>
+            <a href="{{ URLFor "Snapshot" }}?sid={{ .S1.Key }}&bid={{ .S1.BookmarkID }}" class="is-size-3">{{ .S1.CreatedAt | ToDate }}</a>
             <iframe src="{{ SnapshotURL .S1.Key }}" id="sn1" title="snapshot 1" scrolling="no" class="snapshot-iframe"></iframe>
         </div>
         <div class="column">
-            <a href="{{ URLFor "Snapshot" }}?sid={{ .S2.Key }}&bid={{ .S2.BookmarkID }}">{{ .S2.CreatedAt | ToDate }}</a>
+            <a href="{{ URLFor "Snapshot" }}?sid={{ .S2.Key }}&bid={{ .S2.BookmarkID }}" class="is-size-3">{{ .S2.CreatedAt | ToDate }}</a>
             <iframe title="snapshot 2" id="sn2" class="snapshot-iframe" scrolling="no"></iframe>
         </div>
     </div>

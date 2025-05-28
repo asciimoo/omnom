@@ -1,24 +1,20 @@
 //If we'll have some custom font (these are just dummy fonts)
-// @font-face {
-//     font-family: "fa-brands-400";
-//     src: url("../../webfonts/fa-brands-400.eot");
-//     /* IE9 Compat Modes */
-//     src: url("../../webfonts/fa-brands-400.eot?#iefix") format("embedded-opentype"),
-//         /* IE6-IE8 */
-//         url("../../webfonts/fa-brands-400.otf") format("opentype"),
-//         /* Open webType Font */
-//         url("../../webfonts/fa-brands-400.svg") format("svg"),
-//         /* Legacweby iOS */
-//         url("../../webfonts/fa-brands-400.ttf") format("truetype"),
-//         /* Safarwebi, Android, iOS */
-//         url("../../webfonts/fa-brands-400.woff") format("woff"),
-//         /* Moderwebn Browsers */
-//         url("../../webfonts/fa-brands-400.woff2") format("woff2");
-//     /* Modern Browsers */
-//     font-weight: normal;
-//     font-style: normal;
-//     font-display: swap;
-// }
+@font-face {
+    font-family: "Font Awesome 6 Brands";
+    src: url("../webfonts/fa-brands-400.ttf") format("truetype"),
+        url("../webfonts/fa-brands-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    src: url("../webfonts/fa-solid-900.ttf") format("truetype"),
+        url("../webfonts/fa-solid-900.woff2") format("woff2");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
 
 // @font-face {
 //     font-family: "fa-regular-400";

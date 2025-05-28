@@ -242,13 +242,10 @@
 <div class="field is-horizontal">
     <div class="field-body">
         <div class="field">
-            <div class="control has-icons-left has-icons-right">
-                <input class="input" type="text" placeholder="{{ .Tr.Msg "search" }}" name="query" value="{{ .SearchParams.Q }}">
+            <div class="control has-icons-left">
+                <input class="input" type="search" placeholder="{{ .Tr.Msg "search" }}" name="query" value="{{ .SearchParams.Q }}">
                  <span class="icon is-small is-left">
                 <i class="fas fa-search"></i>
-                </span>
-                <span class="icon is-small is-right">
-                <i class="fas fa-times-circle"></i>
                 </span>
             </div>
         </div>
@@ -278,7 +275,7 @@
 <div class="field">
     <label class="label">{{ .Tr.Msg "domain" }}</label>
     <div class="control">
-        <input class="input" type="text" placeholder="{{ .Tr.Msg "domain" }}.." name="domain" value="{{ .SearchParams.Domain }}">
+        <input class="input" type="search" placeholder="{{ .Tr.Msg "domain" }}.." name="domain" value="{{ .SearchParams.Domain }}">
     </div>
 </div>
 {{ end }}
@@ -287,7 +284,7 @@
 <div class="field">
 <label class="label">{{ .Tr.Msg "owner" }}</label>
     <div class="control">
-        <input class="input" type="text" placeholder="{{ .Tr.Msg "username" }}.." name="owner" value="{{ .SearchParams.Owner }}">
+        <input class="input" type="search" placeholder="{{ .Tr.Msg "username" }}.." name="owner" value="{{ .SearchParams.Owner }}">
     </div>
 </div>
 {{ end }}
@@ -296,7 +293,7 @@
 <div class="field">
 <label class="label">{{ .Tr.Msg "tags" }}</label>
     <div class="control">
-        <input class="input" type="text" placeholder="{{ .Tr.Msg "tag" }}.." name="tag" value="{{ .SearchParams.Tag }}">
+        <input class="input" type="search" placeholder="{{ .Tr.Msg "tag" }}.." name="tag" value="{{ .SearchParams.Tag }}">
     </div>
 </div>
 {{ end }}
