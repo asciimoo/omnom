@@ -25,6 +25,8 @@ func Init(c *config.Config) error {
 	log.Debug().Str("Database", c.DB.Connection).Msg("")
 	if c.App.DebugSQL {
 		dbCfg.Logger = logger.Default.LogMode(logger.Info)
+	} else {
+		dbCfg.Logger = logger.Default.LogMode(logger.Silent)
 	}
 	var err error
 	switch c.DB.Type {
