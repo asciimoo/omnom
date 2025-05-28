@@ -531,7 +531,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 				}
 				u := model.GetUserBySubmissionToken(tok)
 				if u == nil {
-					_, _ = gin.DefaultWriter.Write([]byte("\033[31m[ERROR] CSRF token mismatch\033[0m\n"))
+					log.Error().Msg("CSRF token mismatch")
 					c.String(400, "CSRF token mismatch")
 					c.Abort()
 					return
@@ -546,7 +546,7 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 		c.Next()
 		err, ok := c.Get("Error")
 		if ok {
-			_, _ = gin.DefaultWriter.Write([]byte(fmt.Sprintf("\033[31m[ERROR] %s\033[0m\n", err)))
+			log.Error().Str("Error", err.(string)).Msg("webapp error")
 		}
 	}
 }
