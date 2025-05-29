@@ -101,5 +101,8 @@
         //s1.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
     }).catch(err => console.log(err));
  }
+ Promise.all([loadSnapshot(s1URL, s1), loadSnapshot(s2URL, s2)]).then(() => {
+     console.log("snapshots loaded");
+ });
 </script>
 {{ end }}
