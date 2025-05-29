@@ -66,25 +66,20 @@
      return matchCount > 0 && matchCount == nodeCount;
  }
 
- s2.addEventListener('load', function(e) {
-     resizeIFrameToFitContent(s2);
-     s2Loaded = true;
-     if(s1Loaded) {
-        highlightDiffs(s2.contentWindow.document.body, s1.contentWindow.document.body);
-        s2Loaded = false;
-     }
- });
- s1.addEventListener('load', function(e) {
-     resizeIFrameToFitContent(s1);
-     s1Loaded = true;
-     if(s2Loaded) {
-        highlightDiffs(s2.contentWindow.document.body, s1.contentWindow.document.body);
-        s1Loaded = false;
-     }
- });
+ function initIframe(el) {
+     let p = new Promise((resolve, reject) => {
+        el.addEventListener('load', function(e) {
+            resizeIFrameToFitContent(el);
+            resolve();
+        });
+     });
+     return p;
+ }
 
  let s1URL = "{{ SnapshotURL .S1.Key }}";
  let s2URL = "{{ SnapshotURL .S2.Key }}";
+ let s1p = initIframe(s1);
+ let s2p = initIframe(s2);
  function loadSnapshot(url, el) {
     return fetch(url).then(r => {
         return r.text();
@@ -101,8 +96,9 @@
         //s1.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
     }).catch(err => console.log(err));
  }
- Promise.all([loadSnapshot(s1URL, s1), loadSnapshot(s2URL, s2)]).then(() => {
-     console.log("snapshots loaded");
+ Promise.all([loadSnapshot(s1URL, s1), loadSnapshot(s2URL, s2), s1p, s2p]).then(() => {
+     highlightDiffs(s2.contentWindow.document.body, s1.contentWindow.document.body);
+     highlightDiffs(s1.contentWindow.document.body, s2.contentWindow.document.body);
  });
 </script>
 {{ end }}
