@@ -31,26 +31,39 @@
      iFrame.parentNode.style.height = h;
  }
  function highlightDiffs(e1, e2) {
-     let i1 = document.createNodeIterator(e1, NodeFilter.SHOW_ELEMENT)
-     while ((n1 = i1.nextNode())) {
-         if(Array(...n1.childNodes).some(n => n.nodeType == Node.ELEMENT_NODE)) {
+     if(Array(...e1.childNodes).every(n => n.nodeType != Node.ELEMENT_NODE)) {
+         e1.style.backgroundColor = "#ffeaa7";
+         e1.style.color = "black";
+         e1.style.animation = "omnom-highlight 2s infinite";
+         return false;
+     }
+     let matchCount = 0;
+     let nodeCount = 0;
+     for(let c of e1.childNodes) {
+         if(c.nodeType != Node.ELEMENT_NODE) {
              continue;
          }
-         let i2 = document.createNodeIterator(e2, NodeFilter.SHOW_ELEMENT)
+         nodeCount += 1;
+         let i = document.createNodeIterator(e2, NodeFilter.SHOW_ELEMENT)
          let match = false;
-         while ((n2 = i2.nextNode())) {
-             if(n1.isEqualNode(n2)) {
+         let n = undefined;
+         while((n = i.nextNode())) {
+             if(c.isEqualNode(n)) {
                  match = true;
                  break;
              }
          }
-         if(!match) {
-             n1.style.backgroundColor = "#ffeaa7";
-             n1.style.color = "black";
-             n1.style.animation = "omnom-highlight 2s infinite";
-             console.log("matchNotFound", n1.style.backgroundColor);
+         if(match) {
+             matchCount += 1;
+             continue;
+         }
+         if(highlightDiffs(c, e2)) {
+             c.style.backgroundColor = "#ffeaa7";
+             c.style.color = "black";
+             c.style.animation = "omnom-highlight 2s infinite";
          }
      }
+     return matchCount > 0 && matchCount == nodeCount;
  }
 
  s2.addEventListener('load', function(e) {
@@ -88,8 +101,5 @@
         //s1.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
     }).catch(err => console.log(err));
  }
- Promise.all([loadSnapshot(s1URL, s1), loadSnapshot(s2URL, s2)]).then(() => {
-     console.log("snapshots loaded");
- });
 </script>
 {{ end }}
