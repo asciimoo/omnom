@@ -2,8 +2,6 @@ package webapp
 
 import (
 	"compress/gzip"
-	"encoding/json"
-	"html/template"
 	"io"
 	"net/http"
 	"strings"
@@ -15,6 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
+
+func restoreText(s string) string {
+	return strings.Join(strings.Split(s, "|||"), " ")
+}
 
 func snapshotDiff(c *gin.Context) {
 	s1, err := model.GetSnapshotWithResources(c.Query("s1"))
@@ -38,7 +40,7 @@ func snapshotDiff(c *gin.Context) {
 		log.Error().Err(err).Msg("Failed to fetch URL for snapshot")
 	}
 
-	tds := contentdiff.DiffText(s1.Text, s2.Text)
+	tds := contentdiff.DiffText(restoreText(s1.Text), restoreText(s2.Text))
 	iKeys := contentdiff.DiffList(getImageResources(s1), getImageResources(s2))
 	tdLen := 0
 	for _, d := range tds {
@@ -94,55 +96,11 @@ func snapshotDiffSideBySide(c *gin.Context) {
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch URL for snapshot")
 	}
-
-	tds := contentdiff.DiffText(s1.Text, s2.Text)
-	type Edit struct {
-		S    string `json:"s"`
-		Idx  int    `json:"idx"`
-		PreS string `json:"preStr"`
-	}
-	adds := make([]Edit, 0, 16)
-	dels := make([]Edit, 0, 16)
-	var b strings.Builder
-	for _, d := range tds {
-		switch d.Type {
-		case "+":
-			idx := strings.Count(b.String(), d.Text) + 1
-			adds = append(adds, Edit{S: d.Text, Idx: idx})
-		case "-":
-			idx := 1
-			var preS string
-			if len(b.String()) < 7 {
-				preS = b.String()
-			} else {
-				preS := b.String()[b.Len()-5:]
-				idx = strings.Count(b.String(), preS) + 1
-			}
-			dels = append(dels, Edit{S: d.Text, Idx: idx, PreS: preS})
-		}
-		if d.Type == "+" || d.Type == "0" {
-			b.WriteString(d.Text)
-		}
-	}
-	as, err := json.Marshal(adds)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to serialize additions")
-		as = []byte("[]")
-	}
-	ds, err := json.Marshal(dels)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to serialize deletions")
-		ds = []byte("[]")
-	}
 	render(c, http.StatusOK, "snapshot-diff-side-by-side", gin.H{
 		"SURL":       sURL,
 		"S1":         s1,
 		"S2":         s2,
 		"hideFooter": true,
-		//nolint: gosec // JSON is safe.
-		"Additions": template.JS(string(as)),
-		//nolint: gosec // JSON is safe.
-		"Deletions": template.JS(string(ds)),
 	})
 }
 

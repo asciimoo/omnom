@@ -79,9 +79,20 @@ func DiffLink(l1, l2 []Link) []LinkDiff {
 				break
 			}
 		}
-		if !found {
-			r = append(r, LinkDiff{Link: v1, Type: "-"})
+		if found {
+			continue
 		}
+		dup := false
+		for _, v2 := range r {
+			if v1.Href == v2.Link.Href {
+				dup = true
+				break
+			}
+		}
+		if dup {
+			continue
+		}
+		r = append(r, LinkDiff{Link: v1, Type: "-"})
 	}
 	for _, v1 := range l2 {
 		found := false
@@ -91,9 +102,20 @@ func DiffLink(l1, l2 []Link) []LinkDiff {
 				break
 			}
 		}
-		if !found {
-			r = append(r, LinkDiff{Link: v1, Type: "+"})
+		if found {
+			continue
 		}
+		dup := false
+		for _, v2 := range r {
+			if v1.Href == v2.Link.Href {
+				dup = true
+				break
+			}
+		}
+		if dup {
+			continue
+		}
+		r = append(r, LinkDiff{Link: v1, Type: "+"})
 	}
 	return r
 }
