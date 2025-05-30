@@ -10,6 +10,7 @@
         <h3 class="title">{{ .Tr.Msg "addon tokens" }}</h3>
         <div class="columns is-mobile"><div class="column is-narrow">
             <div class="list"><dl>
+                {{ $Tr := .Tr }}
                 {{ range .AddonTokens }}
                 <div class="list-item">
                     <li class="pure-list">
@@ -17,7 +18,7 @@
                                 <code class="has-text-dark">{{ .Text }}</code>
                                 <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                                 <input type="hidden" name="id" value="{{ .ID }}" />
-                                <input type="submit" class="button is-danger is-small" value="{{ .Tr.Msg "delete" }}" />
+                                <input type="submit" class="button is-danger is-small" value="{{ $Tr.Msg "delete" }}" />
                         </form>
                     </li>
                 </div>
