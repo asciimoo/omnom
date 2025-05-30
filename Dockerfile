@@ -25,11 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Copy binary and static files
-COPY static ./static
-COPY config.yml_sample config.yml
-
 # Modify config.yml to provide some needed default values for running inside the container
+COPY config.yml_sample config.yml
 RUN sed -i -E \
     # Listen to any address by default
     -e 's/address: "127\.0\.0\.1:7331"/address: "0.0.0.0:7331"/' \
