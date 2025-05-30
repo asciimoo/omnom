@@ -9,6 +9,7 @@ import (
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/storage"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -22,6 +23,9 @@ var testCfg = &config.Config{
 	DB: config.DB{
 		Type:       "sqlite",
 		Connection: ":memory:",
+	},
+	Storage: config.Storage{
+		Type: "fs",
 	},
 	Server: config.Server{
 		BaseURL: "https://test.com/",
@@ -55,6 +59,10 @@ var testActorJSON = []byte(`{
 func initTestApp() *gin.Engine {
 	_, _ = testCfg.ActivityPub.ExportPrivKey()
 	err := model.Init(testCfg)
+	if err != nil {
+		panic(err)
+	}
+	err = storage.Init(testCfg.Storage)
 	if err != nil {
 		panic(err)
 	}
