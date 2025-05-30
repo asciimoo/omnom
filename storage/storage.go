@@ -16,7 +16,6 @@ import (
 )
 
 type Storage interface {
-	Init(sCfg config.Storage) error
 	FS() (iofs.FS, error)
 	GetSnapshot(string) io.ReadCloser
 	GetSnapshotSize(string) uint
@@ -35,19 +34,20 @@ var ErrResourceNotFound = errors.New("resource not found")
 
 var store Storage
 
-var storages = map[string]Storage{
-	"fs": fs.New(),
+func initStorage(sCfg config.Storage) (Storage, error) {
+	if sCfg.Filesystem != nil {
+		return fs.New(*sCfg.Filesystem)
+	}
+	return nil, ErrUnknownStorage
 }
 
 func Init(sCfg config.Storage) error {
-	if s, ok := storages[sCfg.Type]; ok {
-		if err := s.Init(sCfg); err != nil {
-			return err
-		}
-		store = s
-		return nil
+	s, err := initStorage(sCfg)
+	if err != nil {
+		return err
 	}
-	return ErrUnknownStorage
+	store = s
+	return nil
 }
 
 func FS() iofs.FS {

@@ -25,7 +25,7 @@ var testCfg = &config.Config{
 		Connection: ":memory:",
 	},
 	Storage: config.Storage{
-		Type: "fs",
+		Filesystem: &config.StorageFilesystem{},
 	},
 	Server: config.Server{
 		BaseURL: "https://test.com/",

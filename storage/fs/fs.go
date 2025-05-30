@@ -19,17 +19,18 @@ type FSStorage struct {
 	baseDir string
 }
 
-func New() *FSStorage {
-	return &FSStorage{}
-}
-
-func (s *FSStorage) Init(sCfg config.Storage) error {
+func New(cfg config.StorageFilesystem) (*FSStorage, error) {
 	var err error
-	s.baseDir, err = filepath.Abs(sCfg.RootDir)
+	baseDir, err := filepath.Abs(cfg.RootDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return mkdir(filepath.Join(s.baseDir, "snapshots"))
+	if err := mkdir(filepath.Join(baseDir, "snapshots")); err != nil {
+		return nil, err
+	}
+	return &FSStorage{
+		baseDir: baseDir,
+	}, nil
 }
 
 func (s *FSStorage) FS() (fs.FS, error) {
