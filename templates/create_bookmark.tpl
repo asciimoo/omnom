@@ -35,7 +35,6 @@
                     {{ .Tr.Msg "public" }}
                 </label>
             </div>
-            <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
             {{ block "submit" (.Tr.Msg "save") }}{{ end }}
         </div>
     </div>

@@ -27,6 +27,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
+	"filippo.io/csrf"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -176,14 +177,12 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	session := sessions.Default(c)
 	u, _ := c.Get("user")
 	cfg, _ := c.Get("config")
-	csrf, _ := c.Get("_csrf")
 	l, _ := c.Get("localizer")
 	tplVars := gin.H{
 		"Page":                  page,
 		"User":                  u,
 		"DisableSignup":         cfg.(*config.Config).App.DisableSignup,
 		"AllowBookmarkCreation": cfg.(*config.Config).App.CreateBookmarkFromWebapp,
-		"CSRF":                  csrf,
 		"OAuth":                 cfg.(*config.Config).OAuth,
 		"Tr":                    l.(*localization.Localizer),
 	}
@@ -243,7 +242,6 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 }
 
 func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
-	delete(vars, "CSRF")
 	delete(vars, "DisableSignup")
 	delete(vars, "OAuth")
 	c.IndentedJSON(status, vars)
@@ -555,39 +553,17 @@ func LocalizationMiddleware(cfg *config.Config) gin.HandlerFunc {
 }
 
 func CSRFMiddleware() gin.HandlerFunc {
+	protection := csrf.New()
 	return func(c *gin.Context) {
 		if strings.HasSuffix(c.HandlerName(), ".addBookmark") || strings.HasSuffix(c.HandlerName(), ".addResource") {
 			c.Next()
 			return
 		}
-		newToken := model.GenerateToken()
-		c.Set("_csrf", newToken)
-		session := sessions.Default(c)
-		prevToken := session.Get("_csrf")
-		session.Set("_csrf", newToken)
-		err := session.Save()
+		err := protection.Check(c.Request)
 		if err != nil {
-			_ = c.Error(fmt.Errorf("error saving context: %w", err))
-		}
-		if c.Request.Method != POST {
-			c.Next()
+			c.String(403, err.Error())
+			c.Abort()
 			return
-		}
-		uname := session.Get(SID)
-		if uname != nil {
-			if t := c.Request.FormValue("_csrf"); t == "" || prevToken != t {
-				tok := c.PostForm("token")
-				if tok == "" {
-					tok = c.Query("token")
-				}
-				u := model.GetUserBySubmissionToken(tok)
-				if u == nil {
-					log.Error().Msg("CSRF token mismatch")
-					c.String(400, "CSRF token mismatch")
-					c.Abort()
-					return
-				}
-			}
 		}
 	}
 }

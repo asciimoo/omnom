@@ -16,7 +16,6 @@
                     <li class="pure-list">
                         <form method="post" action="{{ URLFor "Delete addon token" }}">
                                 <code class="has-text-dark">{{ .Text }}</code>
-                                <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                                 <input type="hidden" name="id" value="{{ .ID }}" />
                                 <input type="submit" class="button is-danger is-small" value="{{ $Tr.Msg "delete" }}" />
                         </form>
@@ -29,7 +28,6 @@
     {{ else }}
         <div class="columns is-mobile"><div class="column is-narrow">
             <form method="post">
-                <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                 <input type="submit" class="button is-primary" value="{{ .Tr.Msg "show addon tokens" }}" />
             </form>
         </div></div>

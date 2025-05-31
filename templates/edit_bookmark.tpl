@@ -12,7 +12,6 @@
     </h2>
 
     <form method="post" action="{{ URLFor "Save bookmark" }}">
-        <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
         <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
         <div class="field">
             <label class="label">Title</label>
@@ -44,7 +43,6 @@
         <form method="post" action="{{ URLFor "Delete bookmark" }}">
             <input class="button is-danger" type="submit" value="Delete this bookmark" />
             <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
-            <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
         </form>
     </div>
     <h3 class="title">Tags</h3>
@@ -53,7 +51,6 @@
           {{ range .Bookmark.Tags }}
             <span class="tag is-info">{{ .Text }}
                 <form method="post" action="{{ URLFor "Delete tag" }}">
-                    <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                     <input type="hidden" name="tid" value="{{ .ID }}"/>
                     <input type="hidden" name="bid" value="{{ $.Bookmark.ID}}"/>
                     <button class="delete" type="submit"></button>
@@ -71,7 +68,6 @@
             <div class="control">
                 <input class="button is-primary" type="submit" value="Add" />
                 <input type="hidden" name="bid" value="{{ .Bookmark.ID }}" />
-                <input type="hidden" name="_csrf" value="{{ .CSRF }}" />
             </div>
         </div>
     </form>
@@ -88,7 +84,6 @@
                             <form method="post" action="{{ URLFor "Delete snapshot" }}">
                                 <h4 class="has-text-dark"><a href="{{ BaseURL "/snapshot" }}?sid={{ .Key }}&bid={{ $.Bookmark.ID }}">{{ .Title }} {{ .CreatedAt | ToDate }}</a>
                                     <input type="hidden" name="bid" value="{{ $.Bookmark.ID }}" />
-                                    <input type="hidden" name="_csrf" value="{{ $.CSRF }}" />
                                     <input type="hidden" name="sid" value="{{ .ID }}" />
                                     <input type="submit" class="button is-danger is-small" value="Delete" />
                                 </h4>
