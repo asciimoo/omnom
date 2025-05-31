@@ -34,7 +34,6 @@ var cfgFile string
 var cfg *config.Config
 
 func initDB(cmd *cobra.Command, args []string) {
-	initStorage()
 	err := model.Init(cfg)
 	if err != nil {
 		panic(err)
@@ -113,7 +112,6 @@ var listenCmd = &cobra.Command{
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
 		setStrArg(cmd, "address", &cfg.Server.Address)
-		setStrArg(cmd, "static-directory", &cfg.App.StaticDir)
 		setInt64Arg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
 		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
 		setBoolArg(cmd, "create-bookmark-from-webapp", &cfg.App.CreateBookmarkFromWebapp)
@@ -129,6 +127,13 @@ var listenCmd = &cobra.Command{
 		setBoolArg(cmd, "smtp-tls-allow-insecure", &cfg.SMTP.TLSAllowInsecure)
 		setIntArg(cmd, "smtp-send-timeout", &cfg.SMTP.SendTimeout)
 		setIntArg(cmd, "smtp-connection-timeout", &cfg.SMTP.ConnectionTimeout)
+		if v, err := cmd.Flags().GetString("data-directory"); err == nil && cmd.Flags().Changed("data-directory") {
+			if cfg.Storage.Filesystem == nil {
+				cfg.Storage.Filesystem = &config.StorageFilesystem{}
+			}
+			cfg.Storage.Filesystem.RootDir = v
+		}
+		initStorage()
 		err := initMail()
 		if err != nil {
 			fmt.Println("Failed to initialize mailing:", err)
@@ -335,7 +340,7 @@ func init() {
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
-	listenCmd.Flags().String("static-directory", dcfg.App.StaticDir, "Static directory location")
+	listenCmd.Flags().String("data-directory", "./static/data", "Data directory location to store snapshots and resources using file system storage")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("results-per-page", uint(dcfg.App.ResultsPerPage), "Number of bookmarks/snapshots per page")
 	//nolint: gosec // conversion is safe. TODO use uint by default
