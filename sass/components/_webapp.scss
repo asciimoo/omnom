@@ -35,7 +35,6 @@ html {
 
 #omnom-webapp {
     height: 100%;
-    background-color: #f1f2ee;
 
     .navbar-item,
     .navbar-link {
@@ -461,6 +460,9 @@ iframe {
     h1, h2, h3, h4, p {
         color: $color-white;
     }
+    h2 {
+      font-size: 5em;
+    }
     p.big {
         font-size: 2em;
     }
@@ -514,5 +516,27 @@ iframe {
   img {
     margin: 1em;
     max-width: 80%;
+  }
+}
+.is-maxheight {
+  height: 100%;
+}
+.landing-features {
+  margin-top : 4em;
+  .box {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+  }
+  header {
+    font-size: 3em;
+    margin: 0.6em;
+  }
+  .icon {
+    margin: 0.2em;
+    font-size: 3em;
+  }
+  .content {
+    font-size: 1.5em;
   }
 }

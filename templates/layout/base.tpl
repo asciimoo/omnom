@@ -26,16 +26,18 @@
     <input type="checkbox" id="nav-toggle-state" />
 
     <div id="navbar-menu" class="navbar-menu is-size-5">
-      <div class="navbar-start">
-        <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">{{ .Tr.Msg "home" }}</a>
-        {{ if .User }}
-          <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "my bookmarks" }}</a>
+        <div class="navbar-start">
+        {{ if not (eq .Page "index") }}
+            <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">{{ .Tr.Msg "home" }}</a>
+            {{ if .User }}
+            <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "my bookmarks" }}</a>
+            {{ end }}
+            <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "public bookmarks" }}</a>
+            {{ if (and .User .AllowBookmarkCreation) }}
+            <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">{{ .Tr.Msg "create bookmark" }}</a>
+            {{ end }}
+            <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">{{ .Tr.Msg "snapshots" }}</a>
         {{ end }}
-        <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "public bookmarks" }}</a>
-        {{ if (and .User .AllowBookmarkCreation) }}
-          <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">{{ .Tr.Msg "create bookmark" }}</a>
-        {{ end }}
-        <a href="{{ URLFor "Snapshots" }}" class="navbar-item{{ if eq .Page "snapshots" }} is-active{{ end }}">{{ .Tr.Msg "snapshots" }}</a>
       </div>
       <div class="navbar-end">
         {{ if .User }}
@@ -70,20 +72,26 @@
 {{ end }}
 {{ if (not .hideFooter) }}
 <footer class="footer">
-  <div class="container">
-    <div class="content has-text-centered py-4">
-      <p>Omnom © 2025</p>
-      <span>
-          <a href="{{ URLFor "API" }}">API</a>
-          &#8226; <a href="https://github.com/asciimoo/omnom">GitHub</a>
-          &#8226; <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">{{ .Tr.Msg "firefox ext" }}</a>
-          &#8226; <a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">{{ .Tr.Msg "chrome ext" }}</a>
-          &#8226; <a href="https://github.com/asciimoo/omnom/wiki">Wiki</a>
-          <br />
-          <a href="{{ AddURLParam .URL "format=json" }}">{{ .Tr.Msg "json view" }}</a>
-      </span>
+    <div class="container px-6">
+        <div class="columns is-centered">
+            <div class="column">
+                <img src="{{ BaseURL "/static/icons/omnom-logo-v1.svg" }}" class="icon is-large" />
+                <p>Omnom © 2025</p>
+            </div>
+            <div class="column is-narrow px-6">
+                <p><b>{{ .Tr.Msg "product" }}</b></p>
+                <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">{{ .Tr.Msg "firefox ext" }}</a>
+                <br /><a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">{{ .Tr.Msg "chrome ext" }}</a>
+                <br /><a href="{{ AddURLParam .URL "format=json" }}">{{ .Tr.Msg "json view" }}</a>
+            </div>
+            <div class="column is-narrow pl-6">
+                <p><b>{{ .Tr.Msg "support" }}</b></p>
+                <a href="{{ URLFor "API" }}">API</a>
+                <br /><a href="https://github.com/asciimoo/omnom">GitHub</a>
+                <br /><a href="https://github.com/asciimoo/omnom/wiki">Wiki</a>
+            </div>
+        </div>
     </div>
-  </div>
 </footer>
 {{ end }}
 </div>
