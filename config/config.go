@@ -35,7 +35,7 @@ type App struct {
 	LogLevel                 string `yaml:"log_level"`
 	ResultsPerPage           int64  `yaml:"results_per_page"`
 	DisableSignup            bool   `yaml:"disable_signup"`
-	StaticDir                string `yaml:"static_dir"`
+	StaticDir                string `yaml:"static_dir"` // Deprecated: use Storage.Filesystem.RootDir instead
 	CreateBookmarkFromWebapp bool   `yaml:"create_bookmark_from_webapp"`
 	WebappSnapshotterTimeout int    `yaml:"webapp_snapshotter_timeout"`
 	DebugSQL                 bool   `yaml:"debug_sql"`
@@ -54,7 +54,11 @@ type DB struct {
 }
 
 type Storage struct {
-	Type string `yaml:"type"`
+	Filesystem *StorageFilesystem `yaml:"fs"`
+}
+
+type StorageFilesystem struct {
+	RootDir string `yaml:"root_dir"`
 }
 
 type SMTP struct {
@@ -120,8 +124,11 @@ func Load(filename string) (*Config, error) {
 		return CreateDefaultConfig(), nil
 	}
 	c, err := parseConfig(b)
+	if err != nil {
+		return nil, err
+	}
 	c.fname = fn
-	return c, err
+	return c, nil
 }
 
 func CreateDefaultConfig() *Config {
@@ -131,7 +138,6 @@ func CreateDefaultConfig() *Config {
 			CreateBookmarkFromWebapp: false,
 			WebappSnapshotterTimeout: 15,
 			LogLevel:                 "info",
-			StaticDir:                "./static",
 		},
 		Server: Server{
 			Address:      "127.0.0.1:7331",
@@ -140,9 +146,6 @@ func CreateDefaultConfig() *Config {
 		DB: DB{
 			Type:       "sqlite",
 			Connection: "db.sqlite3",
-		},
-		Storage: Storage{
-			Type: "fs",
 		},
 		ActivityPub: &ActivityPub{
 			PubKeyPath:  "./public.pem",
@@ -183,6 +186,27 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 	}
 	if strings.HasSuffix(c.Server.BaseURL, "/") {
 		c.Server.BaseURL = c.Server.BaseURL[:len(c.Server.BaseURL)-1]
+	}
+	if c.App.StaticDir != "" {
+		if c.Storage.Filesystem != nil {
+			return nil, errors.New("remove app.static_dir from config, storage.fs is already configured")
+		}
+		log.Warn().Msg("app.static_dir is deprecated, use storage.fs.root_dir instead to configure where bookmark content is stored")
+		c.Storage.Filesystem = &StorageFilesystem{
+			RootDir: filepath.Join(c.App.StaticDir, "data"),
+		}
+	}
+	count := 0
+	if c.Storage.Filesystem != nil {
+		count += 1
+	}
+	if count > 1 {
+		return nil, errors.New("only one storage backend can be configured")
+	} else if count == 0 {
+		// Default filesystem config
+		c.Storage.Filesystem = &StorageFilesystem{
+			RootDir: "./static/data",
+		}
 	}
 	return c, nil
 }

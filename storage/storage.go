@@ -9,12 +9,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	iofs "io/fs"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/storage/fs"
 )
 
 type Storage interface {
-	Init(map[string]string) error
+	FS() (iofs.FS, error)
 	GetSnapshot(string) io.ReadCloser
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
@@ -32,19 +34,31 @@ var ErrResourceNotFound = errors.New("resource not found")
 
 var store Storage
 
-var storages = map[string]Storage{
-	"fs": fs.New(),
+func initStorage(sCfg config.Storage) (Storage, error) {
+	if sCfg.Filesystem != nil {
+		return fs.New(*sCfg.Filesystem)
+	}
+	return nil, ErrUnknownStorage
 }
 
-func Init(sType string, sCfg map[string]string) error {
-	if s, ok := storages[sType]; ok {
-		if err := s.Init(sCfg); err != nil {
-			return err
-		}
-		store = s
-		return nil
+func Init(sCfg config.Storage) error {
+	s, err := initStorage(sCfg)
+	if err != nil {
+		return err
 	}
-	return ErrUnknownStorage
+	store = s
+	return nil
+}
+
+func FS() iofs.FS {
+	if store == nil {
+		panic(ErrUninitialized)
+	}
+	storeFS, err := store.FS()
+	if err != nil {
+		panic(err)
+	}
+	return storeFS
 }
 
 func GetSnapshot(key string) (io.ReadCloser, error) {

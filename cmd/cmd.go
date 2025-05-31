@@ -43,10 +43,7 @@ func initDB(cmd *cobra.Command, args []string) {
 }
 
 func initStorage() {
-	sCfg := map[string]string{
-		"staticDir": cfg.App.StaticDir,
-	}
-	err := storage.Init(cfg.Storage.Type, sCfg)
+	err := storage.Init(cfg.Storage)
 	if err != nil {
 		panic(err)
 	}

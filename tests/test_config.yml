@@ -2,7 +2,6 @@ app:
   debug: true
   bookmarks_per_page: 20
   disable_signup:  false # set to true to restrict user creation to command line
-  static_dir: "./static"
 server:
   address: "127.0.0.1:7332"
   # e.g. https://mydomain.tld/xy/
@@ -12,9 +11,8 @@ db:
   type: "sqlite"
   connection: "./tests/test_db.sqlite3"
 storage:
-  type: "fs"
-  # it should be in the static/ folder
-  root: "./static/data"
+  fs:
+    root_dir: "./static/data"
 smtp:
   host: "" # leave it blank to disable sending mails
   port: 25

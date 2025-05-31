@@ -8,25 +8,37 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/asciimoo/omnom/config"
 )
 
 type FSStorage struct {
 	baseDir string
 }
 
-func New() *FSStorage {
-	return &FSStorage{}
+func New(cfg config.StorageFilesystem) (*FSStorage, error) {
+	var err error
+	baseDir, err := filepath.Abs(cfg.RootDir)
+	if err != nil {
+		return nil, err
+	}
+	if err := mkdir(filepath.Join(baseDir, "snapshots")); err != nil {
+		return nil, err
+	}
+	return &FSStorage{
+		baseDir: baseDir,
+	}, nil
 }
 
-func (s *FSStorage) Init(cfg map[string]string) error {
-	var err error
-	s.baseDir, err = filepath.Abs(cfg["staticDir"] + "/data/")
+func (s *FSStorage) FS() (fs.FS, error) {
+	root, err := os.OpenRoot(s.baseDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return mkdir(filepath.Join(s.baseDir, "snapshots"))
+	return root.FS(), nil
 }
 
 func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {
