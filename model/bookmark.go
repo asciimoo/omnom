@@ -26,7 +26,8 @@ type Bookmark struct {
 	User         User       `json:"-"`
 }
 
-func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon string) (*Bookmark, bool, error) {
+// TODO use Bookmark as parameter instead of strings
+func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon, collection string) (*Bookmark, bool, error) {
 	url, err := url.Parse(urlString)
 	new := false
 	if err != nil || url.Hostname() == "" || url.Scheme == "" {
@@ -70,6 +71,10 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 			t = strings.TrimSpace(t)
 			b.Tags = append(b.Tags, GetOrCreateTag(t))
 		}
+	}
+	col := GetCollection(u.ID, collection)
+	if col != nil {
+		b.CollectionID = col.ID
 	}
 	if err := DB.Save(b).Error; err != nil {
 		return nil, new, err

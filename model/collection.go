@@ -32,9 +32,14 @@ func GetCollection(uid uint, cid string) *Collection {
 	return c
 }
 
-func GetCollectionTree(uid uint) []*Collection {
+func GetCollections(uid uint) []*Collection {
 	var cols []*Collection
 	DB.Model(&Collection{}).Where("user_id = ?", uid).Order("name asc").Find(&cols)
+	return cols
+}
+
+func GetCollectionTree(uid uint) []*Collection {
+	cols := GetCollections(uid)
 	res := make([]*Collection, 0, len(cols))
 	for _, c := range cols {
 		if c.ParentID < 1 {

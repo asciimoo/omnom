@@ -292,22 +292,22 @@ func init() {
 				},
 			},
 		},
-		//&Endpoint{
-		//	Name:         "Self-contained snapshot view",
-		//	Path:         "/self_contained_snapshot",
-		//	Method:       GET,
-		//	AuthRequired: false,
-		//	Handler:      selfContainedSnapshot,
-		//	Description:  "Displays snapshots as self-contained pages",
-		//	Args: []*EndpointArg{
-		//		&EndpointArg{
-		//			Name:        "sid",
-		//			Type:        "string",
-		//			Required:    true,
-		//			Description: "Snapshot key",
-		//		},
-		//	},
-		//},
+		&Endpoint{
+			Name:         "Collections",
+			Path:         "/collections",
+			Method:       POST,
+			AuthRequired: false,
+			Handler:      showCollections,
+			Description:  "List all collections of a user in JSON format",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "token",
+					Type:        "string",
+					Required:    true,
+					Description: "Extension token. It can be found on the profile page",
+				},
+			},
+		},
 		&Endpoint{
 			Name:         "Add bookmark",
 			Path:         "/add_bookmark",

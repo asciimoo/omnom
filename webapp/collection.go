@@ -51,3 +51,12 @@ func saveCollection(c *gin.Context) {
 	setNotification(c, nInfo, "Save success", true)
 	c.Redirect(http.StatusFound, URLFor("my bookmarks"))
 }
+
+func showCollections(c *gin.Context) {
+	u := model.GetUserBySubmissionToken(c.PostForm("token"))
+	if u == nil {
+		c.IndentedJSON(http.StatusOK, make([]interface{}, 0))
+		return
+	}
+	c.IndentedJSON(http.StatusOK, model.GetCollections(u.ID))
+}

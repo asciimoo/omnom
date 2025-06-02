@@ -241,6 +241,8 @@ func createBookmark(c *gin.Context) {
 		c.PostForm("notes"),
 		c.PostForm("public"),
 		res.Favicon,
+		// TODO handle collections
+		"",
 	)
 	if err != nil {
 		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
@@ -310,6 +312,7 @@ func addBookmark(c *gin.Context) {
 		c.PostForm("notes"),
 		c.PostForm("public"),
 		c.PostForm("favicon"),
+		c.PostForm("collection"),
 	)
 	if err != nil {
 		setNotification(c, nError, err.Error(), false)

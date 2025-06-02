@@ -161,9 +161,33 @@ async function fillFormFields() {
         document.getElementById('notes').value = selection[0].result;
     }
 
+    populateCollections();
+
     //fill tags
     tagInput.renderTags();
 
+}
+
+function populateCollections() {
+    const requestOptions = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `token=`+getOmnomToken()
+    };
+    fetch(`${getOmnomUrl()}collections`, requestOptions).then(async r => {
+        let collections = await r.json();
+        if(!Array.isArray(collections) || collections.length < 1){
+            return;
+        }
+        let el = document.querySelector("#collectionfield");
+        el.classList.remove("hidden");
+        for(let col of collections) {
+            let o = document.createElement('option');
+            o.innerText = col.name;
+            o.setAttribute('value', col.id);
+            el.querySelector("select").appendChild(o);
+        }
+    });
 }
 
 /* ---------------------------------*
