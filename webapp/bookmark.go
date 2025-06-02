@@ -444,9 +444,14 @@ func editBookmark(c *gin.Context) {
 		return
 	}
 	cols := model.GetCollectionTree(uid)
+	col := ""
+	if b.Collection != nil {
+		col = b.Collection.Name
+	}
 	render(c, http.StatusOK, "edit-bookmark", map[string]interface{}{
-		"Bookmark":    b,
-		"Collections": cols,
+		"Bookmark":          b,
+		"Collections":       cols,
+		"CurrentCollection": col,
 	})
 }
 

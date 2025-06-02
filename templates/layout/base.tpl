@@ -169,7 +169,7 @@
                   {{ Truncate .Bookmark.URL 100 }}<br />
                   <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
                   <a href="{{ URLFor "User" .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
-                  {{ if and (eq .Bookmark.UserID $.UID) .Bookmark.Collection.ID }}
+                  {{ if and (eq .Bookmark.UserID $.UID) (ne .Bookmark.Collection nil) .Bookmark.Collection.ID }}
                   <a href="{{ URLFor "my bookmarks" }}?collection={{ .Bookmark.Collection.Name }}"><span class="icon"><i class="fas fa-folder"></i></span>{{ .Bookmark.Collection.Name }}</a>
                   {{ end }}
                   {{ if .Bookmark.Tags }}

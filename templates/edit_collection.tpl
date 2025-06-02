@@ -21,7 +21,7 @@
                         <option value="0">---</option>
                         {{ $c := .Collection }}
                         {{ range .Parents }}
-                            {{ if ne $c.ID .ID }}
+                            {{ if or (eq $c nil) (ne $c.ID .ID) }}
                             <option value="{{ .ID }}" {{ if and (ne $c nil) (eq $c.ParentID .ID) }}selected="selected"{{ end }}>{{ .Name }}</option>
                             {{ end }}
                         {{ end }}
