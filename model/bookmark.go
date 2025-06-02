@@ -12,16 +12,18 @@ import (
 
 type Bookmark struct {
 	CommonFields
-	URL       string     `json:"url"`
-	Title     string     `json:"title"`
-	Notes     string     `json:"notes"`
-	Domain    string     `json:"domain"`
-	Favicon   string     `json:"favicon"`
-	Tags      []Tag      `gorm:"many2many:bookmark_tags;" json:"tags"`
-	Snapshots []Snapshot `json:"snapshots"`
-	Public    bool       `json:"public"`
-	UserID    uint       `json:"user_id"`
-	User      User       `json:"-"`
+	URL          string     `json:"url"`
+	Title        string     `json:"title"`
+	Notes        string     `json:"notes"`
+	Domain       string     `json:"domain"`
+	Favicon      string     `json:"favicon"`
+	Tags         []Tag      `gorm:"many2many:bookmark_tags;" json:"tags"`
+	Snapshots    []Snapshot `json:"snapshots"`
+	CollectionID uint       `json:"-"`
+	Collection   Collection `json:"collection"`
+	Public       bool       `json:"public"`
+	UserID       uint       `json:"user_id"`
+	User         User       `json:"-"`
 }
 
 func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon string) (*Bookmark, bool, error) {

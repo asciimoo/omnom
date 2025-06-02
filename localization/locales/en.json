@@ -86,5 +86,9 @@
     "landing feature 5 desc": "Find any bookmark instantly with full-text search across all your saved content",
     "landing feature 6 title": "Snapshot comparison",
     "landing feature 6 desc": "Quickly identify changes on a website since last visit",
+    "collection": "Collection",
+    "collections": "Collections",
+    "add collection": "Add collection",
+    "no collection": "No collection found",
     "sign up": "Sign up"
 }

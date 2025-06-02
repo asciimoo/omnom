@@ -132,6 +132,24 @@
 </article>
 {{ end }}
 
+{{ define "collections" }}
+{{ if .Collections }}
+<ul>
+    {{ $cc := .CurrentCollection }}
+    {{ $tr := .Tr }}
+    {{ range .Collections }}
+    <li>
+        <a href="{{ URLFor "my bookmarks" }}?collection={{ .Name }}" {{ if eq $cc .Name }}class="has-background-info-light"{{ end }}><span class="icon"><i class="fas fa-folder"></i></span>{{ .Name }}</a>
+        <div class="is-pulled-right">
+            <a href="{{ URLFor "edit collection form" }}?cid={{ .ID }}"><span class="icon"><i class="fas fa-pencil-alt"></i></span></a>
+        </div>
+    </li>
+    {{ block "collections" KVData "Collections" .Children "CurrentCollection" $cc "Tr" $tr }}{{ end }}
+    {{ end }}
+</ul>
+{{ end }}
+{{ end }}
+
 {{ define "bookmark" }}
 <div class="media bookmark__container">
     <div class="bookmark__header">
@@ -150,14 +168,17 @@
               <p class="is-size-7 has-text-grey has-text-weight-normal">
                   {{ Truncate .Bookmark.URL 100 }}<br />
                   <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
-                <a href="{{ URLFor "User" .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
-                {{ if .Bookmark.Tags }}
-                <span class="bookmark__tags">
-                    {{ range .Bookmark.Tags }}
-                        <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-primary">{{ .Text }}</span></a>
-                    {{ end }}
-                </span>
-                {{ end }}
+                  <a href="{{ URLFor "User" .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
+                  {{ if and (eq .Bookmark.UserID $.UID) .Bookmark.Collection.ID }}
+                  <a href="{{ URLFor "my bookmarks" }}?collection={{ .Bookmark.Collection.Name }}"><span class="icon"><i class="fas fa-folder"></i></span>{{ .Bookmark.Collection.Name }}</a>
+                  {{ end }}
+                  {{ if .Bookmark.Tags }}
+                  <span class="bookmark__tags">
+                      {{ range .Bookmark.Tags }}
+                      <a href="{{ if or (eq $.Page "bookmarks") (ne $.Bookmark.UserID $.UID) }}{{ URLFor "Public bookmarks" }}{{ else }}{{ URLFor "My bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-primary">{{ .Text }}</span></a>
+                      {{ end }}
+                  </span>
+                  {{ end }}
               </p>
           </h4>
       </div>
@@ -257,8 +278,9 @@
         </div>
     </div>
 </div>
-{{end}}
-{{define "searchParameters"}}
+{{ end }}
+
+{{ define "searchParameters"}}
 <div class="checkboxes">
     <label class="label" for="search_in_snapshot">
         <input class="switch is-rounded" value="true" type="checkbox" id="search_in_snapshot"  name="search_in_snapshot"{{ if .SearchParams.SearchInSnapshot }} checked="checked"{{ end }}>
@@ -302,6 +324,28 @@
         <input class="input" type="search" placeholder="{{ .Tr.Msg "tag" }}.." name="tag" value="{{ .SearchParams.Tag }}">
     </div>
 </div>
+{{ end }}
+
+{{ define "collectionFilter" }}
+{{ if .Collections }}
+<div class="field">
+    <label class="label">{{ .Tr.Msg "collection" }}</label>
+    <div class="control">
+        <div class="select">
+            {{ $cid := .CurrentCollection }}
+            <select name="collection">
+                <option value="">---</option>
+                {{ range .Collections }}
+                <option value="{{ .Name }}" {{ if eq .Name $cid }}selected="selected"{{ end }}>{{ .Name }}</option>
+                {{ range .Children }}
+                <option value="{{ .Name }}" {{ if eq .Name $cid }}selected="selected"{{ end }}>{{ .Name }}</option>
+                {{ end }}
+                {{ end }}
+            </select>
+        </div>
+    </div>
+</div>
+{{ end }}
 {{ end }}
 
 {{ define "dateFilter" }}

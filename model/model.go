@@ -54,6 +54,7 @@ func Init(c *config.Config) error {
 		&Database{},
 		&Resource{},
 		&APFollower{},
+		&Collection{},
 	)
 	if err != nil {
 		return fmt.Errorf("auto migration of database '%s' has failed: %w", c.DB.Connection, err)

@@ -19,6 +19,7 @@
                 <input class="input" type="text" name="title" value="{{ .Bookmark.Title }}" />
             </div>
         </div>
+        {{ block "collectionFilter" . }}{{ end }}
         <div class="field">
             <div class="control">
                 <label class="checkbox">

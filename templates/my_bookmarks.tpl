@@ -18,6 +18,7 @@
                             <div class="my-bookmarks__advanced-search">
                                 {{ block "domainFilter" .}}{{ end }}
                                 {{ block "ownerFilter" .}}{{ end }}
+                                {{ block "collectionFilter" .}}{{ end }}
                                 {{ block "tagFilter" .}}{{ end }}
                                 {{ block "dateFilter" .}}{{ end }}
                                 {{ block "searchParameters" .}}{{ end }}
@@ -26,6 +27,17 @@
                         </div>
                     </details>
                 </form>
+            </div>
+            <div class="content collections">
+                <div class="is-pulled-right">
+                    <a href="{{ URLFor "edit collection form" }}" aria-label="{{ .Tr.Msg "add collection" }}"><span class="icon"><i class="fas fa-plus"></i></span></a>
+                </div>
+                {{ if .Collections }}
+                    <h3>{{ .Tr.Msg "collections" }}</h3>
+                    {{ block "collections" KVData "Collections" .Collections "CurrentCollection" .CurrentCollection "Tr" .Tr }}{{ end }}
+                {{ else }}
+                    <h3>{{ .Tr.Msg "no collection" }}</h3>
+                {{ end }}
             </div>
         </div>
         {{ $uid := 0 }}

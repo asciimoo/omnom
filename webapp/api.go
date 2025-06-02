@@ -820,6 +820,38 @@ func init() {
 				},
 			},
 		},
+		&Endpoint{
+			Name:         "edit collection form",
+			Path:         "/edit_collection",
+			Method:       GET,
+			AuthRequired: true,
+			Handler:      editCollection,
+			Description:  "View to create or edit collections",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "collection_id",
+					Type:        "int",
+					Required:    false,
+					Description: "collection id",
+				},
+			},
+		},
+		&Endpoint{
+			Name:         "save collection",
+			Path:         "/edit_collection",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      saveCollection,
+			Description:  "Create or edit collections",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "collection_id",
+					Type:        "int",
+					Required:    false,
+					Description: "collection id",
+				},
+			},
+		},
 	}
 }
 

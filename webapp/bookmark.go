@@ -83,7 +83,7 @@ func bookmarks(c *gin.Context) {
 		return
 	}
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
-	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User")
+	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User").Preload("Collection")
 	if !reflect.DeepEqual(*sp, searchParams{}) {
 		hasSearch = true
 		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
@@ -121,12 +121,13 @@ func bookmarks(c *gin.Context) {
 
 func myBookmarks(c *gin.Context) {
 	u, _ := c.Get("user")
+	uid := u.(*model.User).ID
 	var bs []*model.Bookmark
 	pageno := getPageno(c)
 	offset := (pageno - 1) * resultsPerPage
 	var bookmarkCount int64
-	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID)
-	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Preload("Snapshots").Preload("Tags").Preload("User")
+	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", uid)
+	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Preload("Snapshots").Preload("Tags").Preload("User").Preload("Collection")
 	sp := &searchParams{}
 	hasSearch := false
 	if err := c.ShouldBind(sp); err != nil {
@@ -141,6 +142,7 @@ func myBookmarks(c *gin.Context) {
 			_ = filterToDate(sp.ToDate, q, cq)
 			filterDomain(sp.Domain, q, cq)
 			filterTag(sp.Tag, q, cq)
+			filterCollection(sp.Collection, uid, q, cq)
 			if sp.IsPublic {
 				filterPublic(q, cq)
 			}
@@ -150,7 +152,7 @@ func myBookmarks(c *gin.Context) {
 		}
 	}
 	cq.Count(&bookmarkCount)
-	orderBy, _ := c.GetQuery("order_by")
+	orderBy := c.Query("order_by")
 	switch orderBy {
 	case dateAsc:
 		q = q.Order("bookmarks.updated_at asc")
@@ -160,14 +162,18 @@ func myBookmarks(c *gin.Context) {
 		q = q.Order("bookmarks.updated_at desc")
 	}
 	q.Find(&bs)
+
+	cols := model.GetCollectionTree(uid)
 	render(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
-		"Bookmarks":     bs,
-		"Pageno":        pageno,
-		"BookmarkCount": bookmarkCount,
-		"HasNextPage":   offset+resultsPerPage < bookmarkCount,
-		"SearchParams":  sp,
-		"HasSearch":     hasSearch,
-		"OrderBy":       orderBy,
+		"Bookmarks":         bs,
+		"Pageno":            pageno,
+		"BookmarkCount":     bookmarkCount,
+		"HasNextPage":       offset+resultsPerPage < bookmarkCount,
+		"SearchParams":      sp,
+		"HasSearch":         hasSearch,
+		"OrderBy":           orderBy,
+		"Collections":       cols,
+		"CurrentCollection": c.Query("collection"),
 	})
 }
 
@@ -421,25 +427,29 @@ func viewBookmark(c *gin.Context) {
 
 func editBookmark(c *gin.Context) {
 	u, _ := c.Get("user")
+	uid := u.(*model.User).ID
 	bid, ok := c.GetQuery("id")
 	if !ok {
 		return
 	}
 	var b *model.Bookmark
-	model.DB.Model(b).Where("id = ?", bid).Preload("Snapshots").Preload("Tags").First(&b)
+	model.DB.Model(b).Where("id = ?", bid).Preload("Snapshots").Preload("Tags").Preload("Collection").First(&b)
 	if b == nil {
 		return
 	}
-	if u.(*model.User).ID != b.UserID {
+	if uid != b.UserID {
 		return
 	}
+	cols := model.GetCollectionTree(uid)
 	render(c, http.StatusOK, "edit-bookmark", map[string]interface{}{
-		"Bookmark": b,
+		"Bookmark":    b,
+		"Collections": cols,
 	})
 }
 
 func saveBookmark(c *gin.Context) {
 	u, _ := c.Get("user")
+	uid := u.(*model.User).ID
 	bid := c.PostForm("id")
 	if bid == "" {
 		setNotification(c, nError, "Missing bookmark ID", true)
@@ -453,7 +463,7 @@ func saveBookmark(c *gin.Context) {
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
 	}
-	if u.(*model.User).ID != b.UserID {
+	if uid != b.UserID {
 		setNotification(c, nError, "Permission denied", true)
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return
@@ -461,6 +471,10 @@ func saveBookmark(c *gin.Context) {
 	t := c.PostForm("title")
 	if t != "" {
 		b.Title = t
+	}
+	col := model.GetCollectionByName(uid, c.PostForm("collection"))
+	if col != nil {
+		b.CollectionID = col.ID
 	}
 	b.Public = c.PostForm("public") != ""
 	b.Notes = c.PostForm("notes")

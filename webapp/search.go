@@ -25,6 +25,7 @@ type searchParams struct {
 	ToDate           string `form:"to"`
 	Tag              string `form:"tag"`
 	Domain           string `form:"domain"`
+	Collection       string `form:"collection"`
 	IsPublic         bool   `form:"public"`
 	IsPrivate        bool   `form:"private"`
 	SearchInSnapshot bool   `form:"search_in_snapshot"`
@@ -39,6 +40,7 @@ func (s *searchParams) Serialize() string {
 	v.Add("to", s.ToDate)
 	v.Add("tag", s.Tag)
 	v.Add("domain", s.Domain)
+	v.Add("collection", s.Collection)
 	if s.IsPublic {
 		v.Add("public", "1")
 	}
@@ -110,6 +112,20 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) {
 	query = "(" + query + ")"
 	q = q.Where(query, sql.Named("query", qs))   //nolint: staticcheck,wastedassign // it is used in later funcs
 	cq = cq.Where(query, sql.Named("query", qs)) //nolint: staticcheck,wastedassign // it is used in later funcs
+}
+
+func filterCollection(cid string, uid uint, q, cq *gorm.DB) {
+	if cid == "" {
+		return
+	}
+	q = q. //nolint: staticcheck,wastedassign // it is used in later funcs
+		Joins("join collections on bookmarks.collection_id == collections.id").
+		Where("collections.name = ?", cid).
+		Where("collections.user_id = ? ", uid)
+	cq = cq. //nolint: staticcheck,wastedassign // it is used in later funcs
+			Joins("join collections on bookmarks.collection_id == collections.id").
+			Where("collections.name = ?", cid).
+			Where("collections.user_id = ? ", uid)
 }
 
 func filterOwner(o string, q, cq *gorm.DB) {
