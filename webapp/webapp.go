@@ -245,6 +245,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
 	delete(vars, "DisableSignup")
 	delete(vars, "OAuth")
+	delete(vars, "Tr")
 	c.IndentedJSON(status, vars)
 }
 
