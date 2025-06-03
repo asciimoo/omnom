@@ -120,8 +120,10 @@ func Load(filename string) (*Config, error) {
 	b, fn, err := readConfigFile(filename)
 	if err != nil {
 		log.Debug().Msg("No config file found, using default config")
+		c := CreateDefaultConfig()
+		c.setDefaultStorage()
 		//lint:ignore nilerr // no need to check error
-		return CreateDefaultConfig(), nil
+		return c, nil
 	}
 	c, err := parseConfig(b)
 	if err != nil {
@@ -204,9 +206,7 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 		return nil, errors.New("only one storage backend can be configured")
 	} else if count == 0 {
 		// Default filesystem config
-		c.Storage.Filesystem = &StorageFilesystem{
-			RootDir: "./static/data",
-		}
+		c.setDefaultStorage()
 	}
 	return c, nil
 }
@@ -216,6 +216,12 @@ func (c *Config) Filename() string {
 		return "*Default Config*"
 	}
 	return c.fname
+}
+
+func (c *Config) setDefaultStorage() {
+	c.Storage.Filesystem = &StorageFilesystem{
+		RootDir: "./static/data",
+	}
 }
 
 func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
