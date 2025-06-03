@@ -2,8 +2,8 @@ name: Release binaries
 
 on:
   push:
-	tags:
-	  - '*'
+    tags:
+      - '*'
 
 permissions:
   contents: write
