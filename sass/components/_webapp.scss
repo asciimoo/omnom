@@ -382,6 +382,15 @@ iframe {
         details > summary {
           font-size: 0.8em;
         }
+		details[open] summary::before {
+		  content: "";
+		  width: 100vw;
+		  height: 100vh;
+		  position: fixed;
+		  top: 0;
+		  left: 0;
+		  cursor: auto;
+		}
         details > div {
           position: absolute;
           top: 100%;
