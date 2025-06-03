@@ -31,17 +31,30 @@ Omnom browser addon is available for
 - [Chrome/Chromium](https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei)
 
 
-## Requirements
+## Installation
 
-go >= 1.24
+Single file binary release is available [here](https://github.com/asciimoo/omnom/releases/latest).
+
+Docker image is also available available, more details [here](https://github.com/asciimoo/omnom/wiki/Docker).
+
+### Local build
+
+go >= 1.24 required
+
+ - Checkout the repo and execute `go get -u` in the root directory
+ - Run `go build`
 
 ## Setup & run
 
- - Checkout the repo and execute `go get -u`
- - Copy `config.yml_sample` to `config.yml`
- - Execute `go build && ./omnom listen` or `go run omnom.go listen` in the repo root
+ - Run `./omnom help` to list the available commands
+ - Execute `./omnom listen` to start the web application
+
+
+## Configuration
 
 Settings can be configured in `config.yml` config file - don't forget to restart webapp after updating.
+
+Execute `./omnom create-config config.yml` to generate a configuration file with the default configuration values.
 
 
 ## User handling
@@ -76,8 +89,6 @@ To contribute to localizations, please visit our [weblate](https://translate.cod
 
 [![Translation status](https://translate.codeberg.org/widget/omnom/multi-auto.svg)](https://translate.codeberg.org/engage/omnom/)
 
-
-## [Docker](https://github.com/asciimoo/omnom/wiki/Docker)
 
 
 ## Bugs
