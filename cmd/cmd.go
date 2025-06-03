@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/asciimoo/omnom/config"
@@ -372,6 +374,14 @@ func init() {
 		FormatLevel: func(i interface{}) string {
 			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
 		},
+	}
+	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
+		dir, fn := filepath.Split(file)
+		if dir == "" {
+			return fn + ":" + strconv.Itoa(line)
+		}
+		_, subdir := filepath.Split(strings.TrimSuffix(dir, "/"))
+		return subdir + "/" + fn + ":" + strconv.Itoa(line)
 	}
 	log.Logger = log.With().Caller().Logger()
 	log.Logger = log.Output(out)
