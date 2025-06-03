@@ -27,7 +27,7 @@ jobs:
           args: release --clean
           workdir: .
         env:
-          GITHUB_TOKEN: ${{ secrets.OmnomGoReleaser }}
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
 
       - name: Upload assets
         uses: actions/upload-artifact@v4
