@@ -72,6 +72,7 @@ Basic management actions are available using the command line tool (`go run omno
 
 #### Available Commands
 ```
+  create-config        create default configuration file
   create-token         create new login/addon token for a user
   create-user          create new user
   generate-api-docs-md Generate Markdown API documentation
