@@ -34,3 +34,5 @@ jobs:
         with:
           name: omnom
           path: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
