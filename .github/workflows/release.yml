@@ -24,7 +24,7 @@ jobs:
         uses: goreleaser/goreleaser-action@master
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
           workdir: .
         env:
           GITHUB_TOKEN: ${{ secrets.OmnomGoReleaser }}
