@@ -28,6 +28,7 @@
                         </div>
                     </details>
                 </form>
+                {{ if .FrequentTags }}
                 <div class="mt-5 is-hidden-mobile">
                     <h3>{{ .Tr.Msg "frequent tags" }}</h3>
                     <div class="field is-grouped is-grouped-multiline ">
@@ -41,6 +42,7 @@
                         {{ end }}
                     </div>
                 </div>
+                {{ end }}
             </div>
         </div>
         {{ $uid := 0 }}
