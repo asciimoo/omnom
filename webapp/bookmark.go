@@ -315,7 +315,7 @@ func addBookmark(c *gin.Context) {
 		c.PostForm("collection"),
 	)
 	if err != nil {
-		setNotification(c, nError, err.Error(), false)
+		log.Error().Err(err).Msg("Failed to create bookmark DB entry")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -326,15 +326,16 @@ func addBookmark(c *gin.Context) {
 	}
 	snapshotFile, _, err := c.Request.FormFile("snapshot")
 	if err != nil {
-		setNotification(c, nError, err.Error(), false)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+		log.Debug().Msg("No snpashot found")
+		c.JSON(http.StatusOK, map[string]interface{}{
+			"success":      true,
+			"bookmark_url": baseURL(fmt.Sprintf("/bookmark?id=%d", b.ID)),
 		})
 		return
 	}
 	snapshot, err := io.ReadAll(snapshotFile)
 	if err != nil {
-		setNotification(c, nError, err.Error(), false)
+		log.Error().Err(err).Msg("Failed to read snapshot")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -345,7 +346,7 @@ func addBookmark(c *gin.Context) {
 	if !bytes.Equal(snapshot, []byte("")) {
 		key, err := storeSnapshot(snapshot)
 		if err != nil {
-			setNotification(c, nError, "HTML validation failed: "+err.Error(), false)
+			log.Error().Err(err).Msg("Failed to validate snapshot HTML")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": "HTML validation failed: " + err.Error(),
 			})
@@ -359,7 +360,7 @@ func addBookmark(c *gin.Context) {
 			Size:       storage.GetSnapshotSize(key),
 		}
 		if err := model.DB.Save(s).Error; err != nil {
-			setNotification(c, nError, err.Error(), false)
+			log.Error().Err(err).Msg("Failed to create snapshot DB entry")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
@@ -368,7 +369,7 @@ func addBookmark(c *gin.Context) {
 		sSize = s.Size
 		sKey = key
 	}
-	c.JSON(200, map[string]interface{}{
+	c.JSON(http.StatusOK, map[string]interface{}{
 		"success":       true,
 		"bookmark_url":  baseURL(fmt.Sprintf("/bookmark?id=%d", b.ID)),
 		"snapshot_url":  baseURL(fmt.Sprintf("/static/data/snapshots/%s/%s.gz", sKey[:2], sKey)),
