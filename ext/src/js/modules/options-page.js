@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: AGPLv3+
 import {
     renderError,
-    renderSuccess
+    renderSuccess,
+    validateOptions
 } from './utils';
 
 export default function () {
@@ -13,13 +14,8 @@ export default function () {
         if (!serverUrl.endsWith('/')) {
             serverUrl += '/';
         }
-        let formData = new FormData();
-        formData.append('token', document.querySelector('#token').value);
-        fetch(serverUrl + 'check_token', {
-            'method': 'POST',
-            'body': formData,
-        }).then(response => {
-			if (response.ok) {
+        validateOptions(serverUrl, document.querySelector('#token').value).then(response => {
+			if(response.ok) {
                 persistSettings(serverUrl);
 				return
 			}

@@ -57,7 +57,11 @@ function renderError(errorMessage, error) {
     if (error) {
         error.json().then(data => console.log({ error, data }));
     }
-    document.getElementById('omnom-content').innerHTML = `<h1 id="status" class="error">${errorMessage}</h1>`;
+    if(document.getElementById('status')) {
+        document.getElementById('status').innerHTML = errorMessage;
+    } else {
+        document.getElementById('omnom-content').innerHTML = `<h1 id="status" class="error">${errorMessage}</h1>`;
+    }
 }
 
 async function renderSuccess(successMessage, bookmarkInfo) {
@@ -191,6 +195,15 @@ async function sha256(data) {
     return hashHex;
 }
 
+async function validateOptions(serverUrl, token) {
+    let formData = new FormData();
+    formData.append('token', token);
+    return fetch(serverUrl + 'check_token', {
+        'method': 'POST',
+        'body': formData,
+    });
+}
+
 export {
     UrlResolver,
     absoluteURL,
@@ -211,5 +224,6 @@ export {
     renderSuccess,
     setOmnomSettings,
     setSiteUrl,
-    sha256
+    sha256,
+    validateOptions
 }

@@ -89,3 +89,10 @@ input[type="submit"] {
 .hidden {
   display: none;
 }
+.error {
+  font-size: 1.2em;
+  text-align: center;
+  background: $color-muted-red;
+  border: 2px solid $color-red;
+  padding: 1em;
+}

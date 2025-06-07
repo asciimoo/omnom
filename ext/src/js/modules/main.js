@@ -18,7 +18,8 @@ import {
     isOmnomDefaultPublic,
     renderError,
     renderSuccess,
-    setOmnomSettings
+    setOmnomSettings,
+    validateOptions
 } from './utils';
 
 const messageHandlers = new Map([
@@ -195,9 +196,17 @@ function populateCollections() {
  * ---------------------------------*/
 
 function backHandler() {
-    clearContentContainer();
-    updateBoundVar([{ 'onoptions': false }, { 'onafterdownload': false }, { 'onmain': true }]);
-    fillFormFields();
+    chrome.storage.local.get(['omnom_url', 'omnom_token'], function (data) {
+        validateOptions(data.omnom_url, data.omnom_token).then(response => {
+            if(response.ok) {
+                clearContentContainer();
+                updateBoundVar([{ 'onoptions': false }, { 'onafterdownload': false }, { 'onmain': true }]);
+                fillFormFields();
+                return
+            }
+            renderError('Invalid settings! Check out the <a href="https://github.com/asciimoo/omnom/wiki/Browser-extension#setup" target="_blank">documentation</a> for details.');
+        });
+    });
 }
 
 async function optionsHandler() {
