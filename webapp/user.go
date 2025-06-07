@@ -299,7 +299,6 @@ func deleteAddonToken(c *gin.Context) {
 
 func checkAddonToken(c *gin.Context) {
 	tok := c.PostForm("token")
-	log.Debug().Msgf("token: '%v'", tok)
 	var t model.Token
 	err := model.DB.Where("text = ?", tok).First(&t).Error
 	if err != nil {
