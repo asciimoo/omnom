@@ -1,32 +1,39 @@
 {{ define "content" }}
 <div class="content">
-    <h4 class="title">
-        <span class="icon-text">
-            {{ if .Bookmark.Favicon }}
-            <span class="icon">
-                <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
-            </span>
-            {{ end }}
-            <span>
-                <a href="{{ .Bookmark.URL }}" target="_blank">{{ .Bookmark.Title }}</a>
-            </span>
+    <h2 class="title is-size-2 mt-3 mb-0">{{ .Bookmark.Title }}</h2>
+    <p class="icon-text mb-0">
+        {{ if .Bookmark.Favicon }}
+        <span class="icon">
+            <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
         </span>
-        <p class="is-size-7 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 100 }}</p>
-    </h4>
-    <p>{{ .Bookmark.Notes }}</p>
-    {{ $uid := 0 }}
-    {{ if .User }}{{ $uid = .User.ID }}{{ end }}
-    {{ if .Bookmark.Tags }}
-        {{ range .Bookmark.Tags }}
-        <a href="{{ if ne $uid $.Bookmark.UserID }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-info">{{ .Text }}</span></a>
         {{ end }}
+        <span class="is-size-6 has-text-grey has-text-weight-normal">{{ Truncate .Bookmark.URL 200 }}</span>
+    </p>
+    <p class="mt-2">
+        {{ $uid := 0 }}
+        {{ if .User }}{{ $uid = .User.ID }}{{ end }}
+        {{ if .Bookmark.Tags }}
+            {{ range .Bookmark.Tags }}
+            <a href="{{ if ne $uid $.Bookmark.UserID }}{{ BaseURL "/bookmarks" }}{{ else }}{{ BaseURL "/my_bookmarks" }}{{ end }}?tag={{ .Text }}"><span class="tag is-muted-primary is-medium">{{ .Text }}</span></a>
+            {{ end }}
+            <br />
+        {{ end }}
+        <span>{{ .Bookmark.CreatedAt | ToDateTime }} - {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}</span>
+        {{ if .User }}
+        {{ if eq .User.ID .Bookmark.UserID }}
+            <br /><span> <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">edit</a></span>
+        {{ end }}
+        {{ end }}
+    </p>
+    {{ if .Bookmark.Notes }}
+        <h4>Notes</h4>
+        <p>{{ .Bookmark.Notes }}</p>
     {{ end }}
-    {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID $uid ) }}{{ end }}
-    {{ .Bookmark.CreatedAt | ToDate }} {{ if .Bookmark.Public }}Public{{ else }}Private{{ end }}
-    {{ if .User }}
-      {{ if eq .User.ID .Bookmark.UserID }}
-        <a href="{{ BaseURL "/edit_bookmark" }}?id={{ .Bookmark.ID }}">edit</a>
-      {{ end }}
+    {{ if .Bookmark.Snapshots }}
+        <div class="mt-6">
+            <h4>Snapshots</h4>
+            {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID $uid ) }}{{ end }}
+        </div>
     {{ end }}
 </div>
 {{ end }}

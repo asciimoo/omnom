@@ -555,3 +555,9 @@ iframe {
     list-style: none;
   }
 }
+.tag.is-muted-primary {
+  background-color: $primary-color-light;
+}
+.tag.is-grey {
+  background-color: $color-light-gray;
+}
