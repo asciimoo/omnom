@@ -183,7 +183,10 @@
           </h4>
       </div>
       <div class="bookmark__actions">
-        {{ if .Bookmark.Snapshots }}
+          {{ if .Bookmark.Snapshots }}
+          {{ if eq (len .Bookmark.Snapshots) 1 }}
+          <a href="{{ URLFor "snapshot" }}?bid={{ .Bookmark.ID }}&sid={{ (index .Bookmark.Snapshots 0).Key }}">{{ .Tr.Msg "snapshot" }}</a>
+          {{ else }}
           <details>
               <summary>
                   Snapshots <span class="bookmark__snapshot-count">({{len .Bookmark.Snapshots}})</span>
@@ -192,6 +195,7 @@
                   {{ block "snapshots" KVData "Snapshots" .Bookmark.Snapshots "IsOwn" (eq .Bookmark.UserID .UID) }}{{ end }}
               </div>
           </details>
+          {{ end }}
           {{ end }}
         {{ if .Bookmark.Notes }}
         <details>
