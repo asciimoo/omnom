@@ -203,6 +203,15 @@ var createTokenCmd = &cobra.Command{
 	Run:    createToken,
 }
 
+var createBookmarkCmd = &cobra.Command{
+	Use:    "create-bookmark USERNAME TITLE URL",
+	Short:  "create new bookmark",
+	Long:   `create-bookmark USERNAME TITLE URL`,
+	Args:   cobra.ExactArgs(3),
+	PreRun: initDB,
+	Run:    createBookmark,
+}
+
 var createConfigCmd = &cobra.Command{
 	Use:   "create-config FILENAME",
 	Short: "create default configuration file",
@@ -321,6 +330,52 @@ func createConfig(cmd *cobra.Command, args []string) {
 	fmt.Println("Config file created")
 }
 
+func createBookmark(cmd *cobra.Command, args []string) {
+	// TODO add snapshot if server side snapshotting is configured
+	u := model.GetUser(args[0])
+	if u == nil {
+		fmt.Println("User not found")
+		os.Exit(5)
+	}
+	tags := ""
+	if v, err := cmd.Flags().GetString("tags"); err == nil {
+		tags = v
+	}
+	notes := ""
+	if v, err := cmd.Flags().GetString("notes"); err == nil {
+		notes = v
+	}
+	public := ""
+	if v, err := cmd.Flags().GetBool("public"); err == nil {
+		if v {
+			public = "1"
+		}
+	}
+	collection := ""
+	if v, err := cmd.Flags().GetString("collection"); err == nil {
+		collection = v
+	}
+	_, new, err := model.GetOrCreateBookmark(
+		u,
+		args[2],
+		args[1],
+		tags,
+		notes,
+		public,
+		"",
+		collection,
+	)
+	if err != nil {
+		fmt.Println("Failed to add bookmark:", err.Error())
+		os.Exit(1)
+	}
+	if !new {
+		fmt.Println("Bookmark already exists")
+		os.Exit(0)
+	}
+	fmt.Println("Bookmark successfully added")
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(f embed.FS) {
@@ -339,6 +394,7 @@ func init() {
 	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(generateAPIDocsMDCmd)
 	rootCmd.AddCommand(createConfigCmd)
+	rootCmd.AddCommand(createBookmarkCmd)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
@@ -363,6 +419,11 @@ func init() {
 	listenCmd.Flags().Uint("smtp-send-timeout", uint(dcfg.SMTP.SendTimeout), "SMTP send timeout (seconds)")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("smtp-connection-timeout", uint(dcfg.SMTP.ConnectionTimeout), "SMTP connection timeout (seconds)")
+
+	createBookmarkCmd.Flags().Bool("public", true, "Set bookmark to public or private")
+	createBookmarkCmd.Flags().String("tags", "", "Comma separated list of tags")
+	createBookmarkCmd.Flags().String("notes", "", "Bookmark notes")
+	createBookmarkCmd.Flags().String("collection", "", "Collection name")
 
 	cobra.OnInitialize(initialize)
 
