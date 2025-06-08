@@ -272,11 +272,7 @@ func profile(c *gin.Context) {
 
 func generateAddonToken(c *gin.Context) {
 	u, _ := c.Get("user")
-	tok := &model.Token{
-		Text:   model.GenerateToken(),
-		UserID: u.(*model.User).ID,
-	}
-	err := model.DB.Create(tok).Error
+	tok, err := model.CreateAddonToken(u.(*model.User).ID)
 	if err != nil {
 		setNotification(c, nError, err.Error(), true)
 	} else {

@@ -21,3 +21,11 @@ func GenerateToken() string {
 	tok := fmt.Sprintf("%x", b)
 	return tok
 }
+
+func CreateAddonToken(uid uint) (*Token, error) {
+	tok := &Token{
+		Text:   GenerateToken(),
+		UserID: uid,
+	}
+	return tok, DB.Create(tok).Error
+}
