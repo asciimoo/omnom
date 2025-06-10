@@ -16,7 +16,8 @@
                 {{ range $i,$s := .OtherSnapshots }}
                 <div class="level"><div class="level-left">
                     <a href="{{ URLFor "Snapshot" }}?sid={{ $s.Key }}&bid={{ $s.Bid }}">{{ if $s.Title }}{{ $s.Title }}{{ else }}#{{ $i }} - {{ $s.CreatedAt | ToDate }}{{ end }}</a>
-                    <a href="{{ URLFor "Snapshot diff" }}?s1={{ $os.Key }}&s2={{ $s.Key }}" class="button is-small">Compare</a>
+                    <a href="{{ URLFor "Snapshot diff" }}?s1={{ $os.Key }}&s2={{ $s.Key }}" class="button is-small">Show differences</a>
+                    <a href="{{ URLFor "Snapshot diff side by side" }}?s1={{ $os.Key }}&s2={{ $s.Key }}" class="button is-small">Compare side by side</a>
                 </div></div>
                 {{ end }}
             </div>

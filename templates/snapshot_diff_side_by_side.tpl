@@ -1,16 +1,27 @@
 {{ define "full-content" }}
-<div class="iframe-diff-wrapper">
+<div class="iframe-diff-header mb-3">
     <h2 class="title">Side by side snapshot diff of {{ Truncate .SURL 250 }}</h2>
-    <div class="container is-fluid content"><a href="{{ URLFor "Snapshot diff side by side" }}?s1={{ .S2.Key }}&s2={{ .S1.Key }}">swap sides</a></div>
+    <div class="container is-fluid content">
+        <a href="{{ URLFor "Snapshot diff side by side" }}?s1={{ .S2.Key }}&s2={{ .S1.Key }}">Swap sides</a><br />
+        <a href="{{ URLFor "Snapshot diff" }}?s1={{ .S1.Key }}&s2={{ .S2.Key }}">Show differences</a>
+    </div>
+    <div class="columns mb-2">
+        <div class="column">
+            <a href="{{ URLFor "Snapshot" }}?sid={{ .S1.Key }}&bid={{ .S1.BookmarkID }}" class="is-size-3 pl-5">{{ .S1.CreatedAt | ToDateTime }}</a>
+        </div>
+        <div class="column">
+            <a href="{{ URLFor "Snapshot" }}?sid={{ .S2.Key }}&bid={{ .S2.BookmarkID }}" class="is-size-3 pl-5">{{ .S2.CreatedAt | ToDateTime }}</a>
+        </div>
+    </div>
+</div>
+<div class="iframe-diff-wrapper">
     <noscript>{{ block "warning" KVData "Warning" "this feature requires javascript" "Tr" .Tr }}{{ end }}</noscript>
     <div class="columns">
         <div class="column">
-            <a href="{{ URLFor "Snapshot" }}?sid={{ .S1.Key }}&bid={{ .S1.BookmarkID }}" class="is-size-3">{{ .S1.CreatedAt | ToDateTime }}</a>
-            <iframe id="sn1" title="snapshot 1" scrolling="no" class="snapshot-iframe"></iframe>
+            <iframe id="sn1" title="snapshot 1" scrolling="no"></iframe>
         </div>
         <div class="column">
-            <a href="{{ URLFor "Snapshot" }}?sid={{ .S2.Key }}&bid={{ .S2.BookmarkID }}" class="is-size-3">{{ .S2.CreatedAt | ToDateTime }}</a>
-            <iframe title="snapshot 2" id="sn2" class="snapshot-iframe" scrolling="no"></iframe>
+            <iframe title="snapshot 2" id="sn2" scrolling="no"></iframe>
         </div>
     </div>
 </div>
@@ -84,16 +95,19 @@
     return fetch(url).then(r => {
         return r.text();
     }).then(html => {
-        let css = `<style>@keyframes omnom-highlight {
+        const css = document.createElement("style");
+        css.textContent = `@keyframes omnom-highlight {
             0% {background-color: #ffeaa7;}
             50% {background-color: #fdcb6e;}
             100% {background-color: #ffeaa7;}
-        }</style>`;
-        el.srcdoc = html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`+css);
-        //d.open();
-        //d.write();
-        //d.close();
-        //s1.setAttribute("src", "data:text/html;base64,"+btoa(html.replace("<head>", `<head><base href="./static/data/snapshots/aa/">`)+hl));
+        }`;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const base = document.createElement("base")
+        base.setAttribute("href", "./static/data/snapshots/aa/");
+        doc.querySelector("head").prepend(base);
+        doc.querySelector("head").appendChild(css);
+        el.srcdoc = new XMLSerializer().serializeToString(doc);
     }).catch(err => console.log(err));
  }
  Promise.all([loadSnapshot(s1URL, s1), loadSnapshot(s2URL, s2), s1p, s2p]).then(() => {

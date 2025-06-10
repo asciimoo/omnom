@@ -156,6 +156,7 @@ func ExtractHTMLContent(r io.Reader) *HTMLContent {
 			switch string(tn) {
 			case "body":
 				body = true
+				capture = true
 			case "style", "script":
 				capture = false
 			case "img":
