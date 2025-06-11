@@ -25,6 +25,9 @@
                                 {{ block "searchParameters" .}}{{ end }}
                             </div>
                             {{ block "submit" (.Tr.Msg "search") }}{{ end }}
+                            <div class="mt-5">
+                                <a href="{{ URLFor "Snapshots" }}">{{ .Tr.Msg "snapshot search" }}</a>
+                            </div>
                         </div>
                     </details>
                 </form>
