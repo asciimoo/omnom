@@ -16,11 +16,12 @@
             <h3 class="title">{{ .Tr.Msg "no snapshot found" }}</h3>
         {{ else }}
             <h3 class="title">Results for "{{ .SearchParams.Q }}" ({{ .SnapshotCount }})</h3>
+            {{ $Tr := .Tr }}
             {{ range .Snapshots }}
             <div class="box">
                 <h4 class="title"><a href="{{ URLFor "Snapshot" }}?sid={{ .Key }}&bid={{ .BookmarkID }}">{{ .Bookmark.Title }}</a></h4>
                 <p>
-                    {{ .Tr.Msg "original url" }}: <a href="{{ .Bookmark.URL }}" target="_blank">{{ Truncate .Bookmark.URL 100 }}</a><br />
+                    {{ $Tr.Msg "original url" }}: <a href="{{ .Bookmark.URL }}" target="_blank">{{ Truncate .Bookmark.URL 100 }}</a><br />
                     {{ .UpdatedAt | ToDateTime }} - {{ .Size | FormatSize }}
                 </p>
             </div>
