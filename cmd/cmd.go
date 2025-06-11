@@ -35,10 +35,18 @@ const (
 var cfgFile string
 var cfg *config.Config
 
+func exit(errno int, msg string) {
+	if errno != 0 {
+		fmt.Println("Error!")
+	}
+	fmt.Println(msg)
+	os.Exit(errno)
+}
+
 func initDB(cmd *cobra.Command, args []string) {
 	err := model.Init(cfg)
 	if err != nil {
-		panic(err)
+		exit(1, err.Error())
 	}
 	log.Debug().Msg("DB initialization complete")
 }
@@ -46,7 +54,7 @@ func initDB(cmd *cobra.Command, args []string) {
 func initStorage() {
 	err := storage.Init(cfg.Storage)
 	if err != nil {
-		panic(err)
+		exit(1, err.Error())
 	}
 	log.Debug().Msg("Storage initialization complete")
 }
@@ -138,13 +146,11 @@ var listenCmd = &cobra.Command{
 		initStorage()
 		err := initMail()
 		if err != nil {
-			fmt.Println("Failed to initialize mailing:", err)
-			os.Exit(1)
+			exit(1, "Failed to initialize mailing: "+err.Error())
 		}
 		err = initActivityPub()
 		if err != nil {
-			fmt.Println("Failed to initialize ActivityPub keys:", err)
-			os.Exit(1)
+			exit(1, "Failed to initialize ActivityPub keys: "+err.Error())
 		}
 		webapp.Run(cfg)
 	},
@@ -159,8 +165,7 @@ var showUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		u := model.GetUser(args[0])
 		if u == nil {
-			fmt.Println("Cannot find user:")
-			os.Exit(3)
+			exit(1, "Cannot find user")
 		}
 		s := reflect.ValueOf(u).Elem()
 		typeOfT := s.Type()
@@ -185,8 +190,7 @@ var createUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := model.CreateUser(args[0], args[1])
 		if err != nil {
-			fmt.Println("Cannot create new user:", err)
-			os.Exit(4)
+			exit(1, "Cannot create new user: "+err.Error())
 		}
 		u := model.GetUser(args[0])
 		fmt.Println("User", args[0], "successfully created")
@@ -280,20 +284,17 @@ func setToken(cmd *cobra.Command, args []string) {
 
 func changeToken(args []string, tok string) {
 	if args[1] != loginCmd && args[1] != addonCmd {
-		fmt.Println("Invalid token type. Allowed values are 'login' or 'addon'")
-		os.Exit(5)
+		exit(1, "Invalid token type. Allowed values are 'login' or 'addon'")
 	}
 	u := model.GetUser(args[0])
 	if u == nil {
-		fmt.Println("User not found")
-		os.Exit(5)
+		exit(1, "User not found")
 	}
 	if args[1] == loginCmd {
 		u.LoginToken = tok
 		err := model.DB.Save(u).Error
 		if err != nil {
-			fmt.Println("Failed to set token:", err)
-			os.Exit(6)
+			exit(1, "Failed to set token: "+err.Error())
 		}
 	} else {
 		t := &model.Token{
@@ -302,8 +303,7 @@ func changeToken(args []string, tok string) {
 		}
 		err := model.DB.Save(t).Error
 		if err != nil {
-			fmt.Println("Failed to set token:", err)
-			os.Exit(7)
+			exit(1, "Failed to set token: "+err.Error())
 		}
 	}
 	fmt.Printf("Token %s created\n", tok)
@@ -315,17 +315,14 @@ func changeToken(args []string, tok string) {
 func createConfig(cmd *cobra.Command, args []string) {
 	fname := args[0]
 	if _, err := os.Stat(fname); err == nil {
-		fmt.Printf(`File "%s" already exists\n`, fname)
-		os.Exit(1)
+		exit(1, fmt.Sprintf(`File "%s" already exists`, fname))
 	}
 	fc, err := fs.ReadFile("config.yml_sample")
 	if err != nil {
-		fmt.Println(`Cannot read sample config:`, err.Error())
-		os.Exit(1)
+		exit(1, `Cannot read sample config: `+err.Error())
 	}
 	if err := os.WriteFile(fname, fc, 0600); err != nil {
-		fmt.Println(`Failed to create config file:`, err.Error())
-		os.Exit(1)
+		exit(1, `Failed to create config file: `+err.Error())
 	}
 	fmt.Println("Config file created")
 }
@@ -334,8 +331,7 @@ func createBookmark(cmd *cobra.Command, args []string) {
 	// TODO add snapshot if server side snapshotting is configured
 	u := model.GetUser(args[0])
 	if u == nil {
-		fmt.Println("User not found")
-		os.Exit(5)
+		exit(1, "User not found")
 	}
 	tags := ""
 	if v, err := cmd.Flags().GetString("tags"); err == nil {
@@ -366,12 +362,10 @@ func createBookmark(cmd *cobra.Command, args []string) {
 		collection,
 	)
 	if err != nil {
-		fmt.Println("Failed to add bookmark:", err.Error())
-		os.Exit(1)
+		exit(1, "Failed to add bookmark: "+err.Error())
 	}
 	if !new {
-		fmt.Println("Bookmark already exists")
-		os.Exit(0)
+		exit(0, "Bookmark already exists")
 	}
 	fmt.Println("Bookmark successfully added")
 }
@@ -459,8 +453,7 @@ func initConfig() {
 	var err error
 	cfg, err = config.Load(cfgFile)
 	if err != nil {
-		fmt.Println("Failed to initialize config:", err)
-		os.Exit(2)
+		exit(1, "Failed to initialize config:"+err.Error())
 	}
 	if l, _ := rootCmd.PersistentFlags().GetString("log-level"); l != "" && (rootCmd.Flags().Changed("log-level") || cfg.App.LogLevel == "") {
 		cfg.App.LogLevel = l
