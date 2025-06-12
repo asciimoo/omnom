@@ -31,13 +31,13 @@
             <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">{{ .Tr.Msg "home" }}</a>
             {{ if .User }}
             <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "my bookmarks" }}</a>
+            <a href="{{ URLFor "Feeds" }}" class="navbar-item{{ if eq .Page "feeds" }} is-active{{ end }}">{{ .Tr.Msg "feeds" }}</a>
             {{ end }}
             <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "public bookmarks" }}</a>
             {{ if .User }}
             {{ if .AllowBookmarkCreation }}
             <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">{{ .Tr.Msg "create bookmark" }}</a>
             {{ end }}
-            <a href="{{ URLFor "Feeds" }}" class="navbar-item{{ if eq .Page "feeds" }} is-active{{ end }}">{{ .Tr.Msg "feeds" }}</a>
             {{ end }}
         {{ end }}
       </div>
@@ -390,5 +390,42 @@
 <div class="control">
     <input type="submit" name="submit" value="{{ . }}" class="button is-primary" />
 </div>
+{{ end }}
 
+{{ define "unreadFeedItem" }}
+    <div class="media">
+        <div class="media-left">
+            <figure class="image is-48x48">
+                {{ if .Favicon }}
+                <img src="{{ .Favicon | ToURL }}" alt="favicon" />
+                {{ end }}
+            </figure>
+        </div>
+        <div class="media-content">
+            <p class="title is-4"><a href="{{ .URL }}">{{ .Title }}</a></p>
+            <p class="subtitle is-6"><span class="tag">{{ .FeedName }}</span> {{ .CreatedAt | ToDateTime }}</p>
+        </div>
+    </div>
+    {{ if .Content }}
+    <p>{{ .Content }}</p>
+    {{ end }}
+{{ end }}
+
+{{ define "unreadBookmark" }}
+    <div class="media">
+        <div class="media-left">
+            <figure class="image is-48x48">
+            {{ if .Bookmark.Favicon }}
+              <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
+            {{ end }}
+            </figure>
+        </div>
+        <div class="media-content">
+            <p class="title is-4"><a href="{{ .URL }}">{{ .Bookmark.Title }}</a></p>
+            <p class="subtitle is-6"><span class="tag">{{ .Tr.Msg "bookmark" }}</span> {{ .CreatedAt | ToDateTime }}</p>
+        </div>
+    </div>
+    {{ if .Bookmark.Notes }}
+    <p>{{ .Bookmark.Notes }}</p>
+    {{ end }}
 {{ end }}

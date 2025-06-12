@@ -5,8 +5,14 @@
 package model
 
 import (
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/mmcdole/gofeed"
 	"github.com/rs/zerolog/log"
-	//"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -16,11 +22,12 @@ const (
 
 type Feed struct {
 	CommonFields
-	Name  string      `json:"name"`
-	URL   string      `json:"gorm:"unique" url"`
-	Type  string      `json:"type"`
-	Items []*FeedItem `json:"items"`
-	Users []*User     `gorm:"many2many:user_feeds;" json:"-"`
+	Name    string      `json:"name"`
+	URL     string      `json:"gorm:"unique" url"`
+	Type    string      `json:"type"`
+	Favicon string      `json:"favicon"`
+	Items   []*FeedItem `json:"items"`
+	Users   []*User     `gorm:"many2many:user_feeds;" json:"-"`
 }
 
 type UserFeed struct {
@@ -52,6 +59,12 @@ type UserFeedItem struct {
 	User       *User     `json:"-"`
 }
 
+type UnreadFeedItem struct {
+	FeedItem
+	FeedName string
+	Favicon  string
+}
+
 func GetFeeds() ([]*Feed, error) {
 	var res []*Feed
 	err := DB.
@@ -72,12 +85,12 @@ func GetUserFeeds(uid uint) ([]*UserFeed, error) {
 	return res, err
 }
 
-func GetFeedByURL(u string) *Feed {
+func GetFeedByURL(u string) (*Feed, error) {
 	var f *Feed
-	DB.Table("feeds").
+	err := DB.Table("feeds").
 		Preload("Users").
-		Where("feeds.url = ?", u).First(&f)
-	return f
+		Where("feeds.url = ?", u).First(&f).Error
+	return f, err
 }
 
 func createUserFeed(name string, f *Feed, uid uint) error {
@@ -93,20 +106,29 @@ func createUserFeed(name string, f *Feed, uid uint) error {
 	return DB.Create(uf).Error
 }
 
-func createFeed(name, url, ftype string) (*Feed, error) {
+func createFeed(name, url string) (*Feed, error) {
 	f := &Feed{
 		Name: name,
 		URL:  url,
-		Type: ftype,
+	}
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseURL(url)
+	if err != nil {
+		return nil, errors.New("unsupported feed type; " + err.Error())
+	} else {
+		f.Type = RSSFeed
+	}
+	if feed.Image != nil {
+		f.Favicon = fetchImageAsInlineURL(feed.Image.URL)
 	}
 	return f, DB.Create(f).Error
 }
 
-func AddFeed(name, url, ftype string, uid uint) error {
-	f := GetFeedByURL(url)
-	if f == nil {
+func AddFeed(name, url string, uid uint) error {
+	f, err := GetFeedByURL(url)
+	if f == nil || err != nil {
 		var err error
-		f, err = createFeed(name, url, ftype)
+		f, err = createFeed(name, url)
 		if err != nil {
 			return err
 		}
@@ -115,12 +137,12 @@ func AddFeed(name, url, ftype string, uid uint) error {
 }
 
 func AddFeedItem(i *FeedItem, feedURL string) int64 {
-	f := GetFeedByURL(feedURL)
-	if f == nil {
+	f, err := GetFeedByURL(feedURL)
+	if f == nil || err != nil {
 		log.Error().Str("URL", feedURL).Msg("Feed not found")
 		return 0
 	}
-	err := DB.Create(i).Error
+	err = DB.Create(i).Error
 	// TODO accept only UNIQUE constraint failed
 	// According to docs it is type of  gorm.ErrDuplicatedKey, but it does not work
 	if err != nil {
@@ -137,18 +159,14 @@ func AddFeedItem(i *FeedItem, feedURL string) int64 {
 	return DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&uis).RowsAffected
 }
 
-type UnreadItem struct {
-	FeedItem
-	FeedName string
-}
-
-func GetUnreadFeedItems(uid, limit uint) []*UnreadItem {
-	var res []*UnreadItem
+func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
+	var res []*UnreadFeedItem
 	DB.
-		Select("feed_items.*, user_feeds.name as feed_name").
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon").
 		Table("feed_items").
 		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
 		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
+		Joins("join feeds on feeds.id == user_feeds.feed_id").
 		Where("user_feed_items.user_id = ?", uid).
 		Where("user_feed_items.unread = ?", true).
 		Order("feed_items.id asc").
@@ -165,4 +183,17 @@ func GetUnreadFeedItemCount(uid uint) int64 {
 		Where("user_feed_items.unread = ?", true).
 		Count(&res)
 	return res
+}
+
+func fetchImageAsInlineURL(url string) string {
+	r, err := http.Get(url)
+	if err != nil {
+		return ""
+	}
+	defer r.Body.Close()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("data:%s;base64,", r.Header.Get("Content-Type"), base64.StdEncoding.EncodeToString(data))
 }

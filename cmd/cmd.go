@@ -116,6 +116,12 @@ func setInt64Arg(cmd *cobra.Command, arg string, dest *int64) {
 	}
 }
 
+func setUintArg(cmd *cobra.Command, arg string, dest *uint) {
+	if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
+		*dest = v
+	}
+}
+
 var listenCmd = &cobra.Command{
 	Use:    "listen",
 	Short:  "start server",
@@ -138,6 +144,7 @@ var listenCmd = &cobra.Command{
 		setBoolArg(cmd, "smtp-tls-allow-insecure", &cfg.SMTP.TLSAllowInsecure)
 		setIntArg(cmd, "smtp-send-timeout", &cfg.SMTP.SendTimeout)
 		setIntArg(cmd, "smtp-connection-timeout", &cfg.SMTP.ConnectionTimeout)
+		setUintArg(cmd, "feed-items-per-page", &cfg.Feed.ItemsPerPage)
 		if v, err := cmd.Flags().GetString("data-directory"); err == nil && cmd.Flags().Changed("data-directory") {
 			if cfg.Storage.Filesystem == nil {
 				cfg.Storage.Filesystem = &config.StorageFilesystem{}
@@ -430,6 +437,7 @@ func init() {
 	listenCmd.Flags().Uint("smtp-send-timeout", uint(dcfg.SMTP.SendTimeout), "SMTP send timeout (seconds)")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("smtp-connection-timeout", uint(dcfg.SMTP.ConnectionTimeout), "SMTP connection timeout (seconds)")
+	listenCmd.Flags().Uint("feed-items-per-page", dcfg.Feed.ItemsPerPage, "Number of feed items per page")
 
 	createBookmarkCmd.Flags().Bool("public", true, "Set bookmark to public or private")
 	createBookmarkCmd.Flags().String("tags", "", "Comma separated list of tags")

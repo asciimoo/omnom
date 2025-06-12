@@ -22,6 +22,7 @@ type Bookmark struct {
 	CollectionID uint        `json:"-"`
 	Collection   *Collection `json:"collection"`
 	Public       bool        `json:"public"`
+	Unread       bool        `json:"unread"`
 	UserID       uint        `json:"user_id"`
 	User         User        `json:"-"`
 }
@@ -80,4 +81,16 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 		return nil, new, err
 	}
 	return b, new, nil
+}
+
+func GetUnreadBookmarkItems(uid, limit uint) []*Bookmark {
+	var res []*Bookmark
+	DB.
+		Table("bookmarks").
+		Joins("join users on bookmark.user_id == users.id").
+		Where("users.id = ?", uid).
+		Where("bookmarks.unread = ?", true).
+		Order("bookmarks.id asc").
+		Find(&res)
+	return res
 }

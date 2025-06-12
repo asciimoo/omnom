@@ -25,6 +25,7 @@ type Config struct {
 	App         App          `yaml:"app"`
 	Server      Server       `yaml:"server"`
 	DB          DB           `yaml:"db"`
+	Feed        Feed         `yaml:"feed"`
 	Storage     Storage      `yaml:"storage"`
 	SMTP        SMTP         `yaml:"smtp"`
 	ActivityPub *ActivityPub `yaml:"activitypub"`
@@ -51,6 +52,10 @@ type Server struct {
 type DB struct {
 	Connection string `yaml:"connection"`
 	Type       string `yaml:"type"`
+}
+
+type Feed struct {
+	ItemsPerPage uint `yaml:"items_per_page"`
 }
 
 type Storage struct {
@@ -148,6 +153,9 @@ func CreateDefaultConfig() *Config {
 		DB: DB{
 			Type:       "sqlite",
 			Connection: "db.sqlite3",
+		},
+		Feed: Feed{
+			ItemsPerPage: 20,
 		},
 		ActivityPub: &ActivityPub{
 			PubKeyPath:  "./public.pem",

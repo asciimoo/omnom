@@ -35,27 +35,18 @@
             </div>
         </div>
         {{ $uid := 0 }}
-        {{ $page := .Page }}
         {{ $Tr := .Tr }}
         <div class="column">
             {{ if .UnreadItemCount }}
                 <h3 class="title">{{ .Tr.Msg "unread items" }} ({{ .UnreadItemCount }})</h3>
                 {{ range .UnreadItems }}
-                    <div class="media">
-                    <div class="media-left">
-                        <figure class="image is-48x48">
-                        <img src="https://bulma.io/assets/images/placeholders/96x96.png" alt="Placeholder image" />
-                        </figure>
-                    </div>
-                    <div class="media-content">
-                        <p class="title is-4"><a href="{{ .URL }}">{{ .Title }}</a></p>
-                        <p class="subtitle is-6"><span class="tag">{{ .FeedName }}</span> {{ .CreatedAt | ToDateTime }}</p>
-                    </div>
-                    </div>
-                    {{ if .Content }}
-                    <p>{{ .Content }}</p>
+                    {{ if .FeedName }}
+                        {{ block "unreadFeedItem" . }}{{ end }}
+                    {{ else }}
+                        {{ block "unreadBookmark" KVData "Bookmark" . "Tr" $Tr }}{{ end }}
                     {{ end }}
                 {{ end }}
+                <a href="#" class="button is-primary is-medium">Mark items as read</a>
             {{ else }}
             <h3 class="title">{{ .Tr.Msg "no unread items" }}</h3>
             {{ end }}
