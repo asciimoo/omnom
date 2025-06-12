@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/feed"
 	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
@@ -233,6 +234,21 @@ var setTokenCmd = &cobra.Command{
 	Run:    setToken,
 }
 
+var updateFeedsCmd = &cobra.Command{
+	Use:    "update-feeds",
+	Short:  "update RSS/Atom feeds",
+	Long:   `update-feeds`,
+	Args:   cobra.ExactArgs(0),
+	PreRun: initDB,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := feed.Update()
+		if err != nil {
+			exit(1, "Failed to update feeds: "+err.Error())
+		}
+		fmt.Println("Successful feed update")
+	},
+}
+
 var generateAPIDocsMDCmd = &cobra.Command{
 	Use:   "generate-api-docs-md",
 	Short: "Generate Markdown API documentation",
@@ -389,6 +405,7 @@ func init() {
 	rootCmd.AddCommand(generateAPIDocsMDCmd)
 	rootCmd.AddCommand(createConfigCmd)
 	rootCmd.AddCommand(createBookmarkCmd)
+	rootCmd.AddCommand(updateFeedsCmd)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")

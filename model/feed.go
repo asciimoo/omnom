@@ -4,10 +4,20 @@
 
 package model
 
+import (
+	"github.com/rs/zerolog/log"
+	//"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
+
+const (
+	RSSFeed = "rss"
+)
+
 type Feed struct {
 	CommonFields
 	Name  string      `json:"name"`
-	URL   string      `json:"url"`
+	URL   string      `json:"gorm:"unique" url"`
 	Type  string      `json:"type"`
 	Items []*FeedItem `json:"items"`
 	Users []*User     `gorm:"many2many:user_feeds;" json:"-"`
@@ -25,20 +35,134 @@ type UserFeed struct {
 
 type FeedItem struct {
 	CommonFields
-	URL     string  `json:"url"`
+	URL     string  `gorm:"uniqueIndex:feeditemuidx" json:"url"`
 	Title   string  `json:"title"`
 	Content string  `json:"content"`
-	FeedID  uint    `json:"feed_id"`
+	FeedID  uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
 	Feed    *Feed   `json:"feed"`
-	UserID  uint    `json:"user_id"`
 	Users   []*User `gorm:"many2many:user_feed_items;" json:"-"`
 }
 
 type UserFeedItem struct {
 	CommonFields
 	Unread     bool      `json:"unread"`
-	FeedItemID uint      `json:"feed_item_id"`
+	FeedItemID uint      `gorm:"uniqueIndex:userfeeditemuidx" json:"feed_item_id"`
 	FeedItem   *FeedItem `json:"feed_item"`
-	UserID     uint      `json:"user_id"`
+	UserID     uint      `gorm:"uniqueIndex:userfeeditemuidx" json:"user_id"`
 	User       *User     `json:"-"`
+}
+
+func GetFeeds() ([]*Feed, error) {
+	var res []*Feed
+	err := DB.
+		Model(&Feed{}).
+		Order("id").
+		Find(&res).Error
+	return res, err
+}
+
+func GetUserFeeds(uid uint) ([]*UserFeed, error) {
+	var res []*UserFeed
+	err := DB.
+		Table("user_feeds").
+		Joins("join feeds on feeds.id == user_feeds.feed_id").
+		Where("user_feeds.user_id = ?", uid).
+		Order("user_feeds.name").
+		Find(&res).Error
+	return res, err
+}
+
+func GetFeedByURL(u string) *Feed {
+	var f *Feed
+	DB.Table("feeds").
+		Preload("Users").
+		Where("feeds.url = ?", u).First(&f)
+	return f
+}
+
+func createUserFeed(name string, f *Feed, uid uint) error {
+	var uf *UserFeed
+	if err := DB.Where("feed_id = ? and user_id = ?", f.ID, uid).First(uf).Error; err == nil {
+		return nil
+	}
+	uf = &UserFeed{
+		Name:   name,
+		FeedID: f.ID,
+		UserID: uid,
+	}
+	return DB.Create(uf).Error
+}
+
+func createFeed(name, url, ftype string) (*Feed, error) {
+	f := &Feed{
+		Name: name,
+		URL:  url,
+		Type: ftype,
+	}
+	return f, DB.Create(f).Error
+}
+
+func AddFeed(name, url, ftype string, uid uint) error {
+	f := GetFeedByURL(url)
+	if f == nil {
+		var err error
+		f, err = createFeed(name, url, ftype)
+		if err != nil {
+			return err
+		}
+	}
+	return createUserFeed(name, f, uid)
+}
+
+func AddFeedItem(i *FeedItem, feedURL string) int64 {
+	f := GetFeedByURL(feedURL)
+	if f == nil {
+		log.Error().Str("URL", feedURL).Msg("Feed not found")
+		return 0
+	}
+	err := DB.Create(i).Error
+	// TODO accept only UNIQUE constraint failed
+	// According to docs it is type of  gorm.ErrDuplicatedKey, but it does not work
+	if err != nil {
+		DB.Where("feed_id = ? and url = ?", f.ID, i.URL).First(&i)
+	}
+	uis := make([]*UserFeedItem, len(f.Users))
+	for n, u := range f.Users {
+		uis[n] = &UserFeedItem{
+			UserID:     u.ID,
+			FeedItemID: i.ID,
+			Unread:     true,
+		}
+	}
+	return DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&uis).RowsAffected
+}
+
+type UnreadItem struct {
+	FeedItem
+	FeedName string
+}
+
+func GetUnreadFeedItems(uid, limit uint) []*UnreadItem {
+	var res []*UnreadItem
+	DB.
+		Select("feed_items.*, user_feeds.name as feed_name").
+		Table("feed_items").
+		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
+		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
+		Where("user_feed_items.user_id = ?", uid).
+		Where("user_feed_items.unread = ?", true).
+		Order("feed_items.id asc").
+		Find(&res)
+	return res
+}
+
+func GetUnreadFeedItemCount(uid uint) int64 {
+	var res int64
+	DB.
+		Table("feed_items").
+		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
+		Where("user_feed_items.user_id = ?", uid).
+		Where("user_feed_items.unread = ?", true).
+		Count(&res)
+	return res
 }

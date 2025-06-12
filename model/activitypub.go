@@ -6,8 +6,8 @@ package model
 
 type APFollower struct {
 	CommonFields
-	UserID   uint   `gorm:"uniqueIndex:uidx" json:"uid"`
-	Follower string `gorm:"uniqueIndex:uidx" json:"follower"`
+	UserID   uint   `gorm:"uniqueIndex:apuidx" json:"uid"`
+	Follower string `gorm:"uniqueIndex:apuidx" json:"follower"`
 }
 
 func CreateAPFollower(uid uint, follower string) error {
