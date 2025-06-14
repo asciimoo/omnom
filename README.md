@@ -1,6 +1,6 @@
 # Omnom
 
-[![Translation status](https://translate.codeberg.org/widget/omnom/svg-badge.svg)](https://translate.codeberg.org/engage/omnom/)
+[![Translation status](https://hosted.weblate.org/widget/omnom/svg-badge.svg)](https://hosted.weblate.org/engage/omnom/)
 
 
 Bookmarking with website snapshots.
@@ -87,9 +87,9 @@ Basic management actions are available using the command line tool (`go run omno
 
 ## Translations
 
-To contribute to localizations, please visit our [weblate](https://translate.codeberg.org/projects/omnom/)
+To contribute to localizations, please visit our [weblate](https://hosted.weblate.org/projects/omnom/)
 
-[![Translation status](https://translate.codeberg.org/widget/omnom/multi-auto.svg)](https://translate.codeberg.org/engage/omnom/)
+[![Translation status](https://hosted.weblate.org/widget/omnom/multi-auto.svg)](https://hosted.weblate.org/engage/omnom/)
 
 
 

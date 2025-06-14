@@ -107,7 +107,7 @@ sync_translations() {
     DIR="/tmp/tr"
     mkdir $DIR
     cd $DIR
-    wget "https://translate.codeberg.org/download/omnom/?format=zip" -O tr.zip
+    wget "https://hosted.weblate.org/download/omnom/?format=zip" -O tr.zip
     unzip tr.zip
     cd -
     cp "$DIR/omnom/glossary/localization/locales/"*json localization/locales/
