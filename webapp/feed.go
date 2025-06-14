@@ -74,7 +74,7 @@ func mergeUnreadItems(fs []*model.UnreadFeedItem, bs []*model.Bookmark, maxNum u
 		case *model.UnreadFeedItem:
 			c2 = m.CreatedAt
 		}
-		return c1.After(c2)
+		return c1.Before(c2)
 	})
 	if len(ret) >= int(maxNum) {
 		return ret[:maxNum]
