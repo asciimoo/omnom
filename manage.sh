@@ -110,7 +110,7 @@ sync_translations() {
     wget "https://hosted.weblate.org/download/omnom/?format=zip" -O tr.zip
     unzip tr.zip
     cd -
-    cp "$DIR/omnom/glossary/localization/locales/"*json localization/locales/
+    cp "$DIR/omnom/app/localization/locales/"*json localization/locales/
     git commit localization/locales/ -m '[enh] synchronize translations from weblate'
     rm -r "$DIR"
 }
