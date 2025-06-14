@@ -111,6 +111,7 @@ sync_translations() {
     unzip tr.zip
     cd -
     cp "$DIR/omnom/app/localization/locales/"*json localization/locales/
+    git add localization/locales/
     git commit localization/locales/ -m '[enh] synchronize translations from weblate'
     rm -r "$DIR"
 }
