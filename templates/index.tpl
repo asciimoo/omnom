@@ -71,7 +71,7 @@
             <p class="title is-5">{{ .Tr.Msg "landing subslogan 3 desc" }}</p>
         </div>
     </div>
-    <div class="columns is-centered mt-6 mb-6">
+    <div class="columns is-centered my-6 mx-1">
         <div class="column">
             <div class="box has-text-centered is-maxheight">
                 <header class="is-size-3">
