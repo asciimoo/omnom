@@ -40,7 +40,7 @@
             {{ if .UnreadItemCount }}
                 <h3 class="title">{{ .Tr.Msg "unread items" }} ({{ .UnreadItemCount }})</h3>
                 {{ range .UnreadItems }}
-                    {{ if .FeedName }}
+                    {{ if HasAttr . "FeedName" }}
                         {{ block "unreadFeedItem" . }}{{ end }}
                     {{ else }}
                         {{ block "unreadBookmark" KVData "Bookmark" . "Tr" $Tr }}{{ end }}

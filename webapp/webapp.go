@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -86,6 +87,16 @@ var tplFuncMap = template.FuncMap{
 			return u
 		}
 		return baseURL(u)
+	},
+	"HasAttr": func(v interface{}, name string) bool {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Ptr {
+			rv = rv.Elem()
+		}
+		if rv.Kind() != reflect.Struct {
+			return false
+		}
+		return rv.FieldByName(name).IsValid()
 	},
 }
 

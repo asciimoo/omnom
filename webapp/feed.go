@@ -37,7 +37,7 @@ func feeds(c *gin.Context) {
 	render(c, http.StatusOK, "feeds", map[string]interface{}{
 		"Feeds":           res,
 		"UnreadItems":     is,
-		"UnreadItemCount": model.GetUnreadFeedItemCount(uid),
+		"UnreadItemCount": model.GetUnreadFeedItemCount(uid) + model.GetUnreadBookmarkCount(uid),
 		"FeedItemIDs":     concatFeedItemIDs(is),
 		"BookmarkIDs":     concatBookmarkIDs(is),
 	})

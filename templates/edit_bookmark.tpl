@@ -34,6 +34,14 @@
                     </div>
                 </div>
                 <div class="field">
+                    <div class="control">
+                        <label class="checkbox">
+                            <b>Unread</b>
+                            <input name="unread" type="checkbox"{{ if .Bookmark.Unread }} checked{{ end }}>
+                        </label>
+                    </div>
+                </div>
+                <div class="field">
                     <label class="label">Notes</label>
                     <div class="control">
                         <textarea class="textarea" name="notes">{{ .Bookmark.Notes }}</textarea>

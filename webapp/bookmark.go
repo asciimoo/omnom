@@ -243,6 +243,8 @@ func createBookmark(c *gin.Context) {
 		res.Favicon,
 		// TODO handle collections
 		"",
+		// TODO handle unread
+		"",
 	)
 	if err != nil {
 		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
@@ -313,6 +315,7 @@ func addBookmark(c *gin.Context) {
 		c.PostForm("public"),
 		c.PostForm("favicon"),
 		c.PostForm("collection"),
+		c.PostForm("unread"),
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create bookmark DB entry")
@@ -486,6 +489,7 @@ func saveBookmark(c *gin.Context) {
 		b.CollectionID = col.ID
 	}
 	b.Public = c.PostForm("public") != ""
+	b.Unread = c.PostForm("unread") != ""
 	b.Notes = c.PostForm("notes")
 	err := model.DB.Save(b).Error
 	if err != nil {

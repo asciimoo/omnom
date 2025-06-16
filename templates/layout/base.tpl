@@ -422,7 +422,7 @@
         </div>
         <div class="media-content">
             <p class="title is-4"><a href="{{ .URL }}">{{ .Bookmark.Title }}</a></p>
-            <p class="subtitle is-6"><span class="tag">{{ .Tr.Msg "bookmark" }}</span> {{ .CreatedAt | ToDateTime }}</p>
+            <p class="subtitle is-6"><span class="tag is-muted-primary">{{ .Tr.Msg "bookmark" }}</span> {{ .Bookmark.CreatedAt | ToDateTime }}</p>
         </div>
     </div>
     {{ if .Bookmark.Notes }}

@@ -370,6 +370,12 @@ func createBookmark(cmd *cobra.Command, args []string) {
 			public = "1"
 		}
 	}
+	unread := ""
+	if v, err := cmd.Flags().GetBool("unread"); err == nil {
+		if v {
+			unread = "1"
+		}
+	}
 	collection := ""
 	if v, err := cmd.Flags().GetString("collection"); err == nil {
 		collection = v
@@ -383,6 +389,7 @@ func createBookmark(cmd *cobra.Command, args []string) {
 		public,
 		"",
 		collection,
+		unread,
 	)
 	if err != nil {
 		exit(1, "Failed to add bookmark: "+err.Error())
@@ -440,6 +447,7 @@ func init() {
 	listenCmd.Flags().Uint("feed-items-per-page", dcfg.Feed.ItemsPerPage, "Number of feed items per page")
 
 	createBookmarkCmd.Flags().Bool("public", true, "Set bookmark to public or private")
+	createBookmarkCmd.Flags().Bool("unread", false, "Mark bookmark as unread")
 	createBookmarkCmd.Flags().String("tags", "", "Comma separated list of tags")
 	createBookmarkCmd.Flags().String("notes", "", "Bookmark notes")
 	createBookmarkCmd.Flags().String("collection", "", "Collection name")
