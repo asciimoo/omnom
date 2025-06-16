@@ -87,7 +87,7 @@ func GetUnreadBookmarkItems(uid, limit uint) []*Bookmark {
 	var res []*Bookmark
 	DB.
 		Table("bookmarks").
-		Joins("join users on bookmark.user_id == users.id").
+		Joins("join users on bookmarks.user_id == users.id").
 		Where("users.id = ?", uid).
 		Where("bookmarks.unread = ?", true).
 		Order("bookmarks.id asc").

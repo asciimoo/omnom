@@ -5,13 +5,6 @@
 package model
 
 import (
-	"encoding/base64"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
-
-	"github.com/mmcdole/gofeed"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm/clause"
 )
@@ -61,8 +54,9 @@ type UserFeedItem struct {
 
 type UnreadFeedItem struct {
 	FeedItem
-	FeedName string
-	Favicon  string
+	FeedName       string
+	Favicon        string
+	UserFeedItemID uint
 }
 
 func GetFeeds() ([]*Feed, error) {
@@ -93,53 +87,18 @@ func GetFeedByURL(u string) (*Feed, error) {
 	return f, err
 }
 
-func createUserFeed(name string, f *Feed, uid uint) error {
-	var uf *UserFeed
-	if err := DB.Where("feed_id = ? and user_id = ?", f.ID, uid).First(uf).Error; err == nil {
-		return nil
-	}
-	uf = &UserFeed{
-		Name:   name,
-		FeedID: f.ID,
-		UserID: uid,
-	}
-	return DB.Create(uf).Error
+func GetFeedByID(id uint) (*Feed, error) {
+	var f *Feed
+	err := DB.Table("feeds").
+		Preload("Users").
+		Where("feeds.id = ?", id).First(&f).Error
+	return f, err
 }
 
-func createFeed(name, url string) (*Feed, error) {
-	f := &Feed{
-		Name: name,
-		URL:  url,
-	}
-	fp := gofeed.NewParser()
-	feed, err := fp.ParseURL(url)
-	if err != nil {
-		return nil, errors.New("unsupported feed type; " + err.Error())
-	} else {
-		f.Type = RSSFeed
-	}
-	if feed.Image != nil {
-		f.Favicon = fetchImageAsInlineURL(feed.Image.URL)
-	}
-	return f, DB.Create(f).Error
-}
-
-func AddFeed(name, url string, uid uint) error {
-	f, err := GetFeedByURL(url)
+func AddFeedItem(i *FeedItem) int64 {
+	f, err := GetFeedByID(i.FeedID)
 	if f == nil || err != nil {
-		var err error
-		f, err = createFeed(name, url)
-		if err != nil {
-			return err
-		}
-	}
-	return createUserFeed(name, f, uid)
-}
-
-func AddFeedItem(i *FeedItem, feedURL string) int64 {
-	f, err := GetFeedByURL(feedURL)
-	if f == nil || err != nil {
-		log.Error().Str("URL", feedURL).Msg("Feed not found")
+		log.Error().Uint("ID", i.FeedID).Msg("Feed not found")
 		return 0
 	}
 	err = DB.Create(i).Error
@@ -162,7 +121,7 @@ func AddFeedItem(i *FeedItem, feedURL string) int64 {
 func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 	var res []*UnreadFeedItem
 	DB.
-		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon").
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon, user_feed_items.id as user_feed_item_id").
 		Table("feed_items").
 		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
 		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
@@ -183,17 +142,4 @@ func GetUnreadFeedItemCount(uid uint) int64 {
 		Where("user_feed_items.unread = ?", true).
 		Count(&res)
 	return res
-}
-
-func fetchImageAsInlineURL(url string) string {
-	r, err := http.Get(url)
-	if err != nil {
-		return ""
-	}
-	defer r.Body.Close()
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		return ""
-	}
-	return fmt.Sprintf("data:%s;base64,", r.Header.Get("Content-Type"), base64.StdEncoding.EncodeToString(data))
 }

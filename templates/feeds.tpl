@@ -46,12 +46,19 @@
                         {{ block "unreadBookmark" KVData "Bookmark" . "Tr" $Tr }}{{ end }}
                     {{ end }}
                 {{ end }}
-                <a href="#" class="button is-primary is-medium">Mark items as read</a>
+                <div class="columns is-centered">
+                    <div class="column is-narrow">
+                        <form method="post" action="{{ URLFor "archive items" }}">
+                            <input type="hidden" name="bids" value="{{ .BookmarkIDs }}" />
+                            <input type="hidden" name="fids" value="{{ .FeedItemIDs }}" />
+                            <input type="submit" class="button is-primary is-medium" value="{{ .Tr.Msg "archive page" }}" />
+                        </form>
+                    </div>
+                </div>
             {{ else }}
             <h3 class="title">{{ .Tr.Msg "no unread items" }}</h3>
             {{ end }}
         </div>
     </div>
-{{ block "paging" .}}{{ end }}
 </div>
 {{ end }}
