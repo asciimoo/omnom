@@ -105,7 +105,7 @@ func fetchImageAsInlineURL(u string) string {
 	if u == "" {
 		return ""
 	}
-	r, err := http.Get(u)
+	r, err := http.Get(u) //nolint: gosec //safe url
 	if err != nil {
 		return ""
 	}

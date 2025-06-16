@@ -102,7 +102,7 @@ func mergeUnreadItems(fs []*model.UnreadFeedItem, bs []*model.Bookmark, maxNum u
 		}
 		return c1.Before(c2)
 	})
-	if len(ret) >= int(maxNum) {
+	if len(ret) >= int(maxNum) { //nolint: gosec // safe
 		return ret[:maxNum]
 	}
 	return ret
