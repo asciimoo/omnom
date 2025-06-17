@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/asciimoo/omnom/model"
 
@@ -101,6 +102,7 @@ func init() {
 }
 
 func Update() error {
+	log.Debug().Msg("Updating feeds")
 	feeds, err := model.GetFeeds()
 	if err != nil {
 		return err
@@ -109,6 +111,18 @@ func Update() error {
 		updateRSSFeed(f)
 	}
 	return nil
+}
+
+func UpdateLoop() {
+	interval := 60 * time.Minute
+	ticker := time.NewTicker(interval)
+	for {
+		<-ticker.C
+		err := Update()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to update feeds")
+		}
+	}
 }
 
 func updateRSSFeed(f *model.Feed) {
@@ -132,7 +146,7 @@ func updateRSSFeed(f *model.Feed) {
 			FeedID:  f.ID,
 		})
 	}
-	log.Debug().Int64("items", added).Str("feed", f.Name).Msg("Feed fetched")
+	log.Debug().Int64("new items", added).Str("feed", f.Name).Msg("Feed updated")
 }
 
 func createFeed(name, u string) (*model.Feed, error) {

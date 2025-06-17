@@ -160,6 +160,7 @@ var listenCmd = &cobra.Command{
 		if err != nil {
 			exit(1, "Failed to initialize ActivityPub keys: "+err.Error())
 		}
+		go feed.UpdateLoop()
 		webapp.Run(cfg)
 	},
 }
