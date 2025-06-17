@@ -30,7 +30,7 @@
                     </form>
                 </details>
                 {{ range .Feeds }}
-                <h4>{{ .Name }}</h4>
+                <h4>{{ .Name }}{{ if .UnreadCount }} <span class="tag is-medium">{{ .UnreadCount }}</span>{{ end }}</h4>
                 {{ end }}
             </div>
         </div>

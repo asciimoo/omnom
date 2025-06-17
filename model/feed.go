@@ -59,6 +59,11 @@ type UnreadFeedItem struct {
 	UserFeedItemID uint
 }
 
+type UserFeedSummary struct {
+	UserFeed
+	UnreadCount uint
+}
+
 func GetFeeds() ([]*Feed, error) {
 	var res []*Feed
 	err := DB.
@@ -68,13 +73,17 @@ func GetFeeds() ([]*Feed, error) {
 	return res, err
 }
 
-func GetUserFeeds(uid uint) ([]*UserFeed, error) {
-	var res []*UserFeed
+func GetUserFeeds(uid uint) ([]*UserFeedSummary, error) {
+	var res []*UserFeedSummary
 	err := DB.
 		Table("user_feeds").
+		Select("user_feeds.*, feeds.*, count(user_feed_items.id) as unread_count").
 		Joins("join feeds on feeds.id == user_feeds.feed_id").
-		Where("user_feeds.user_id = ?", uid).
-		Order("user_feeds.name").
+		Joins("join feed_items on feed_items.feed_id == feeds.id").
+		Joins("join user_feed_items on user_feed_items.feed_item_id == feed_items.id").
+		Where("user_feeds.user_id = ? and user_feed_items.unread = ?", uid, true).
+		Group("feeds.id").
+		Order("unread_count, user_feeds.name").
 		Find(&res).Error
 	return res, err
 }
