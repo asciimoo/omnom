@@ -402,13 +402,13 @@
             </figure>
         </div>
         <div class="media-content">
-            <p class="title is-4"><a href="{{ .URL }}">{{ .Title }}</a></p>
+            <p class="title is-5"><a href="{{ .URL }}">{{ .Title }}</a></p>
             <p class="subtitle is-6"><span class="tag">{{ .FeedName }}</span> {{ .CreatedAt | ToDateTime }}</p>
+            {{ if .Content }}
+            <article class="rss content">{{ .Content | ToHTML }}</article>
+            {{ end }}
         </div>
     </div>
-    {{ if .Content }}
-    <p>{{ .Content }}</p>
-    {{ end }}
 {{ end }}
 
 {{ define "unreadBookmark" }}
@@ -421,7 +421,7 @@
             </figure>
         </div>
         <div class="media-content">
-            <p class="title is-4"><a href="{{ .URL }}">{{ .Bookmark.Title }}</a></p>
+            <p class="title is-5"><a href="{{ .URL }}">{{ .Bookmark.Title }}</a></p>
             <p class="subtitle is-6"><span class="tag is-muted-primary">{{ .Tr.Msg "bookmark" }}</span> {{ .Bookmark.CreatedAt | ToDateTime }}</p>
         </div>
     </div>

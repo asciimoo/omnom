@@ -7,12 +7,98 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/asciimoo/omnom/model"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/mmcdole/gofeed"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/net/html"
 )
+
+var htmlSanitizerPolicy *bluemonday.Policy
+
+func init() {
+	p := bluemonday.NewPolicy()
+	p.AllowElements(
+		"a",
+		"abbr",
+		"b",
+		"br",
+		"canvas",
+		"caption",
+		"center",
+		"cite",
+		"code",
+		"del",
+		"details",
+		"div",
+		"dt",
+		"em",
+		"figcaption",
+		"figure",
+		"h1",
+		"h2",
+		"h3",
+		"h4",
+		"h5",
+		"h6",
+		"hr",
+		"i",
+		"img",
+		"ins",
+		"kbd",
+		"label",
+		"li",
+		"math",
+		"marquee",
+		"media",
+		"mediagroup",
+		"noscript",
+		"ol",
+		"p",
+		"pre",
+		"source",
+		"span",
+		"strong",
+		"sub",
+		"summary",
+		"sup",
+		"svg",
+		"table",
+		"tbody",
+		"td",
+		"tfoot",
+		"th",
+		"thead",
+		"title",
+		"tr",
+		"tt",
+		"u",
+		"ul",
+		"video",
+	)
+	p.AllowStyles(
+		"text-decoration",
+		"color",
+		"background",
+		"background-color",
+		"background-image",
+		"font-size",
+		"text-align",
+	).Globally()
+	p.AllowAttrs("href").OnElements("a")
+	p.AllowAttrs("src", "srcset").OnElements("img", "source")
+	p.AllowAttrs("alt").Globally()
+	p.AllowAttrs("title").Globally()
+	p.RequireParseableURLs(true)
+	p.AllowDataURIImages()
+	p.AllowImages()
+	p.AllowTables()
+	p.AllowURLSchemes("mailto", "http", "https")
+	htmlSanitizerPolicy = p
+}
 
 func Update() error {
 	feeds, err := model.GetFeeds()
@@ -27,6 +113,11 @@ func Update() error {
 
 func updateRSSFeed(f *model.Feed) {
 	fp := gofeed.NewParser()
+	pu, err := url.Parse(f.URL)
+	if err != nil {
+		log.Error().Err(err).Str("URL", f.URL).Msg("Failed to parse feed URL")
+		return
+	}
 	rss, err := fp.ParseURL(f.URL)
 	if err != nil {
 		log.Error().Err(err).Str("URL", f.URL).Msg("Failed to fetch feed")
@@ -36,7 +127,7 @@ func updateRSSFeed(f *model.Feed) {
 	for _, i := range rss.Items {
 		added += model.AddFeedItem(&model.FeedItem{
 			Title:   i.Title,
-			Content: i.Content,
+			Content: sanitizeHTML(pu, i.Content),
 			URL:     i.Link,
 			FeedID:  f.ID,
 		})
@@ -126,4 +217,44 @@ func getFaviconURL(u string) string {
 	pu.Path = "favicon.ico"
 	pu.RawQuery = ""
 	return pu.String()
+}
+
+func sanitizeHTML(u *url.URL, h string) string {
+	// TODO fetch resources to local storage
+	return htmlSanitizerPolicy.Sanitize(resolveURLs(u, h))
+}
+
+func resolveURLs(base *url.URL, h string) string {
+	if h == "" {
+		return ""
+	}
+	doc, err := html.Parse(strings.NewReader(h))
+	if err != nil {
+		log.Debug().Err(err).Str("HTML", h).Msg("Failed to parse HTML")
+		return ""
+	}
+	for n := range doc.Descendants() {
+		if n.Type != html.ElementNode {
+			continue
+		}
+		for _, a := range n.Attr {
+			if a.Key == "src" || a.Key == "href" {
+				a.Val = toFullURL(base, a.Val)
+			}
+		}
+	}
+	var out strings.Builder
+	err = html.Render(&out, doc)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to render HTML")
+	}
+	return out.String()
+}
+
+func toFullURL(base *url.URL, u string) string {
+	pu, err := url.Parse(u)
+	if err != nil {
+		return ""
+	}
+	return base.ResolveReference(pu).String()
 }
