@@ -396,16 +396,17 @@
     <div class="media">
         <div class="media-left">
             <figure class="image is-48x48">
-                {{ if .Favicon }}
-                <img src="{{ .Favicon | ToURL }}" alt="favicon" />
+                {{ if .Item.Favicon }}
+                <img src="{{ .Item.Favicon | ToURL }}" alt="favicon" />
                 {{ end }}
             </figure>
         </div>
         <div class="media-content">
-            <p class="title is-5"><a href="{{ .URL }}">{{ .Title }}</a></p>
-            <p class="subtitle is-6"><span class="tag">{{ .FeedName }}</span> {{ .CreatedAt | ToDateTime }}</p>
-            {{ if .Content }}
-            <article class="rss content">{{ .Content | ToHTML }}</article>
+            <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="fids" value="{{ .Item.UserFeedItemID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
+            <p class="title is-5"><a href="{{ .Item.URL }}">{{ .Item.Title }}</a></p>
+            <p class="subtitle is-6"><span class="tag">{{ .Item.FeedName }}</span> {{ .Item.CreatedAt | ToDateTime }}</p>
+            {{ if .Item.Content }}
+            <article class="rss content">{{ .Item.Content | ToHTML }}</article>
             {{ end }}
         </div>
     </div>
@@ -421,6 +422,7 @@
             </figure>
         </div>
         <div class="media-content">
+            <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="bids" value="{{ .Bookmark.ID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
             <p class="title is-5"><a href="{{ .URL }}">{{ .Bookmark.Title }}</a></p>
             <p class="subtitle is-6"><span class="tag is-muted-primary">{{ .Tr.Msg "bookmark" }}</span> {{ .Bookmark.CreatedAt | ToDateTime }}</p>
         </div>
