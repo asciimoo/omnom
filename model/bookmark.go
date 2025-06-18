@@ -22,12 +22,13 @@ type Bookmark struct {
 	CollectionID uint        `json:"-"`
 	Collection   *Collection `json:"collection"`
 	Public       bool        `json:"public"`
+	Unread       bool        `json:"unread"`
 	UserID       uint        `json:"user_id"`
 	User         User        `json:"-"`
 }
 
 // TODO use Bookmark as parameter instead of strings
-func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon, collection string) (*Bookmark, bool, error) {
+func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon, collection, unread string) (*Bookmark, bool, error) {
 	url, err := url.Parse(urlString)
 	new := false
 	if err != nil || url.Hostname() == "" || url.Scheme == "" {
@@ -62,8 +63,11 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 	if !strings.HasPrefix(b.Favicon, "data:image") {
 		b.Favicon = ""
 	}
-	if public != "" {
+	if public != "" && public != "0" {
 		b.Public = true
+	}
+	if unread != "" && unread != "0" {
+		b.Unread = true
 	}
 	if tags != "" {
 		b.Tags = make([]Tag, 0, 8)
@@ -80,4 +84,26 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 		return nil, new, err
 	}
 	return b, new, nil
+}
+
+func GetUnreadBookmarkItems(uid, limit uint) []*Bookmark {
+	var res []*Bookmark
+	DB.
+		Model(&Bookmark{}).
+		Joins("join users on bookmarks.user_id = users.id").
+		Where("users.id = ?", uid).
+		Where("bookmarks.unread = ?", true).
+		Order("bookmarks.id asc").
+		Find(&res)
+	return res
+}
+
+func GetUnreadBookmarkCount(uid uint) int64 {
+	var res int64
+	DB.
+		Table("bookmarks").
+		Where("bookmarks.user_id = ?", uid).
+		Where("bookmarks.unread = ?", true).
+		Count(&res)
+	return res
 }

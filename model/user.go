@@ -10,12 +10,14 @@ import (
 
 type User struct {
 	CommonFields
-	Username         string     `gorm:"unique" json:"username"`
-	Email            *string    `gorm:"unique" json:"email"`
-	OAuthID          *string    `gorm:"unique" json:"-"`
-	LoginToken       string     `json:"-"`
-	SubmissionTokens []Token    `json:"-"`
-	Bookmarks        []Bookmark `json:"bookmarks"`
+	Username         string      `gorm:"unique" json:"username"`
+	Email            *string     `gorm:"unique" json:"email"`
+	OAuthID          *string     `gorm:"unique" json:"-"`
+	LoginToken       string      `json:"-"`
+	SubmissionTokens []Token     `json:"-"`
+	Bookmarks        []Bookmark  `json:"bookmarks"`
+	Feeds            []*Feed     `gorm:"many2many:user_feeds;" json:"feeds"`
+	FeedsItems       []*FeedItem `gorm:"many2many:user_feed_items;" json:"feed_items"`
 }
 
 func GetUser(name string) *User {

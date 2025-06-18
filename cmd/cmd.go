@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/feed"
 	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
@@ -115,6 +116,12 @@ func setInt64Arg(cmd *cobra.Command, arg string, dest *int64) {
 	}
 }
 
+func setUintArg(cmd *cobra.Command, arg string, dest *uint) {
+	if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
+		*dest = v
+	}
+}
+
 var listenCmd = &cobra.Command{
 	Use:    "listen",
 	Short:  "start server",
@@ -137,6 +144,7 @@ var listenCmd = &cobra.Command{
 		setBoolArg(cmd, "smtp-tls-allow-insecure", &cfg.SMTP.TLSAllowInsecure)
 		setIntArg(cmd, "smtp-send-timeout", &cfg.SMTP.SendTimeout)
 		setIntArg(cmd, "smtp-connection-timeout", &cfg.SMTP.ConnectionTimeout)
+		setUintArg(cmd, "feed-items-per-page", &cfg.Feed.ItemsPerPage)
 		if v, err := cmd.Flags().GetString("data-directory"); err == nil && cmd.Flags().Changed("data-directory") {
 			if cfg.Storage.Filesystem == nil {
 				cfg.Storage.Filesystem = &config.StorageFilesystem{}
@@ -152,6 +160,7 @@ var listenCmd = &cobra.Command{
 		if err != nil {
 			exit(1, "Failed to initialize ActivityPub keys: "+err.Error())
 		}
+		go feed.UpdateLoop()
 		webapp.Run(cfg)
 	},
 }
@@ -231,6 +240,21 @@ var setTokenCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(3),
 	PreRun: initDB,
 	Run:    setToken,
+}
+
+var updateFeedsCmd = &cobra.Command{
+	Use:    "update-feeds",
+	Short:  "update RSS/Atom feeds",
+	Long:   `update-feeds`,
+	Args:   cobra.ExactArgs(0),
+	PreRun: initDB,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := feed.Update()
+		if err != nil {
+			exit(1, "Failed to update feeds: "+err.Error())
+		}
+		fmt.Println("Successful feed update")
+	},
 }
 
 var generateAPIDocsMDCmd = &cobra.Command{
@@ -347,6 +371,12 @@ func createBookmark(cmd *cobra.Command, args []string) {
 			public = "1"
 		}
 	}
+	unread := ""
+	if v, err := cmd.Flags().GetBool("unread"); err == nil {
+		if v {
+			unread = "1"
+		}
+	}
 	collection := ""
 	if v, err := cmd.Flags().GetString("collection"); err == nil {
 		collection = v
@@ -360,6 +390,7 @@ func createBookmark(cmd *cobra.Command, args []string) {
 		public,
 		"",
 		collection,
+		unread,
 	)
 	if err != nil {
 		exit(1, "Failed to add bookmark: "+err.Error())
@@ -389,6 +420,7 @@ func init() {
 	rootCmd.AddCommand(generateAPIDocsMDCmd)
 	rootCmd.AddCommand(createConfigCmd)
 	rootCmd.AddCommand(createBookmarkCmd)
+	rootCmd.AddCommand(updateFeedsCmd)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
@@ -413,8 +445,10 @@ func init() {
 	listenCmd.Flags().Uint("smtp-send-timeout", uint(dcfg.SMTP.SendTimeout), "SMTP send timeout (seconds)")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("smtp-connection-timeout", uint(dcfg.SMTP.ConnectionTimeout), "SMTP connection timeout (seconds)")
+	listenCmd.Flags().Uint("feed-items-per-page", dcfg.Feed.ItemsPerPage, "Number of feed items per page")
 
 	createBookmarkCmd.Flags().Bool("public", true, "Set bookmark to public or private")
+	createBookmarkCmd.Flags().Bool("unread", false, "Mark bookmark as unread")
 	createBookmarkCmd.Flags().String("tags", "", "Comma separated list of tags")
 	createBookmarkCmd.Flags().String("notes", "", "Bookmark notes")
 	createBookmarkCmd.Flags().String("collection", "", "Collection name")

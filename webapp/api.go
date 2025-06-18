@@ -689,6 +689,58 @@ func init() {
 			RSS: "Bookmarks",
 		},
 		&Endpoint{
+			Name:         "Feeds",
+			Path:         "/feeds",
+			Method:       GET,
+			AuthRequired: true,
+			Handler:      feeds,
+			Description:  "List feeds",
+		},
+		&Endpoint{
+			Name:         "Archive items",
+			Path:         "/archive_items",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      archiveItems,
+			Description:  "Mark unread items as read",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "bids",
+					Type:        "string",
+					Required:    true,
+					Description: "Comma separated list of bookmark IDs",
+				},
+				&EndpointArg{
+					Name:        "fids",
+					Type:        "string",
+					Required:    true,
+					Description: "Comma separated list of feed item IDs",
+				},
+			},
+		},
+		&Endpoint{
+			Name:         "Add feed",
+			Path:         "/add_feed",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      addFeed,
+			Description:  "Add new feed",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "name",
+					Type:        "string",
+					Required:    true,
+					Description: "Feed name",
+				},
+				&EndpointArg{
+					Name:        "url",
+					Type:        "string",
+					Required:    true,
+					Description: "Feed URL",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "Edit bookmark",
 			Path:         "/edit_bookmark",
 			Method:       GET,

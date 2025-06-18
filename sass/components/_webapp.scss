@@ -579,3 +579,15 @@ iframe {
 .tag.is-grey {
   background-color: $color-light-gray;
 }
+.rss {
+  max-width: 60em;
+  h1, h2, h3, h4, h5 {
+    margin-top: 1em;
+  }
+  p {
+    text-align: justify;
+  }
+  img {
+    margin: 1em;
+  }
+}

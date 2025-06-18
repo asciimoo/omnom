@@ -20,6 +20,8 @@ db:
 storage:
   fs:
     root_dir: "./static/data"
+feed:
+  items_per_page: 20
 smtp:
   host: "" # leave it blank to disable sending mails
   port: 25

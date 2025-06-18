@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -86,6 +87,16 @@ var tplFuncMap = template.FuncMap{
 			return u
 		}
 		return baseURL(u)
+	},
+	"HasAttr": func(v interface{}, name string) bool {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Ptr {
+			rv = rv.Elem()
+		}
+		if rv.Kind() != reflect.Struct {
+			return false
+		}
+		return rv.FieldByName(name).IsValid()
 	},
 }
 
@@ -167,6 +178,7 @@ func createRenderer(tplFS fs.FS) multitemplate.Renderer {
 	addTemplate(r, tplFS, true, "snapshot-diff", "snapshot_diff.tpl")
 	addTemplate(r, tplFS, true, "snapshot-diff-side-by-side", "snapshot_diff_side_by_side.tpl")
 	addTemplate(r, tplFS, true, "edit-collection", "edit_collection.tpl")
+	addTemplate(r, tplFS, true, "feeds", "feeds.tpl")
 	addTemplate(r, tplFS, true, "user", "user.tpl")
 	addTemplate(r, tplFS, true, "api", "api.tpl")
 	addTemplate(r, tplFS, true, "error", "error.tpl")

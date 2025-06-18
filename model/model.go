@@ -45,6 +45,14 @@ func Init(c *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("custom migration of database '%s' has failed: %w", c.DB.Connection, err)
 	}
+	err = DB.SetupJoinTable(Feed{}, "Users", &UserFeed{})
+	if err != nil {
+		return fmt.Errorf("failed to setup join table for users and feeds: %w", err)
+	}
+	err = DB.SetupJoinTable(FeedItem{}, "Users", &UserFeedItem{})
+	if err != nil {
+		return fmt.Errorf("failed to setup join table for users and feed items: %w", err)
+	}
 	err = DB.AutoMigrate(
 		&User{},
 		&Bookmark{},
@@ -55,6 +63,10 @@ func Init(c *config.Config) error {
 		&Resource{},
 		&APFollower{},
 		&Collection{},
+		&Feed{},
+		&FeedItem{},
+		&UserFeed{},
+		&UserFeedItem{},
 	)
 	if err != nil {
 		return fmt.Errorf("auto migration of database '%s' has failed: %w", c.DB.Connection, err)

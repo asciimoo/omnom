@@ -45,6 +45,7 @@
     "sort": "Sort",
     "frequent tags": "Frequent tags",
     "no bookmarks found": "No bookmarks found",
+    "no feeds found": "No feeds found",
     "advanced search options": "Advanced search options",
     "successful authentication": "Successful authentication",
     "assign account data": "Assign username and e-mail address to your account",
@@ -92,5 +93,15 @@
     "collections": "Collections",
     "add collection": "Add collection",
     "no collection": "No collection found",
+    "feeds": "Feeds",
+    "add": "Add",
+    "url": "URL",
+    "name": "Name",
+    "add feed": "Add feed",
+    "no unread items": "No unread items",
+    "unread items": "Unread items",
+    "archive page": "Archive this page",
+    "archive item": "Archive item",
+    "bookmark": "Bookmark",
     "sign up": "Sign up"
 }
