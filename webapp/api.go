@@ -697,6 +697,60 @@ func init() {
 			Description:  "List feeds",
 		},
 		&Endpoint{
+			Name:         "Edit feed form",
+			Path:         "/edit_feed",
+			Method:       GET,
+			AuthRequired: true,
+			Handler:      editFeedForm,
+			Description:  "Edit feed form",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "id",
+					Type:        "string",
+					Required:    true,
+					Description: "User feed ID",
+				},
+			},
+		},
+		&Endpoint{
+			Name:         "Edit feed",
+			Path:         "/edit_feed",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      editFeed,
+			Description:  "Edit feed",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "id",
+					Type:        "string",
+					Required:    true,
+					Description: "User feed ID",
+				},
+				&EndpointArg{
+					Name:        "name",
+					Type:        "string",
+					Required:    true,
+					Description: "User feed name",
+				},
+			},
+		},
+		&Endpoint{
+			Name:         "Delete feed",
+			Path:         "/delete_feed",
+			Method:       POST,
+			AuthRequired: true,
+			Handler:      deleteFeed,
+			Description:  "Delete feed",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "id",
+					Type:        "string",
+					Required:    true,
+					Description: "User feed ID",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "Archive items",
 			Path:         "/archive_items",
 			Method:       POST,

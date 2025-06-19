@@ -29,8 +29,14 @@
                         {{ block "submit" (.Tr.Msg "submit") }}{{ end }}
                     </form>
                 </details>
+                {{ $Tr := .Tr }}
                 {{ range .Feeds }}
-                <h4>{{ .Name }}{{ if .UnreadCount }} <span class="tag is-medium">{{ .UnreadCount }}</span>{{ end }}</h4>
+                <h4>
+                    <div class="is-pulled-right">
+                        <a href="{{ URLFor "edit feed" }}?id={{ .ID }}" aria-label="{{ $Tr.Msg "edit feed" }}"><span class="icon"><i class="fas fa-pencil"></i></span></a>
+                    </div>
+                    {{ .Name }}{{ if .UnreadCount }} <span class="tag is-medium">{{ .UnreadCount }}</span>{{ end }}
+                </h4>
                 {{ end }}
             </div>
         </div>

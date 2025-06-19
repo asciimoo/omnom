@@ -5,6 +5,8 @@
 package model
 
 import (
+	"errors"
+
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm/clause"
 )
@@ -77,7 +79,7 @@ func GetUserFeeds(uid uint) ([]*UserFeedSummary, error) {
 	var res []*UserFeedSummary
 	err := DB.
 		Table("user_feeds").
-		Select("user_feeds.*, feeds.*, count(user_feed_items.id) as unread_count").
+		Select("user_feeds.*, count(user_feed_items.id) as unread_count").
 		Joins("join feeds on feeds.id == user_feeds.feed_id").
 		Joins("join feed_items on feed_items.feed_id == feeds.id").
 		Joins("join user_feed_items on user_feed_items.feed_item_id == feed_items.id").
@@ -86,6 +88,52 @@ func GetUserFeeds(uid uint) ([]*UserFeedSummary, error) {
 		Order("unread_count, user_feeds.name").
 		Find(&res).Error
 	return res, err
+}
+
+func GetUserFeed(uid uint, fid string) (*UserFeed, error) {
+	var f *UserFeed
+	res := DB.
+		Table("user_feeds").
+		Select("*").
+		Where("user_id = ? and id = ?", uid, fid).
+		Find(&f)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil, errors.New("no feed found")
+	}
+	return f, nil
+}
+
+func DeleteUserFeed(f *UserFeed) error {
+	if err := DB.Delete(
+		&UserFeedItem{},
+		"id in (?)",
+		DB.Table("user_feed_items").
+			Select("user_feed_items.id").
+			Joins("join feed_items on user_feed_items.feed_item_id = feed_items.id").
+			Joins("join feeds on feeds.id == feed_items.feed_id").
+			Joins("join user_feeds on user_feeds.feed_id == feeds.id").
+			Where("user_feed_items.user_id = ? and user_feeds.id = ?", f.UserID, f.ID),
+	).Error; err != nil {
+		return err
+	}
+	res := DB.Delete(f, "id = ?", f.ID)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return nil
+	}
+	var ufCount int64
+	if err := DB.Table("user_feeds").Where("feed_id = ?", f.FeedID).Count(&ufCount).Error; err != nil {
+		return err
+	}
+	if ufCount == 0 {
+		return DB.Delete(&Feed{}, "id = ?", f.FeedID).Error
+	}
+	return nil
 }
 
 func GetFeedByURL(u string) (*Feed, error) {

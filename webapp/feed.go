@@ -61,6 +61,49 @@ func archiveItems(c *gin.Context) {
 	c.Redirect(http.StatusFound, URLFor("feeds"))
 }
 
+func editFeedForm(c *gin.Context) {
+	f, err := getUserFeedOrAbort(c)
+	if err != nil || f == nil {
+		return
+	}
+	render(c, http.StatusOK, "edit-feed", map[string]interface{}{
+		"Feed": f,
+	})
+}
+
+func editFeed(c *gin.Context) {
+	f, err := getUserFeedOrAbort(c)
+	if err != nil {
+		return
+	}
+	if c.PostForm("name") != "" {
+		f.Name = c.PostForm("name")
+	}
+	err = model.DB.Save(f).Error
+	if err == nil {
+		setNotification(c, nInfo, "Feed saved", true)
+	} else {
+		setNotification(c, nError, "Failed to save feed", true)
+	}
+	render(c, http.StatusOK, "edit-feed", map[string]interface{}{
+		"Feed": f,
+	})
+}
+
+func deleteFeed(c *gin.Context) {
+	f, err := getUserFeedOrAbort(c)
+	if err != nil {
+		return
+	}
+	err = model.DeleteUserFeed(f)
+	if err == nil {
+		setNotification(c, nInfo, "Feed deleted", true)
+	} else {
+		setNotification(c, nError, "Failed to delete feed", true)
+	}
+	c.Redirect(http.StatusFound, URLFor("feeds"))
+}
+
 func addFeed(c *gin.Context) {
 	url := c.PostForm("url")
 	name := c.PostForm("name")
@@ -73,6 +116,22 @@ func addFeed(c *gin.Context) {
 		setNotification(c, nInfo, "Feed added", true)
 	}
 	c.Redirect(http.StatusFound, URLFor("feeds"))
+}
+
+func getUserFeedOrAbort(c *gin.Context) (*model.UserFeed, error) {
+	u, _ := c.Get("user")
+	uid := u.(*model.User).ID
+	fid := c.Query("id")
+	if fid == "" {
+		fid = c.PostForm("id")
+	}
+	f, err := model.GetUserFeed(uid, fid)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get feed")
+		c.Redirect(http.StatusFound, URLFor("feeds"))
+		return nil, err
+	}
+	return f, nil
 }
 
 func mergeUnreadItems(fs []*model.UnreadFeedItem, bs []*model.Bookmark, maxNum uint) []any {
