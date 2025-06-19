@@ -41,7 +41,6 @@ func feeds(c *gin.Context) {
 		"FeedItemIDs":     concatFeedItemIDs(is),
 		"BookmarkIDs":     concatBookmarkIDs(is),
 	})
-	c.Redirect(http.StatusFound, URLFor("feeds"))
 }
 
 func archiveItems(c *gin.Context) {
