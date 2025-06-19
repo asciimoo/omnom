@@ -217,12 +217,6 @@
           <a href="{{ URLFor "Edit bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-pencil-alt"></i>
           </a>
-          <form method="post" action="{{ URLFor "Delete bookmark" }}">
-              <button class="button is-white" type="submit" value="{{ .Tr.Msg "delete bookmark" }}">
-                  <span class="icon is-small"><i class="fas fa-trash"></i></span>
-              </button>
-              <input type="hidden" name="id" value="{{ .Bookmark.ID }}" />
-          </form>
           {{ end }}
           <!--<i class="fas fa-heart"></i>
           <i class="fas fa-share-alt"></i>-->
