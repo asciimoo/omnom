@@ -42,15 +42,25 @@
      iFrame.parentNode.style.height = h;
  }
  function highlightDiffs(e1, e2) {
+     if(e1.nodeName == 'SCRIPT' || e1.nodeName == 'STYLE') {
+         return false;
+     }
      if(Array(...e1.childNodes).every(n => n.nodeType != Node.ELEMENT_NODE)) {
-         e1.style.backgroundColor = "#ffeaa7";
-         e1.style.color = "black";
-         e1.style.animation = "omnom-highlight 2s infinite";
+         highlightElement(e1);
          return false;
      }
      let matchCount = 0;
      let nodeCount = 0;
      for(let c of e1.childNodes) {
+         if(c.nodeType == Node.TEXT_NODE) {
+             if(c.textContent.trim() && e2.textContent.indexOf(c.textContent) == -1) {
+                let h = document.createElement("span");
+                h.textContent = c.textContent;
+                c.replaceWith(h);
+                highlightElement(h);
+             }
+             continue;
+         }
          if(c.nodeType != Node.ELEMENT_NODE) {
              continue;
          }
@@ -69,12 +79,15 @@
              continue;
          }
          if(highlightDiffs(c, e2)) {
-             c.style.backgroundColor = "#ffeaa7";
-             c.style.color = "black";
-             c.style.animation = "omnom-highlight 2s infinite";
+             highlightElement(c);
          }
      }
      return matchCount > 0 && matchCount == nodeCount;
+ }
+ function highlightElement(el) {
+    el.style.backgroundColor = "#ffeaa7";
+    el.style.color = "black";
+    el.style.animation = "omnom-highlight 2s infinite";
  }
 
  function initIframe(el) {
@@ -107,7 +120,7 @@
         base.setAttribute("href", "./static/data/snapshots/aa/");
         doc.querySelector("head").prepend(base);
         doc.querySelector("head").appendChild(css);
-        el.srcdoc = new XMLSerializer().serializeToString(doc);
+        el.srcdoc = doc.documentElement.outerHTML;
     }).catch(err => console.log(err));
  }
  Promise.all([loadSnapshot(s1URL, s1), loadSnapshot(s2URL, s2), s1p, s2p]).then(() => {
