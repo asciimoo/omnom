@@ -2,6 +2,9 @@ package webapp
 
 import (
 	"compress/gzip"
+	"fmt"
+	"html"
+	"html/template"
 	"io"
 	"net/http"
 	"strings"
@@ -13,10 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
-
-func restoreText(s string) string {
-	return strings.Join(strings.Split(s, "|||"), " ")
-}
 
 func snapshotDiff(c *gin.Context) {
 	s1, err := model.GetSnapshotWithResources(c.Query("s1"))
@@ -40,11 +39,11 @@ func snapshotDiff(c *gin.Context) {
 		log.Error().Err(err).Msg("Failed to fetch URL for snapshot")
 	}
 
-	tds := contentdiff.DiffText(restoreText(s1.Text), restoreText(s2.Text))
+	tds := contentdiff.DiffText(s1.Text, s2.Text)
 	iKeys := contentdiff.DiffList(getImageResources(s1), getImageResources(s2))
 	tdLen := 0
 	for _, d := range tds {
-		if d.Type != "0" {
+		if d.Type != "0" && strings.TrimSpace(d.Text) != "" {
 			tdLen += 1
 		}
 	}
@@ -66,7 +65,7 @@ func snapshotDiff(c *gin.Context) {
 	c1 := contentdiff.ExtractHTMLContent(sr1)
 	c2 := contentdiff.ExtractHTMLContent(sr2)
 	render(c, http.StatusOK, "snapshot-diff", gin.H{
-		"TextDiffs":   tds,
+		"TextDiff":    renderTextDiffs(tds),
 		"TextDiffLen": tdLen,
 		"ImageDiffs":  iKeys,
 		"LinkDiffs":   contentdiff.DiffLink(c1.Links, c2.Links),
@@ -74,6 +73,26 @@ func snapshotDiff(c *gin.Context) {
 		"S1":          s1,
 		"S2":          s2,
 	})
+}
+
+func renderTextDiffs(tds []contentdiff.TextDiff) template.HTML {
+	var s strings.Builder
+	for _, d := range tds {
+		class := ""
+		switch d.Type {
+		case "0":
+		case "+":
+			class = "is-muted-primary"
+		case "-":
+			class = "has-background-danger-light"
+		}
+		if class == "" {
+			s.WriteString(html.EscapeString(d.Text))
+		} else {
+			s.WriteString(fmt.Sprintf(`<span class="%s">%s</span>`, class, html.EscapeString(d.Text)))
+		}
+	}
+	return template.HTML(strings.ReplaceAll(s.String(), "|||", "<br />")) //nolint: gosec // conversion is safe
 }
 
 func snapshotDiffSideBySide(c *gin.Context) {

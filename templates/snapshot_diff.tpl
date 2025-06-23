@@ -29,13 +29,11 @@
         {{ end }}
         </div>
         <div class="column">
-        {{ if .TextDiffs }}
+        {{ if .TextDiffLen }}
             <h3>Text changes ({{ .TextDiffLen }})</h3>
-            {{ if gt .TextDiffLen 0 }}
-                <p>
-                {{ range .TextDiffs }}<span class="{{ if eq .Type "+" }}is-muted-primary{{ end }}{{ if eq .Type "-" }}has-background-danger-light{{ end }}">{{ .Text }}</span>{{ end }}
-                </p>
-            {{ end }}
+            <p>
+            {{ .TextDiff }}
+            </p>
         {{ else }}
             <h3>No text changes</h3>
         {{ end }}

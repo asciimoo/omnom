@@ -53,7 +53,7 @@ func DiffText(t1, t2 string) []TextDiff {
 	dmp := diffmatchpatch.New()
 	ds := dmp.DiffMain(t1, t2, false)
 	r := make([]TextDiff, len(ds))
-	for i, d := range ds {
+	for i, d := range dmp.DiffCleanupSemantic(ds) {
 		r[i] = TextDiff{
 			Text: d.Text,
 		}
