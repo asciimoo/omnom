@@ -102,11 +102,14 @@ func init() {
 }
 
 func Update() error {
-	log.Debug().Msg("Updating feeds")
 	feeds, err := model.GetFeeds()
 	if err != nil {
 		return err
 	}
+	if len(feeds) == 0 {
+		return nil
+	}
+	log.Debug().Msg("Updating feeds")
 	for _, f := range feeds {
 		updateRSSFeed(f)
 	}
@@ -154,7 +157,7 @@ func createFeed(name, u string) (*model.Feed, error) {
 		Name: name,
 		URL:  u,
 	}
-	// TODO parse feed URL if u is HTML
+	// TODO parse feed URL if u's content is HTML
 	// TODO add support for ActivityPub feeds
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURL(u)
