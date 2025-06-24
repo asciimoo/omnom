@@ -83,7 +83,7 @@
     "landing feature 2 title": "始终可用",
     "landing feature 2 desc": "即使原始网站离线，您的快照仍然可以访问",
     "landing feature 3 title": "智能组织",
-    "landing feature 3 desc": "创建收藏夹，添加标签，将书签组织到对你有意义的项目中",
+    "landing feature 3 desc": "创建集合，添加标签，将书签组织到对你有意义的项目中",
     "landing subslogan 3 desc": "Omnom 结合了书签的简便性和网页存档的可靠性",
     "landing feature 4 title": "轻松分享",
     "landing feature 5 desc": "通过全文搜索，瞬间找到任何书签",
@@ -92,5 +92,15 @@
     "landing feature 6 title": "快照对比",
     "landing feature 6 desc": "快速识别自上次访问以来网页的变化",
     "collection": "集合",
-    "collections": "集合"
+    "collections": "集合",
+    "no feeds found": "未找到订阅源",
+    "feeds": "订阅源",
+    "add": "添加",
+    "name": "名称",
+    "add feed": "添加订阅源",
+    "no unread items": "没有未读项目",
+    "unread items": "未读项目",
+    "archive page": "归档此页面",
+    "archive item": "归档项目",
+    "bookmark": "书签"
 }
