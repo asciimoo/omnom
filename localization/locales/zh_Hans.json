@@ -21,7 +21,7 @@
     "email": "电子邮件",
     "submit": "提交",
     "or sign up with": "或用其他方式注册",
-    "landing subslogan 3 title": "一切你需要的网页保存和组织工具",
+    "landing subslogan 3 title": "保存和组织网页所需的全部工具",
     "add collection": "添加集合",
     "no collection": "未找到集合",
     "sign up": "注册",
@@ -102,5 +102,7 @@
     "unread items": "未读项目",
     "archive page": "归档此页面",
     "archive item": "归档项目",
-    "bookmark": "书签"
+    "bookmark": "书签",
+    "edit feed": "编辑订阅源",
+    "delete feed": "删除订阅源"
 }
