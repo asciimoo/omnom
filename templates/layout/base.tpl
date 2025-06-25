@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="{{ .Theme }}">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -82,7 +82,8 @@
             </div>
             <div class="column is-narrow px-6">
                 <p><b>{{ .Tr.Msg "product" }}</b></p>
-                <a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">{{ .Tr.Msg "firefox ext" }}</a>
+                {{ if eq .Theme "dark" }}<a href="?theme=light">{{ .Tr.Msg "light theme" }}</a>{{ else }}<a href="?theme=dark">{{ .Tr.Msg "dark theme" }}</a>{{ end }}
+                <br /><a href="https://addons.mozilla.org/en-US/firefox/addon/omnom/">{{ .Tr.Msg "firefox ext" }}</a>
                 <br /><a href="https://chrome.google.com/webstore/detail/omnom/nhpakcgbfdhghjnilnbgofmaeecoojei">{{ .Tr.Msg "chrome ext" }}</a>
                 <br /><a href="{{ AddURLParam .URL "format=json" }}">{{ .Tr.Msg "json view" }}</a>
             </div>
@@ -209,7 +210,7 @@
           </div>
         </details>
         {{ end }}
-          <span class="tag is-light">{{ if .Bookmark.Public }}{{ .Tr.Msg "public" }}{{ else }}{{ .Tr.Msg "private" }}{{ end }}</span>
+          <span class="tag">{{ if .Bookmark.Public }}{{ .Tr.Msg "public" }}{{ else }}{{ .Tr.Msg "private" }}{{ end }}</span>
           <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}">
               <i class="fas fa-eye"></i>
           </a>

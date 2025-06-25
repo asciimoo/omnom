@@ -14,7 +14,7 @@
                 <form action="" method="get">
                     {{ block "textFilter" . }}{{ end }}
                     {{ block "sortBy" . }}{{ end }}
-                    <details {{ if .HasSearch }}open{{ end }}>
+                    <details {{ if .HasSearch }}open{{ end }} class="mt-4">
                         <summary>{{ .Tr.Msg "advanced search options" }}</summary>
                         <div class="my-bookmarks__advanced-content">
                             <div class="my-bookmarks__advanced-search">

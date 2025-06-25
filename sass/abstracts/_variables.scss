@@ -9,22 +9,39 @@ $gutter-vertical-mini: 1rem;
 $gutter-horizontal: 6rem;
 
 //COLORS
-$primary-color: #0093ab;
-$primary-color-light: #9AECDB;
-$primary-color-dark: #2980ad;
-$secondary-color: #3d3e3e;
-$tertiary-color: #b7b8b8;
-$alternative-color:#220450;
-$alternative-color-light: #2f2365;
-$color-white: #fff;
-$color-black: #000;
-//$color-red: #eb4d4b;
-$color-red: #de1763;
-$color-muted-red: #ff8989;
-$color-orange: #f47603;
-$color-light-gray: #c9cccc;
-$color-gray: #797c7c;
+:root {
+  --primary-color: #0093ab;
+  --primary-color-light: #9AECDB;
+  --primary-color-dark: #2980ad;
+  --secondary-color: #3d3e3e;
+  --tertiary-color: #b7b8b8;
+  --alternative-color:#220450;
+  --alternative-color-light: #2f2365;
+  --color-menu-white: #fff;
+  --color-white: #fff;
+  --color-black: #000;
+  //$color-red: #eb4d4b;
+  --color-red: #de1763;
+  --color-muted-red: #ff8989;
+  --color-orange: #d44603;
+  --color-light-gray: #c9cccc;
+  --color-gray: #797c7c;
+  --color-shadow: #494949;
+}
 
+@mixin dark-colors() {
+  --color-white: #111;
+  --color-black: #ccc;
+  --color-shadow: #222;
+  --primary-color-light: #0a3d62;
+  --color-red: #eb6d6b;
+  --secondary-color: #8d8e8e;
+  --color-light-gray: #333;
+  --color-orange: #f47603;
+  .has-text-black {
+    color: var(--color-black) !important;
+  }
+}
 //FONT SIZES
 $extra-small-font: 0.9rem;
 $small-font: 1.5rem;
@@ -36,16 +53,25 @@ $phone-mini: 4.5rem;
 
 //BULMA
 $tag-background-color:transparent;
-$switch-background-active: $primary-color;
+$switch-background-active: --primary-color;
 $family-sans-serif: 'sans-serif';
 $message-background-color: transparent;
-$message-body-border-color: $tertiary-color $tertiary-color $tertiary-color $primary-color;
+$message-body-border-color: --tertiary-color --tertiary-color --tertiary-color --primary-color;
 $message-body-border-width: 1px 1px 1px 7px;
 $message-body-padding: 0.5rem;
-$button-color: $primary-color;
-$button-border-color: $primary-color;
-$progress-value-background-color: $primary-color;
+$button-color: --primary-color;
+$button-border-color: --primary-color;
+$progress-value-background-color: --primary-color;
 $body-overflow-y: auto;
-$footer-background-color: $alternative-color;
-$footer-color: $color-white;
+$footer-background-color: --alternative-color;
+$footer-color: --color-white;
 $footer-padding: 0;
+
+ @media (prefers-color-scheme: dark) {
+  :root {
+    @include dark-colors();
+  }
+}
+[data-theme="dark"] {
+    @include dark-colors();
+}

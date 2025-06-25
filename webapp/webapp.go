@@ -204,6 +204,10 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 		},
 	}
 	sessChanged := false
+	if c.Query("theme") == "dark" || c.Query("theme") == "light" {
+		session.Set("Theme", c.Query("theme"))
+		sessChanged = true
+	}
 	if s := session.Get("Error"); s != nil {
 		tplVars["Error"], _ = s.(string)
 		session.Delete("Error")
@@ -227,6 +231,9 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	}
 	if s, ok := c.Get("Info"); ok {
 		tplVars["Info"], _ = s.(string)
+	}
+	if s := session.Get("Theme"); s != nil {
+		tplVars["Theme"], _ = s.(string)
 	}
 	if sessChanged {
 		err := session.Save()

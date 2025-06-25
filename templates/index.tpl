@@ -3,7 +3,7 @@
     <div class="hero-body shadow-bottom">
         <div class="columns">
             <div class="column has-text-centered">
-                <h2 class="title">
+                <h2 class="title has-text-white">
                     {{ .Tr.Msg "landing page slogan" | ToHTML }}
                 </h2>
                 <p class="big has-text-info">
