@@ -142,9 +142,13 @@ func updateRSSFeed(f *model.Feed) {
 	}
 	var added int64
 	for _, i := range rss.Items {
+		c := i.Content
+		if c == "" {
+			c = i.Description
+		}
 		added += model.AddFeedItem(&model.FeedItem{
 			Title:   i.Title,
-			Content: sanitizeHTML(pu, i.Content),
+			Content: sanitizeHTML(pu, c),
 			URL:     i.Link,
 			FeedID:  f.ID,
 		})
@@ -254,9 +258,9 @@ func resolveURLs(base *url.URL, h string) string {
 		if n.Type != html.ElementNode {
 			continue
 		}
-		for _, a := range n.Attr {
+		for i, a := range n.Attr {
 			if a.Key == "src" || a.Key == "href" {
-				a.Val = toFullURL(base, a.Val)
+				n.Attr[i] = html.Attribute{Key: a.Key, Val: toFullURL(base, a.Val)}
 			}
 		}
 	}
