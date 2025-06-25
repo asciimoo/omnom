@@ -279,6 +279,9 @@ func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
 	tplVars := map[string]interface{}{
 		"RSS":  vars[k.(string)],
 		"Type": k.(string),
+		"FullURL": func(u string) string {
+			return getFullURL(c, u)
+		},
 	}
 	tplVars["FullURLPrefix"] = getFullURLPrefix(c)
 	c.HTML(status, "rss", tplVars)

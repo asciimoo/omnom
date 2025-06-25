@@ -15,13 +15,13 @@ SPDX-License-Identifier: AGPLv3+
         <item>
             {{- if eq $type "Bookmarks" }}
                 <title>{{ .Title }}</title>
-                <link>{{ $.FullURLPrefix }}{{ URLFor "Bookmark" }}?id={{ .ID }}</link>
+                <link>{{ call $FullURL (URLFor "Snapshot") }}?id={{ .ID }}</link>
                 <pubDate>{{ .UpdatedAt | ToDateTime }}</pubDate>
                 <description>{{ .Notes }}</description>
             {{- end }}
             {{ if eq $type "Snapshots" -}}
                 <title>{{ .Bookmark.Title }} (Size: {{ .Size | FormatSize }})</title>
-                <link>{{ $FullURL (URLFor "Snapshot") }}?sid={{ .Key }}&bid={{ .Bookmark.ID }}</link>
+                <link>{{ call $FullURL (URLFor "Snapshot") }}?sid={{ .Key }}&bid={{ .Bookmark.ID }}</link>
                 <pubDate>{{ .UpdatedAt | ToDateTime }}</pubDate>
                 <description>{{ .Bookmark.Notes }}</description>
             {{- end }}
