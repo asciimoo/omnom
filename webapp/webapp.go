@@ -199,6 +199,9 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 		"AllowBookmarkCreation": cfg.(*config.Config).App.CreateBookmarkFromWebapp,
 		"OAuth":                 cfg.(*config.Config).OAuth,
 		"Tr":                    l.(*localization.Localizer),
+		"FullURL": func(u string) string {
+			return getFullURL(c, u)
+		},
 	}
 	sessChanged := false
 	if s := session.Get("Error"); s != nil {
@@ -259,6 +262,7 @@ func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
 	delete(vars, "DisableSignup")
 	delete(vars, "OAuth")
 	delete(vars, "Tr")
+	delete(vars, "FullURL")
 	c.IndentedJSON(status, vars)
 }
 
