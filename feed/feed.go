@@ -97,6 +97,7 @@ func init() {
 	p.AllowDataURIImages()
 	p.AllowImages()
 	p.AllowTables()
+	p.RequireNoFollowOnLinks(false)
 	p.AllowURLSchemes("mailto", "http", "https")
 	htmlSanitizerPolicy = p
 }
@@ -260,7 +261,7 @@ func resolveURLs(base *url.URL, h string) string {
 		}
 		for i, a := range n.Attr {
 			if a.Key == "src" || a.Key == "href" {
-				n.Attr[i] = html.Attribute{Key: a.Key, Val: toFullURL(base, a.Val)}
+				n.Attr[i] = html.Attribute{Key: a.Key, Val: resolveURL(base, a.Val)}
 			}
 		}
 	}
@@ -272,10 +273,22 @@ func resolveURLs(base *url.URL, h string) string {
 	return out.String()
 }
 
-func toFullURL(base *url.URL, u string) string {
+func resolveURL(base *url.URL, u string) string {
 	pu, err := url.Parse(u)
 	if err != nil {
 		return ""
 	}
+	q := pu.Query()
+	qChange := false
+	for k, _ := range q {
+		if k == "utm" || strings.HasPrefix(k, "utm_") {
+			qChange = true
+			q.Del(k)
+		}
+	}
+	if qChange {
+		pu.RawQuery = q.Encode()
+	}
+
 	return base.ResolveReference(pu).String()
 }
