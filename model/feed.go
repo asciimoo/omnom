@@ -79,13 +79,13 @@ func GetUserFeeds(uid uint) ([]*UserFeedSummary, error) {
 	var res []*UserFeedSummary
 	err := DB.
 		Table("user_feeds").
-		Select("user_feeds.*, count(user_feed_items.id) as unread_count").
+		Select("user_feeds.*, sum(user_feed_items.unread) as unread_count").
 		Joins("join feeds on feeds.id == user_feeds.feed_id").
 		Joins("join feed_items on feed_items.feed_id == feeds.id").
 		Joins("join user_feed_items on user_feed_items.feed_item_id == feed_items.id").
-		Where("user_feeds.user_id = ? and user_feed_items.unread = ?", uid, true).
+		Where("user_feeds.user_id = ?", uid).
 		Group("feeds.id").
-		Order("unread_count, user_feeds.name").
+		Order("unread_count desc, user_feeds.name").
 		Find(&res).Error
 	return res, err
 }
