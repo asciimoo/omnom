@@ -271,7 +271,7 @@
     <div class="field-body">
         <div class="field">
             <div class="control has-icons-left">
-                <input class="input" type="search" placeholder="{{ .Tr.Msg "search" }}" name="query" value="{{ .SearchParams.Q }}">
+                <input class="input" type="search" placeholder="{{ .Tr.Msg "search" }}" name="query" value="{{ or .SearchParams.Q .Query }}">
                  <span class="icon is-small is-left">
                 <i class="fas fa-search"></i>
                 </span>
@@ -387,7 +387,7 @@
 </div>
 {{ end }}
 
-{{ define "unreadFeedItem" }}
+{{ define "feedItem" }}
     <div class="media">
         <div class="media-left">
             <figure class="image is-48x48">
@@ -397,7 +397,9 @@
             </figure>
         </div>
         <div class="media-content">
+            {{ if .Item.Unread }}
             <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="fids" value="{{ .Item.UserFeedItemID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
+            {{ end }}
             <p class="title is-5"><a href="{{ .Item.URL }}">{{ .Item.Title }}</a></p>
             <p class="subtitle is-6"><span class="tag">{{ .Item.FeedName }}</span> {{ .Item.CreatedAt | ToDateTime }}</p>
             {{ if .Item.Content }}
@@ -407,7 +409,7 @@
     </div>
 {{ end }}
 
-{{ define "unreadBookmark" }}
+{{ define "feedBookmarkItem" }}
     <div class="media">
         <div class="media-left">
             <figure class="image is-48x48">
@@ -417,7 +419,9 @@
             </figure>
         </div>
         <div class="media-content">
+            {{ if .Bookmark.Unread }}
             <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="bids" value="{{ .Bookmark.ID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
+            {{ end }}
             <p class="title is-5"><a href="{{ .URL }}">{{ .Bookmark.Title }}</a></p>
             <p class="subtitle is-6"><span class="tag is-muted-primary">{{ .Tr.Msg "bookmark" }}</span> {{ .Bookmark.CreatedAt | ToDateTime }}</p>
         </div>
@@ -425,4 +429,52 @@
     {{ if .Bookmark.Notes }}
     <p>{{ .Bookmark.Notes }}</p>
     {{ end }}
+{{ end }}
+
+{{ define "feedSidebar" }}
+<div class="column is-2-fullhd is-one-quarter-desktop is-one-third-tablet">
+    <div class="content">
+        {{ if not .Feeds }}
+        <h3 class="title">{{ .Tr.Msg "no feeds found" }}</h3>
+        {{ end }}
+        <form action="{{ URLFor "feed search" }}" method="get">
+            {{ if .FeedID }}<input type="hidden" name="feed_id" value="{{ .FeedID }}" />{{ end }}
+            {{ block "textFilter" . }}{{ end }}
+            <div class="checkboxes">
+                <label class="label" for="include_read_items">
+                    <input class="switch is-rounded" value="true" type="checkbox" id="include_read_items"  name="include_read_items"{{ if .IncludeRead }} checked="checked"{{ end }}>
+                    {{ .Tr.Msg "include read items" }}
+                </label>
+            </div>
+            {{ block "submit" (.Tr.Msg "search") }}{{ end }}
+        </form>
+        <details class="my-4 is-size-4">
+            <summary>{{ .Tr.Msg "add feed" }}</summary>
+            <form action="{{ URLFor "add feed" }}" method="post">
+                <div class="field">
+                    <label class="label">{{ .Tr.Msg "name" }}</label>
+                    <div class="control">
+                        <input class="input" type="text" placeholder="{{ .Tr.Msg "name" }}.." name="name" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">{{ .Tr.Msg "url" }}</label>
+                    <div class="control">
+                        <input class="input" type="text" placeholder="{{ .Tr.Msg "url" }}.." name="url" />
+                    </div>
+                </div>
+                {{ block "submit" (.Tr.Msg "submit") }}{{ end }}
+            </form>
+        </details>
+        {{ $Tr := .Tr }}
+        {{ range .Feeds }}
+        <h4>
+            <div class="is-pulled-right">
+                <a href="{{ URLFor "edit feed" }}?id={{ .ID }}" aria-label="{{ $Tr.Msg "edit feed" }}"><span class="icon"><i class="fas fa-pencil"></i></span></a>
+            </div>
+            <a href="{{ URLFor "feed search" }}?feed_id={{ .ID }}">{{ .Name }}</a>{{ if .Count }} <span class="tag is-medium">{{ .Count }}</span>{{ end }}
+        </h4>
+        {{ end }}
+    </div>
+</div>
 {{ end }}

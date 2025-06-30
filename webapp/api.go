@@ -713,6 +713,34 @@ func init() {
 			},
 		},
 		&Endpoint{
+			Name:         "Feed search",
+			Path:         "/feed_search",
+			Method:       GET,
+			AuthRequired: true,
+			Handler:      searchFeedItems,
+			Description:  "Search for feed items",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "q",
+					Type:        "string",
+					Required:    true,
+					Description: "Search Query",
+				},
+				&EndpointArg{
+					Name:        "include_read_items",
+					Type:        "bool",
+					Required:    false,
+					Description: "Include read items in the results",
+				},
+				&EndpointArg{
+					Name:        "feed_id",
+					Type:        "int",
+					Required:    false,
+					Description: "Limit search results to the specified feed",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "Edit feed",
 			Path:         "/edit_feed",
 			Method:       POST,

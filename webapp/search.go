@@ -95,11 +95,7 @@ func filterText(qs string, inNote bool, inSnapshot bool, q, cq *gorm.DB) {
 	if qs == "" {
 		return
 	}
-	if strings.Contains(qs, "*") {
-		qs = strings.ReplaceAll(qs, "*", "%")
-	} else {
-		qs = fmt.Sprintf("%%%s%%", qs)
-	}
+	qs = model.CreateGlob(qs)
 	query := "LOWER(bookmarks.title) LIKE LOWER(@query)"
 	if inNote {
 		query += " or LOWER(bookmarks.notes) LIKE LOWER(@query)"

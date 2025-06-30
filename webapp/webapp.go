@@ -179,6 +179,7 @@ func createRenderer(tplFS fs.FS) multitemplate.Renderer {
 	addTemplate(r, tplFS, true, "snapshot-diff-side-by-side", "snapshot_diff_side_by_side.tpl")
 	addTemplate(r, tplFS, true, "edit-collection", "edit_collection.tpl")
 	addTemplate(r, tplFS, true, "feeds", "feeds.tpl")
+	addTemplate(r, tplFS, true, "feed-search", "feed_search.tpl")
 	addTemplate(r, tplFS, true, "edit-feed", "edit_feed.tpl")
 	addTemplate(r, tplFS, true, "user", "user.tpl")
 	addTemplate(r, tplFS, true, "api", "api.tpl")

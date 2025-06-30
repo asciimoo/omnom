@@ -5,9 +5,11 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -59,11 +61,12 @@ type UnreadFeedItem struct {
 	FeedName       string
 	Favicon        string
 	UserFeedItemID uint
+	Unread         bool
 }
 
 type UserFeedSummary struct {
 	UserFeed
-	UnreadCount uint
+	Count uint
 }
 
 func GetFeeds() ([]*Feed, error) {
@@ -75,17 +78,21 @@ func GetFeeds() ([]*Feed, error) {
 	return res, err
 }
 
-func GetUserFeeds(uid uint) ([]*UserFeedSummary, error) {
+func GetUserFeeds(uid uint, unread bool) ([]*UserFeedSummary, error) {
 	var res []*UserFeedSummary
-	err := DB.
-		Table("user_feeds").
-		Select("user_feeds.*, sum(user_feed_items.unread) as unread_count").
-		Joins("join feeds on feeds.id == user_feeds.feed_id").
+	q := DB.
+		Table("user_feeds")
+	if unread {
+		q = q.Select("user_feeds.*, sum(user_feed_items.unread) as count")
+	} else {
+		q = q.Select("user_feeds.*, count(user_feed_items.id) as count")
+	}
+	err := q.Joins("join feeds on feeds.id == user_feeds.feed_id").
 		Joins("join feed_items on feed_items.feed_id == feeds.id").
 		Joins("join user_feed_items on user_feed_items.feed_item_id == feed_items.id").
 		Where("user_feeds.user_id = ?", uid).
 		Group("feeds.id").
-		Order("unread_count desc, user_feeds.name").
+		Order("count desc, user_feeds.name").
 		Find(&res).Error
 	return res, err
 }
@@ -178,7 +185,7 @@ func AddFeedItem(i *FeedItem) int64 {
 func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 	var res []*UnreadFeedItem
 	DB.
-		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon, user_feed_items.id as user_feed_item_id").
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
 		Table("feed_items").
 		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
 		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
@@ -186,6 +193,7 @@ func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 		Where("user_feed_items.user_id = ?", uid).
 		Where("user_feed_items.unread = ?", true).
 		Order("feed_items.id asc").
+		Limit(int(limit)). //nolint:gosec // TODO
 		Find(&res)
 	return res
 }
@@ -199,4 +207,30 @@ func GetUnreadFeedItemCount(uid uint) int64 {
 		Where("user_feed_items.unread = ?", true).
 		Count(&res)
 	return res
+}
+
+func SearchFeedItems(uid, limit uint, query string, feedID uint, includeRead bool) ([]*UnreadFeedItem, int64, error) {
+	var res []*UnreadFeedItem
+	var resCount int64
+	q := DB.
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
+		Table("feed_items").
+		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
+		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
+		Joins("join feeds on feeds.id == user_feeds.feed_id").
+		Where("user_feed_items.user_id = ?", uid)
+	if feedID != 0 {
+		includeRead = true
+		q = q.Where("user_feeds.id == ?", feedID)
+	}
+	if query != "" {
+		q = q.Where("feed_items.title LIKE LOWER(@query) OR feed_items.content LIKE LOWER(@query)", sql.Named("query", CreateGlob(query)))
+	}
+	if !includeRead {
+		q = q.Where("user_feed_items.unread = ?", true)
+	}
+	q = q.Session(&gorm.Session{})
+	q.Order("feed_items.id asc").Limit(int(limit)).Find(&res) //nolint:gosec // TODO
+	q.Count(&resCount)
+	return res, resCount, nil
 }

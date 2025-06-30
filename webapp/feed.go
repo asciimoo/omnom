@@ -23,7 +23,7 @@ import (
 func feeds(c *gin.Context) {
 	u, _ := c.Get("user")
 	uid := u.(*model.User).ID
-	res, err := model.GetUserFeeds(uid)
+	fs, err := model.GetUserFeeds(uid, true)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get feeds")
 		_ = c.AbortWithError(http.StatusBadRequest, err)
@@ -35,11 +35,58 @@ func feeds(c *gin.Context) {
 	bis := model.GetUnreadBookmarkItems(uid, ipp)
 	is := mergeUnreadItems(fis, bis, ipp)
 	render(c, http.StatusOK, "feeds", map[string]interface{}{
-		"Feeds":           res,
+		"Feeds":           fs,
 		"UnreadItems":     is,
 		"UnreadItemCount": model.GetUnreadFeedItemCount(uid) + model.GetUnreadBookmarkCount(uid),
 		"FeedItemIDs":     concatFeedItemIDs(is),
 		"BookmarkIDs":     concatBookmarkIDs(is),
+	})
+}
+
+func searchFeedItems(c *gin.Context) {
+	u, _ := c.Get("user")
+	uid := u.(*model.User).ID
+	fs, err := model.GetUserFeeds(uid, false)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get feeds")
+		_ = c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	cfg, _ := c.Get("config")
+	ipp := cfg.(*config.Config).Feed.ItemsPerPage
+	q := c.Query("query")
+	includeRead := false
+	var fid uint
+	if c.Query("feed_id") != "" {
+		if i, err := strconv.ParseUint(c.Query("feed_id"), 10, 64); err == nil {
+			fid = uint(i)
+		}
+	}
+	if c.Query("include_read_items") != "" && c.Query("include_read_items") != "0" && c.Query("include_read_items") != "false" {
+		includeRead = true
+	}
+	res, resCount, err := model.SearchFeedItems(uid, ipp, q, fid, includeRead)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to filter feed items")
+		_ = c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	fn := ""
+	if fid > 0 {
+		for _, f := range fs {
+			if f.ID == fid {
+				fn = f.Name
+			}
+		}
+	}
+	render(c, http.StatusOK, "feed-search", map[string]interface{}{
+		"Feeds":       fs,
+		"Items":       res,
+		"ItemCount":   resCount,
+		"IncludeRead": includeRead,
+		"Query":       q,
+		"FeedID":      fid,
+		"FeedName":    fn,
 	})
 }
 
