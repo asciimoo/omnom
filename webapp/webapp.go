@@ -194,12 +194,11 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	cfg, _ := c.Get("config")
 	l, _ := c.Get("localizer")
 	tplVars := gin.H{
-		"Page":                  page,
-		"User":                  u,
-		"DisableSignup":         cfg.(*config.Config).App.DisableSignup,
-		"AllowBookmarkCreation": cfg.(*config.Config).App.CreateBookmarkFromWebapp,
-		"OAuth":                 cfg.(*config.Config).OAuth,
-		"Tr":                    l.(*localization.Localizer),
+		"Page":          page,
+		"User":          u,
+		"DisableSignup": cfg.(*config.Config).App.DisableSignup,
+		"OAuth":         cfg.(*config.Config).OAuth,
+		"Tr":            l.(*localization.Localizer),
 		"FullURL": func(u string) string {
 			return getFullURL(c, u)
 		},

@@ -1,5 +1,7 @@
 {{ define "content" }}
-{{ block "warning" KVData "Warning" (.Tr.Msg "experimental feature") "Tr" .Tr }}{{ end }}
+{{ if .AllowSnapshotCreation }}
+    {{ block "warning" KVData "Warning" (.Tr.Msg "experimental snapshot feature") "Tr" .Tr }}{{ end }}
+{{ end }}
 <div class="content">
     <h3 class="title">{{ .Tr.Msg "create bookmark" }}</h3>
     <form action="" method="post">
@@ -23,6 +25,7 @@
                     <input class="input" type="text" placeholder="Tags" name="tags">
                 </div>
             </div>
+            {{ block "collectionFilter" . }}{{ end }}
             <div class="field">
                 <label class="label">{{ .Tr.Msg "notes" }}</label>
                 <div class="control">
@@ -33,6 +36,12 @@
                 <label class="checkbox">
                     <input type="checkbox" name="public">
                     {{ .Tr.Msg "public" }}
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" name="unread">
+                    {{ .Tr.Msg "unread" }}
                 </label>
             </div>
             {{ block "submit" (.Tr.Msg "save") }}{{ end }}

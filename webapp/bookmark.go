@@ -56,7 +56,7 @@ var shadowDOMScript = []byte(`<script>
     processNode(document);
 })()</script>`)
 
-type browserBookmarkResponse struct {
+type browserSnapshotResponse struct {
 	DOM       string `json:"dom"`
 	Favicon   string `json:"favicon"`
 	Title     string `json:"string"`
@@ -179,22 +179,94 @@ func myBookmarks(c *gin.Context) {
 
 func createBookmarkForm(c *gin.Context) {
 	cfg, _ := c.Get("config")
-	if !cfg.(*config.Config).App.CreateBookmarkFromWebapp {
-		notFoundView(c)
-		return
-	}
-	render(c, http.StatusOK, "create-bookmark", nil)
+	u, _ := c.Get("user")
+	uid := u.(*model.User).ID
+	cols := model.GetCollectionTree(uid)
+	render(c, http.StatusOK, "create-bookmark", map[string]any{
+		"Collections":           cols,
+		"AllowSnapshotCreation": cfg.(*config.Config).App.CreateSnapshotFromWebapp,
+	})
 }
 
 func createBookmark(c *gin.Context) {
 	cfg, _ := c.Get("config")
-	if !cfg.(*config.Config).App.CreateBookmarkFromWebapp {
-		notFoundView(c)
-		return
-	}
 	cu, _ := c.Get("user")
 	u, _ := cu.(*model.User)
-	urlString := c.PostForm("url")
+
+	bs := &browserSnapshotResponse{}
+	bsCreated := false
+	var err error
+	if cfg.(*config.Config).App.CreateSnapshotFromWebapp {
+		bs, err = createSnapshot(c.PostForm("url"), cfg.(*config.Config).App.WebappSnapshotterTimeout)
+		if err != nil {
+			setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
+		} else {
+			bsCreated = true
+		}
+	}
+	b, new, err := model.GetOrCreateBookmark(
+		u,
+		c.PostForm("url"),
+		c.PostForm("title"),
+		c.PostForm("tags"),
+		c.PostForm("notes"),
+		c.PostForm("public"),
+		bs.Favicon,
+		c.PostForm("collection"),
+		c.PostForm("unread"),
+	)
+	fmt.Println("YOOOOOOO", c.PostForm("collection"))
+	if err != nil {
+		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+		return
+	}
+	if new {
+		go apNotifyFollowers(c, b)
+	}
+	if bsCreated {
+		key, err := storeSnapshot([]byte(bs.DOM))
+		if err != nil {
+			setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
+			c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+			return
+		}
+
+		s := &model.Snapshot{
+			Key:        key,
+			Text:       bs.Text,
+			Title:      bs.Title,
+			BookmarkID: b.ID,
+			Size:       storage.GetSnapshotSize(key),
+		}
+		for _, r := range bs.Resources {
+			if bytes.Equal(r.Content, []byte("")) {
+				continue
+			}
+			key := storage.Hash(r.Content) + "." + r.Extension
+			err = storage.SaveResource(key, r.Content)
+			if err != nil {
+				setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+				c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+				return
+			}
+			size := storage.GetResourceSize(key)
+			s.Size += size
+			// TODO check error in GetOrCreateResource
+			s.Resources = append(s.Resources, model.GetOrCreateResource(key, r.Mimetype, r.Filename, size))
+		}
+		if err := model.DB.Save(s).Error; err != nil {
+			setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
+			c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
+			return
+		}
+	}
+
+	setNotification(c, nInfo, "Bookmark successfully created", true)
+	c.Redirect(http.StatusFound, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
+}
+
+func createSnapshot(urlString string, to int) (*browserSnapshotResponse, error) {
 	if snapshotJS == "" {
 		b, err := static.FS.ReadFile("js/snapshot.js")
 		if err != nil {
@@ -210,12 +282,11 @@ func createBookmark(c *gin.Context) {
 		//chromedp.WithErrorf(log.Printf),
 	)
 	defer cancel()
-	to := cfg.(*config.Config).App.WebappSnapshotterTimeout
 	if to > 0 {
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(to)*time.Second)
 	}
 	defer cancel()
-	var res browserBookmarkResponse
+	res := &browserSnapshotResponse{}
 	err := chromedp.Run(ctx,
 		chromedp.EmulateViewport(1200, 1000),
 		chromedp.Navigate(urlString),
@@ -223,76 +294,11 @@ func createBookmark(c *gin.Context) {
 		chromedp.Evaluate(snapshotJS, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 			return p.WithAwaitPromise(true)
 		}),
-		chromedp.Evaluate(`webapp_snapshot.createOmnomSnapshot();`, &res, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+		chromedp.Evaluate(`webapp_snapshot.createOmnomSnapshot();`, res, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 			return p.WithAwaitPromise(true)
 		}),
 	)
-	if err != nil {
-		setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
-		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
-		return
-	}
-
-	b, new, err := model.GetOrCreateBookmark(
-		u,
-		c.PostForm("url"),
-		c.PostForm("title"),
-		c.PostForm("tags"),
-		c.PostForm("notes"),
-		c.PostForm("public"),
-		res.Favicon,
-		// TODO handle collections
-		"",
-		// TODO handle unread
-		"",
-	)
-	if err != nil {
-		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
-		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
-		return
-	}
-	if new {
-		go apNotifyFollowers(c, b)
-	}
-
-	key, err := storeSnapshot([]byte(res.DOM))
-	if err != nil {
-		setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
-		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
-		return
-	}
-
-	s := &model.Snapshot{
-		Key:        key,
-		Text:       res.Text,
-		Title:      res.Title,
-		BookmarkID: b.ID,
-		Size:       storage.GetSnapshotSize(key),
-	}
-	for _, r := range res.Resources {
-		if bytes.Equal(r.Content, []byte("")) {
-			continue
-		}
-		key := storage.Hash(r.Content) + "." + r.Extension
-		err = storage.SaveResource(key, r.Content)
-		if err != nil {
-			setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
-			c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
-			return
-		}
-		size := storage.GetResourceSize(key)
-		s.Size += size
-		// TODO check error in GetOrCreateResource
-		s.Resources = append(s.Resources, model.GetOrCreateResource(key, r.Mimetype, r.Filename, size))
-	}
-	if err := model.DB.Save(s).Error; err != nil {
-		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
-		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
-		return
-	}
-
-	setNotification(c, nInfo, "Bookmark successfully created", true)
-	c.Redirect(http.StatusFound, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
+	return res, err
 }
 
 func addBookmark(c *gin.Context) {

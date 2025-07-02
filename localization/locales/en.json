@@ -35,7 +35,7 @@
     "landing page subslogan 2": "Access and share previously visited pages without worrying about modifications or availability",
     "download extension": "Download extension",
     "landing page ext desc": "Browser extensions are required to create bookmarks. Install the extension to your browser and enjoy Omnoming.",
-    "experimental feature": "This is an experimental feature, always check the output",
+    "experimental snapshot feature": "Server side snapshot creation is an experimental feature, always check the output",
     "save": "Save",
     "notes": "Notes",
     "title": "Title",
@@ -111,5 +111,6 @@
     "no results found": "No results found",
     "search results": "Search results",
     "feed search": "Feed search",
+    "unread": "Unread",
     "sign up": "Sign up"
 }

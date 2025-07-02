@@ -37,7 +37,7 @@ type App struct {
 	ResultsPerPage           int64  `yaml:"results_per_page"`
 	DisableSignup            bool   `yaml:"disable_signup"`
 	StaticDir                string `yaml:"static_dir"` // Deprecated: use Storage.Filesystem.RootDir instead
-	CreateBookmarkFromWebapp bool   `yaml:"create_bookmark_from_webapp"`
+	CreateSnapshotFromWebapp bool   `yaml:"create_snapshot_from_webapp"`
 	WebappSnapshotterTimeout int    `yaml:"webapp_snapshotter_timeout"`
 	DebugSQL                 bool   `yaml:"debug_sql"`
 }
@@ -142,7 +142,7 @@ func CreateDefaultConfig() *Config {
 	return &Config{
 		App: App{
 			ResultsPerPage:           30,
-			CreateBookmarkFromWebapp: false,
+			CreateSnapshotFromWebapp: false,
 			WebappSnapshotterTimeout: 15,
 			LogLevel:                 "info",
 		},

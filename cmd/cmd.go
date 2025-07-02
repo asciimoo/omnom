@@ -131,7 +131,7 @@ var listenCmd = &cobra.Command{
 		setStrArg(cmd, "address", &cfg.Server.Address)
 		setInt64Arg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
 		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
-		setBoolArg(cmd, "create-bookmark-from-webapp", &cfg.App.CreateBookmarkFromWebapp)
+		setBoolArg(cmd, "create-snapshot-from-webapp", &cfg.App.CreateSnapshotFromWebapp)
 		setBoolArg(cmd, "secure-cookie", &cfg.Server.SecureCookie)
 		setStrArg(cmd, "db-type", &cfg.DB.Type)
 		setStrArg(cmd, "db-connection", &cfg.DB.Connection)
@@ -203,7 +203,11 @@ var createUserCmd = &cobra.Command{
 		}
 		u := model.GetUser(args[0])
 		fmt.Println("User", args[0], "successfully created")
-		fmt.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, u.LoginToken)
+		addr := cfg.Server.BaseURL
+		if addr == "" {
+			addr = fmt.Sprintf("http://%s", cfg.Server.Address)
+		}
+		fmt.Printf("Visit %s/login?token=%s to sign in\n", addr, u.LoginToken)
 	},
 }
 
@@ -332,7 +336,11 @@ func changeToken(args []string, tok string) {
 	}
 	fmt.Printf("Token %s created\n", tok)
 	if args[1] == loginCmd {
-		fmt.Printf("Visit %s/login?token=%s to sign in\n", cfg.Server.Address, tok)
+		addr := cfg.Server.BaseURL
+		if addr == "" {
+			addr = fmt.Sprintf("http://%s", cfg.Server.Address)
+		}
+		fmt.Printf("Visit %s/login?token=%s to sign in\n", addr, tok)
 	}
 }
 
@@ -429,7 +437,7 @@ func init() {
 	listenCmd.Flags().Uint("results-per-page", uint(dcfg.App.ResultsPerPage), "Number of bookmarks/snapshots per page")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("webapp-snapshotter-timeout", uint(dcfg.App.WebappSnapshotterTimeout), "Timeout duration for webapp snapshotter (seconds)")
-	listenCmd.Flags().Bool("create-bookmark-from-webapp", dcfg.App.CreateBookmarkFromWebapp, "Allow creating bookmarks from webapp (requires chromium)")
+	listenCmd.Flags().Bool("create-bookmark-from-webapp", dcfg.App.CreateSnapshotFromWebapp, "Allow creating snapshots from webapp (requires chromium)")
 	listenCmd.Flags().Bool("secure-cookie", dcfg.Server.SecureCookie, "Use secure cookies")
 	listenCmd.Flags().String("db-type", dcfg.DB.Type, "Database type")
 	listenCmd.Flags().String("db-connection", dcfg.DB.Connection, "Database connection string (path for sqlite)")

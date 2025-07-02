@@ -2,8 +2,8 @@ app:
   log_level: "info" # possible values: error, warning, info, debug, trace
   results_per_page: 30
   disable_signup:  false # set to true to restrict user creation to command line
-  # requires Chromium-like browser to be in your $PATH
-  create_bookmark_from_webapp: true # set to false to allow create bookmark/snapshot only from the addon
+  # webapp snapshot creation requires Chromium-like browser to be in your $PATH
+  create_snapshot_from_webapp: false # set to true to allow snapshot server side
   webapp_snapshotter_timeout: 15 # seconds
   debug_sql: false
 server:

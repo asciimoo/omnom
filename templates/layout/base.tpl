@@ -35,9 +35,7 @@
             {{ end }}
             <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "public bookmarks" }}</a>
             {{ if .User }}
-            {{ if .AllowBookmarkCreation }}
             <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">{{ .Tr.Msg "create bookmark" }}</a>
-            {{ end }}
             {{ end }}
         {{ end }}
       </div>
