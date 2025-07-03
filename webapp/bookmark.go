@@ -215,7 +215,6 @@ func createBookmark(c *gin.Context) {
 		c.PostForm("collection"),
 		c.PostForm("unread"),
 	)
-	fmt.Println("YOOOOOOO", c.PostForm("collection"))
 	if err != nil {
 		setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
 		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
