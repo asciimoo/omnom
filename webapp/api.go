@@ -30,7 +30,7 @@ type Endpoint struct {
 	Path         string
 	Method       string
 	AuthRequired bool
-	Handler      gin.HandlerFunc
+	Handler      gin.HandlerFunc `json:"-"`
 	Description  string
 	Args         []*EndpointArg
 	RSS          string
