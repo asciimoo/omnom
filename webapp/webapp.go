@@ -602,7 +602,7 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 		c.Next()
 		err, ok := c.Get("Error")
 		if ok {
-			log.Error().Str("Error", err.(string)).Msg("webapp error")
+			log.Error().Err(err).Msg("webapp error")
 		}
 	}
 }
