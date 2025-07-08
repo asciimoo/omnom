@@ -104,7 +104,12 @@
   <div class="message-header">
     <p>{{ .Tr.Msg "error" }}</p>
   </div>
-  <div class="message-body">{{ .Error | ToHTML }}</div>
+  <div class="message-body">
+      <b>{{ .Error | ToHTML }}</b>
+      {{ if .Message }}
+      <p>{{ .Message }}</p>
+      {{ end }}
+  </div>
 </article>
 {{ end }}
 

@@ -301,6 +301,9 @@ func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
 	} else {
 		h = e.Handler
 	}
+	if len(e.Args) > 0 {
+		h = validateArgsWrapper(h, e.Method, e.Args)
+	}
 	switch e.Method {
 	case GET:
 		r.GET(e.Path, h)
@@ -312,6 +315,31 @@ func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
 		r.PATCH(e.Path, h)
 	case HEAD:
 		r.HEAD(e.Path, h)
+	}
+}
+
+func validateArgsWrapper(h gin.HandlerFunc, method string, args []*EndpointArg) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		for _, a := range args {
+			if !a.Required || a.SkipAutoValidation {
+				continue
+			}
+			val := ""
+			if method == POST {
+				val = c.PostForm(a.Name)
+			}
+			if method == GET {
+				val = c.Query(a.Name)
+			}
+			// TODO type check
+			if val == "" {
+				render(c, http.StatusNotFound, "error", gin.H{
+					"Title": "Missing argument",
+				})
+				return
+			}
+		}
+		h(c)
 	}
 }
 
@@ -602,7 +630,7 @@ func ErrorLoggerMiddleware() gin.HandlerFunc {
 		c.Next()
 		err, ok := c.Get("Error")
 		if ok {
-			log.Error().Err(err).Msg("webapp error")
+			log.Error().Err(err.(error)).Msg("webapp error")
 		}
 	}
 }

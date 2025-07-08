@@ -19,10 +19,11 @@ const (
 )
 
 type EndpointArg struct {
-	Name        string
-	Type        string
-	Required    bool
-	Description string
+	Name               string
+	Type               string
+	Required           bool
+	Description        string
+	SkipAutoValidation bool `json:"-"`
 }
 
 type Endpoint struct {
@@ -405,10 +406,11 @@ func init() {
 					Description: "List of resource metadata containing objects with mimetype, extension and filename information",
 				},
 				&EndpointArg{
-					Name:        "resource[0-9]+",
-					Type:        "multipart files",
-					Required:    true,
-					Description: "Resource files",
+					Name:               "resource[0-9]+",
+					Type:               "multipart files",
+					Required:           true,
+					SkipAutoValidation: true,
+					Description:        "Resource files",
 				},
 			},
 		},
@@ -507,10 +509,11 @@ func init() {
 			Description:  "Inbox for ActivityPub messages",
 			Args: []*EndpointArg{
 				&EndpointArg{
-					Name:        "message",
-					Type:        "JSON",
-					Required:    true,
-					Description: "ActivityPub message",
+					Name:               "message",
+					Type:               "JSON",
+					Required:           true,
+					SkipAutoValidation: true,
+					Description:        "ActivityPub message",
 				},
 			},
 		},
@@ -723,7 +726,7 @@ func init() {
 				&EndpointArg{
 					Name:        "q",
 					Type:        "string",
-					Required:    true,
+					Required:    false,
 					Description: "Search Query",
 				},
 				&EndpointArg{
@@ -789,13 +792,13 @@ func init() {
 				&EndpointArg{
 					Name:        "bids",
 					Type:        "string",
-					Required:    true,
+					Required:    false,
 					Description: "Comma separated list of bookmark IDs",
 				},
 				&EndpointArg{
 					Name:        "fids",
 					Type:        "string",
-					Required:    true,
+					Required:    false,
 					Description: "Comma separated list of feed item IDs",
 				},
 			},
