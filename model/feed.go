@@ -220,7 +220,6 @@ func SearchFeedItems(uid, limit uint, query string, feedID uint, includeRead boo
 		Joins("join feeds on feeds.id == user_feeds.feed_id").
 		Where("user_feed_items.user_id = ?", uid)
 	if feedID != 0 {
-		includeRead = true
 		q = q.Where("user_feeds.id == ?", feedID)
 	}
 	if query != "" {
