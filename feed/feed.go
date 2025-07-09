@@ -228,7 +228,7 @@ func getFeedInfo(u string) (model.FeedType, string, error) {
 	}
 	defer resp.Body.Close()
 	ct := strings.ToLower(resp.Header.Get("Content-Type"))
-	if strings.Contains(ct, "xml") || strings.Contains(ct, "rss") || strings.Contains(ct, "atom") || strings.Contains(ct, "rdf") {
+	if strings.Contains(ct, "xml") || strings.Contains(ct, "rss") || strings.Contains(ct, "atom") || strings.Contains(ct, "rdf") || strings.Contains(ct, "feed+json") {
 		return model.RSSFeed, u, nil
 	}
 	return "", "", errors.New("unknown feed type")
