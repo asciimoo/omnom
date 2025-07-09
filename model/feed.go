@@ -13,8 +13,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type FeedType string
+
 const (
-	RSSFeed = "rss"
+	RSSFeed FeedType = "rss"
 )
 
 type Feed struct {

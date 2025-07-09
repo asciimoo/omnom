@@ -158,23 +158,30 @@ func updateRSSFeed(f *model.Feed) {
 }
 
 func createFeed(name, u string) (*model.Feed, error) {
+	ftype, fu, err := getFeedInfo(u)
+	if err != nil {
+		return nil, err
+	}
 	f := &model.Feed{
 		Name: name,
-		URL:  u,
+		URL:  fu,
 	}
 	// TODO parse feed URL if u's content is HTML
 	// TODO add support for ActivityPub feeds
-	fp := gofeed.NewParser()
-	feed, err := fp.ParseURL(u)
-	if err != nil {
+	switch ftype {
+	case model.RSSFeed:
+		feed, err := createRSSFeed(fu)
+		if err != nil {
+			return nil, err
+		}
+		f.Type = string(model.RSSFeed)
+		if feed.Image != nil {
+			f.Favicon = fetchImageAsInlineURL(feed.Image.URL)
+		} else {
+			f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
+		}
+	default:
 		return nil, errors.New("unsupported feed type; " + err.Error())
-	} else {
-		f.Type = model.RSSFeed
-	}
-	if feed.Image != nil {
-		f.Favicon = fetchImageAsInlineURL(feed.Image.URL)
-	} else {
-		f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
 	}
 	return f, model.DB.Create(f).Error
 }
@@ -192,7 +199,7 @@ func AddFeed(name, u string, uid uint) error {
 	if err != nil {
 		return err
 	}
-	switch f.Type {
+	switch model.FeedType(f.Type) {
 	case model.RSSFeed:
 		updateRSSFeed(f)
 	default:
@@ -212,6 +219,24 @@ func createUserFeed(name string, f *model.Feed, uid uint) error {
 		UserID: uid,
 	}
 	return model.DB.Create(uf).Error
+}
+
+func getFeedInfo(u string) (model.FeedType, string, error) {
+	resp, err := http.Get(u) //nolint: gosec //safe url
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+	ct := strings.ToLower(resp.Header.Get("Content-Type"))
+	if strings.Contains(ct, "xml") || strings.Contains(ct, "rss") || strings.Contains(ct, "atom") || strings.Contains(ct, "rdf") {
+		return model.RSSFeed, u, nil
+	}
+	return "", "", errors.New("unknown feed type")
+}
+
+func createRSSFeed(u string) (*gofeed.Feed, error) {
+	fp := gofeed.NewParser()
+	return fp.ParseURL(u)
 }
 
 func fetchImageAsInlineURL(u string) string {
