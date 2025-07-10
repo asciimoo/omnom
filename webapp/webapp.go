@@ -628,9 +628,9 @@ func CSRFMiddleware() gin.HandlerFunc {
 func ErrorLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
-		err, ok := c.Get("Error")
+		errStr, ok := c.Get("Error")
 		if ok {
-			log.Error().Err(err.(error)).Msg("webapp error")
+			log.Error().Str("error", errStr.(string)).Msg("webapp error")
 		}
 	}
 }
