@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -228,10 +229,64 @@ func getFeedInfo(u string) (model.FeedType, string, error) {
 	}
 	defer resp.Body.Close()
 	ct := strings.ToLower(resp.Header.Get("Content-Type"))
-	if strings.Contains(ct, "xml") || strings.Contains(ct, "rss") || strings.Contains(ct, "atom") || strings.Contains(ct, "rdf") || strings.Contains(ct, "feed+json") {
+	if isRSSFeed(ct) {
 		return model.RSSFeed, u, nil
 	}
+	if strings.Contains(ct, "html") {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "", "", err
+		}
+		return parseHTMLFeedInfo(u, body)
+	}
 	return "", "", errors.New("unknown feed type")
+}
+
+func isRSSFeed(s string) bool {
+	return strings.Contains(s, "xml") || strings.Contains(s, "rss") || strings.Contains(s, "atom") || strings.Contains(s, "rdf") || strings.Contains(s, "feed+json")
+}
+
+func parseHTMLFeedInfo(u string, body []byte) (model.FeedType, string, error) {
+	r := bytes.NewReader(body)
+	doc := html.NewTokenizer(r)
+	pu, err := url.Parse(u)
+	if err != nil {
+		return "", "", err
+	}
+	for {
+		tt := doc.Next()
+		switch tt {
+		case html.ErrorToken:
+			return "", "", errors.New("no feed found")
+		case html.StartTagToken:
+			tn, hasAttr := doc.TagName()
+			if !hasAttr || !bytes.Equal(tn, []byte("link")) {
+				continue
+			}
+			isAlternate := false
+			href := ""
+			ftype := ""
+			for {
+				aName, aVal, moreAttr := doc.TagAttr()
+				if bytes.Equal(aName, []byte("rel")) && bytes.Equal(aVal, []byte("alternate")) {
+					isAlternate = true
+				}
+				if bytes.Equal(aName, []byte("href")) {
+					href = string(aVal)
+				}
+				if bytes.Equal(aName, []byte("type")) {
+					ftype = string(aVal)
+				}
+				if !moreAttr {
+					break
+				}
+			}
+			if isAlternate && href != "" && isRSSFeed(ftype) {
+				return model.RSSFeed, resolveURL(pu, href), nil
+			}
+		}
+	}
+	return "", "", errors.New("no feed found")
 }
 
 func createRSSFeed(u string) (*gofeed.Feed, error) {
