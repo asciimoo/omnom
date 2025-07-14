@@ -80,6 +80,15 @@ func GetFeeds() ([]*Feed, error) {
 	return res, err
 }
 
+func GetFeedItem(fid uint, u string) (*FeedItem, error) {
+	var i *FeedItem
+	err := DB.
+		Model(&FeedItem{}).
+		Where("feed_id = ? AND url = ?", fid, u).
+		First(&i).Error
+	return i, err
+}
+
 func GetUserFeeds(uid uint, unread bool) ([]*UserFeedSummary, error) {
 	var res []*UserFeedSummary
 	q := DB.

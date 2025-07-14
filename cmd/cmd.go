@@ -253,6 +253,7 @@ var updateFeedsCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(0),
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
+		initStorage()
 		err := feed.Update()
 		if err != nil {
 			exit(1, "Failed to update feeds: "+err.Error())

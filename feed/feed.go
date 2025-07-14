@@ -6,20 +6,27 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/asciimoo/omnom/model"
+	"github.com/asciimoo/omnom/storage"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/mmcdole/gofeed"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 var htmlSanitizerPolicy *bluemonday.Policy
+
+const (
+	srcAttr = "src"
+)
 
 func init() {
 	p := bluemonday.NewPolicy()
@@ -91,7 +98,7 @@ func init() {
 		"text-align",
 	).Globally()
 	p.AllowAttrs("href").OnElements("a")
-	p.AllowAttrs("src", "srcset").OnElements("img", "source")
+	p.AllowAttrs(srcAttr, "srcset").OnElements("img", "source")
 	p.AllowAttrs("alt").Globally()
 	p.AllowAttrs("title").Globally()
 	p.RequireParseableURLs(true)
@@ -144,16 +151,26 @@ func updateRSSFeed(f *model.Feed) {
 	}
 	var added int64
 	for _, i := range rss.Items {
-		c := i.Content
-		if c == "" {
-			c = i.Description
+		i.Link = resolveURL(pu, i.Link)
+		fi, err := model.GetFeedItem(f.ID, i.Link)
+		if fi == nil || err != nil {
+			c := i.Content
+			if c == "" {
+				c = i.Description
+			}
+			fi = &model.FeedItem{
+				Title:   i.Title,
+				Content: sanitizeHTML(pu, c),
+				URL:     i.Link,
+				FeedID:  f.ID,
+			}
+			fi.Content, err = saveResources(fi.Content)
+			if err != nil {
+				log.Error().Err(err).Str("feed", f.Name).Str("URL", fi.URL).Msg("Failed to save resources for feed item")
+				continue
+			}
 		}
-		added += model.AddFeedItem(&model.FeedItem{
-			Title:   i.Title,
-			Content: sanitizeHTML(pu, c),
-			URL:     i.Link,
-			FeedID:  f.ID,
-		})
+		added += model.AddFeedItem(fi)
 	}
 	log.Debug().Int64("new items", added).Str("feed", f.Name).Msg("Feed updated")
 }
@@ -340,7 +357,7 @@ func resolveURLs(base *url.URL, h string) string {
 			continue
 		}
 		for i, a := range n.Attr {
-			if a.Key == "src" || a.Key == "href" {
+			if a.Key == srcAttr || a.Key == "href" {
 				n.Attr[i] = html.Attribute{Key: a.Key, Val: resolveURL(base, a.Val)}
 			}
 		}
@@ -371,4 +388,60 @@ func resolveURL(base *url.URL, u string) string {
 	}
 
 	return base.ResolveReference(pu).String()
+}
+
+func saveResources(h string) (string, error) {
+	if h == "" {
+		return "", nil
+	}
+	doc, err := html.Parse(strings.NewReader(h))
+	if err != nil {
+		return "", err
+	}
+	for n := range doc.Descendants() {
+		if n.Type != html.ElementNode || n.DataAtom != atom.Img {
+			continue
+		}
+		for i, a := range n.Attr {
+			if a.Key == srcAttr {
+				key, err := saveResource(a.Val)
+				if err != nil {
+					return "", err
+				}
+				n.Attr[i] = html.Attribute{Key: a.Key, Val: fmt.Sprintf("/static/data/resources/%s/%s", key[:2], key)}
+			}
+		}
+	}
+	var out strings.Builder
+	err = html.Render(&out, doc)
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
+}
+
+func saveResource(u string) (string, error) {
+	resp, err := http.Get(u) //nolint: gosec //safe url
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	mts, err := mime.ExtensionsByType(resp.Header.Get("Content-Type"))
+	if err != nil {
+		return "", err
+	}
+	if len(mts) < 1 {
+		return "", errors.New("failed to identify file extension")
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	key := storage.Hash(body) + mts[0]
+	err = storage.SaveResource(key, body)
+	if err != nil {
+		return "", err
+	}
+	// TODO model.GetOrCreateResource(key, r.Mimetype, r.Filename, size)
+	return key, nil
 }
