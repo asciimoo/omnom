@@ -112,6 +112,22 @@ func init() {
 			Description:  "Destroys user session",
 		},
 		&Endpoint{
+			Name:         "Search",
+			Path:         "/search",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      search,
+			Description:  "Global search",
+			Args: []*EndpointArg{
+				&EndpointArg{
+					Name:        "q",
+					Type:        "string",
+					Required:    false,
+					Description: "Search terms",
+				},
+			},
+		},
+		&Endpoint{
 			Name:         "Snapshots",
 			Path:         "/snapshots",
 			Method:       GET,

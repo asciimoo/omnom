@@ -180,6 +180,7 @@ func apOutboxResponse(c *gin.Context) {
 		notFoundView(c)
 		return
 	}
+	//nolint: gosec // conversion is safe
 	if err := model.DB.Limit(int(resultsPerPage)).Where("bookmarks.public = 1 AND bookmarks.user_id = ?", user.ID).Preload("Tags").Find(&bs).Error; err != nil {
 		log.Error().Err(err).Msg("Failed to count bookmarks")
 		notFoundView(c)

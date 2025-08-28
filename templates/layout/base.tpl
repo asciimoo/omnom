@@ -40,6 +40,20 @@
         {{ end }}
       </div>
       <div class="navbar-end">
+        <form action="{{ URLFor "search" }}">
+            <div class="field is-horizontal navbar-item">
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control has-icons-left">
+                            <input class="input is-outlined is-info" type="search" placeholder="{{ .Tr.Msg "search" }}" name="q" value="{{ or .SearchParams.Q .Query }}" id="search-input">
+                            <span class="icon is-small is-left has-text-info">
+                            <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
         {{ if .User }}
             <a href="{{ URLFor "Profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
               {{ if .AllowManualLogin }}

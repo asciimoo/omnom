@@ -100,7 +100,7 @@ var tplFuncMap = template.FuncMap{
 	},
 }
 
-var resultsPerPage int64 = 20
+var resultsPerPage uint = 20
 
 func addURLParam(base string, param string) string {
 	if strings.Contains(base, "?") {
@@ -180,6 +180,7 @@ func createRenderer(tplFS fs.FS) multitemplate.Renderer {
 	addTemplate(r, tplFS, true, "edit-collection", "edit_collection.tpl")
 	addTemplate(r, tplFS, true, "feeds", "feeds.tpl")
 	addTemplate(r, tplFS, true, "feed-search", "feed_search.tpl")
+	addTemplate(r, tplFS, true, "search", "search.tpl")
 	addTemplate(r, tplFS, true, "edit-feed", "edit_feed.tpl")
 	addTemplate(r, tplFS, true, "user", "user.tpl")
 	addTemplate(r, tplFS, true, "api", "api.tpl")
@@ -491,11 +492,11 @@ func index(c *gin.Context) {
 	render(c, http.StatusOK, "index", nil)
 }
 
-func getPageno(c *gin.Context) int64 {
-	var pageno int64 = 1
+func getPageno(c *gin.Context) uint {
+	var pageno uint = 1
 	if pagenoStr, ok := c.GetQuery("pageno"); ok {
-		if userPageno, err := strconv.Atoi(pagenoStr); err == nil && userPageno > 0 {
-			pageno = int64(userPageno)
+		if userPageno, err := strconv.ParseUint(pagenoStr, 10, 64); err == nil && userPageno > 0 {
+			pageno = uint(userPageno)
 		}
 	}
 	return pageno

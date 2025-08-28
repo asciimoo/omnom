@@ -5,9 +5,12 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"net/url"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type Bookmark struct {
@@ -106,4 +109,28 @@ func GetUnreadBookmarkCount(uid uint) int64 {
 		Where("bookmarks.unread = ?", true).
 		Count(&res)
 	return res
+}
+
+func SearchBookmarks(uid, limit uint, query string) ([]*Bookmark, int64, error) {
+	var res []*Bookmark
+	var resCount int64
+	q := DB.Select("*").Table("bookmarks")
+	if uid == 0 {
+		q = q.Where("bookmarks.public = 1")
+	} else {
+		q = q.Where("bookmarks.public = 1 or bookmarks.user_id = ?", uid)
+	}
+	if query != "" {
+		q = q.Where("bookmarks.title LIKE LOWER(@query) OR bookmarks.notes LIKE LOWER(@query)", sql.Named("query", CreateGlob(query)))
+	}
+	q = q.Session(&gorm.Session{})
+	err := q.Preload("Snapshots").Preload("Tags").Preload("User").Preload("Collection").Order("bookmarks.id asc").Limit(int(limit)).Find(&res).Error //nolint:gosec // TODO
+	if err != nil {
+		return nil, 0, err
+	}
+	err = q.Count(&resCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return res, resCount, nil
 }

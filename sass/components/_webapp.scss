@@ -591,3 +591,11 @@ iframe {
     margin: 1em;
   }
 }
+#search-input {
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--color-menu-white);
+}
+#search-input::placeholder {
+  color: var(--color-menu-white);
+  opacity: 0.6;
+}

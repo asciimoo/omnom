@@ -34,7 +34,7 @@ type Config struct {
 
 type App struct {
 	LogLevel                 string `yaml:"log_level"`
-	ResultsPerPage           int64  `yaml:"results_per_page"`
+	ResultsPerPage           uint   `yaml:"results_per_page"`
 	DisableSignup            bool   `yaml:"disable_signup"`
 	StaticDir                string `yaml:"static_dir"` // Deprecated: use Storage.Filesystem.RootDir instead
 	CreateSnapshotFromWebapp bool   `yaml:"create_snapshot_from_webapp"`

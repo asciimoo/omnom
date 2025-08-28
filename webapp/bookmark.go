@@ -83,6 +83,7 @@ func bookmarks(c *gin.Context) {
 		return
 	}
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.public = 1")
+	//nolint: gosec // uint -> int conversion is safe
 	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Where("bookmarks.public = 1").Preload("Snapshots").Preload("Tags").Preload("User").Preload("Collection")
 	if !reflect.DeepEqual(*sp, searchParams{}) {
 		hasSearch = true
@@ -110,11 +111,12 @@ func bookmarks(c *gin.Context) {
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
-		"HasNextPage":   offset+resultsPerPage < bookmarkCount,
-		"SearchParams":  sp,
-		"HasSearch":     hasSearch,
-		"OrderBy":       orderBy,
-		"FrequentTags":  model.GetFrequentPublicTags(20),
+		//nolint: gosec // conversion is safe
+		"HasNextPage":  offset+resultsPerPage < uint(bookmarkCount),
+		"SearchParams": sp,
+		"HasSearch":    hasSearch,
+		"OrderBy":      orderBy,
+		"FrequentTags": model.GetFrequentPublicTags(20),
 	}
 	render(c, http.StatusOK, "bookmarks", args)
 }
@@ -127,6 +129,7 @@ func myBookmarks(c *gin.Context) {
 	offset := (pageno - 1) * resultsPerPage
 	var bookmarkCount int64
 	cq := model.DB.Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", uid)
+	//nolint: gosec // uint -> int conversion is safe
 	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Model(&model.Bookmark{}).Where("bookmarks.user_id = ?", u.(*model.User).ID).Preload("Snapshots").Preload("Tags").Preload("User").Preload("Collection")
 	sp := &searchParams{}
 	hasSearch := false
@@ -165,10 +168,11 @@ func myBookmarks(c *gin.Context) {
 
 	cols := model.GetCollectionTree(uid)
 	render(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
-		"Bookmarks":         bs,
-		"Pageno":            pageno,
-		"BookmarkCount":     bookmarkCount,
-		"HasNextPage":       offset+resultsPerPage < bookmarkCount,
+		"Bookmarks":     bs,
+		"Pageno":        pageno,
+		"BookmarkCount": bookmarkCount,
+		//nolint: gosec // conversion is safe
+		"HasNextPage":       offset+resultsPerPage < uint(bookmarkCount),
 		"SearchParams":      sp,
 		"HasSearch":         hasSearch,
 		"OrderBy":           orderBy,

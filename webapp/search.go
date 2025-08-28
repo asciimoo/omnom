@@ -7,12 +7,16 @@ package webapp
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +34,39 @@ type searchParams struct {
 	IsPrivate        bool   `form:"private"`
 	SearchInSnapshot bool   `form:"search_in_snapshot"`
 	SearchInNote     bool   `form:"search_in_note"`
+}
+
+func search(c *gin.Context) {
+	q := c.Query("q")
+	if q == "" {
+		return
+	}
+	u, _ := c.Get("user")
+	var uid uint
+	var resCount int64
+	if u != nil {
+		uid = u.(*model.User).ID
+	}
+	cfg, _ := c.Get("config")
+	ipp := cfg.(*config.Config).App.ResultsPerPage
+	fRes, fResCount, err := model.SearchFeedItems(uid, ipp, q, 0, true)
+	if err == nil {
+		resCount += fResCount
+	} else {
+		log.Error().Err(err).Msg("DB error")
+	}
+	bRes, bResCount, err := model.SearchBookmarks(uid, ipp, q)
+	if err == nil {
+		resCount += bResCount
+	} else {
+		log.Error().Err(err).Msg("DB error")
+	}
+	res := mergeUnreadItems(fRes, bRes, ipp)
+	render(c, http.StatusOK, "search", map[string]interface{}{
+		"Items":     res,
+		"ItemCount": resCount,
+		"Query":     q,
+	})
 }
 
 func (s *searchParams) Serialize() string {

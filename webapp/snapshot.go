@@ -306,6 +306,7 @@ func snapshots(c *gin.Context) {
 	offset := (pageno - 1) * resultsPerPage
 	var sc int64
 	//cq := model.DB.Model(&model.Snapshot{}).Where("s.public = 1")
+	//nolint: gosec // uint -> int conversion is safe
 	q := model.DB.Limit(int(resultsPerPage)).Offset(int(offset)).Joins("left join bookmarks on bookmarks.id = snapshots.bookmark_id").Where("bookmarks.url like ?", "%"+qs+"%").Where("bookmarks.public == true or bookmarks.user_id == ?", uid).Preload("Bookmark")
 	cq := model.DB.Model(&model.Snapshot{}).Joins("left join bookmarks on bookmarks.id = snapshots.bookmark_id").Where("bookmarks.url like ?", "%"+qs+"%").Where("bookmarks.public == true or bookmarks.user_id == ?", uid)
 	cq.Count(&sc)
@@ -314,7 +315,8 @@ func snapshots(c *gin.Context) {
 		"Snapshots":     ss,
 		"SnapshotCount": sc,
 		"Pageno":        pageno,
-		"HasNextPage":   offset+resultsPerPage < sc,
+		//nolint: gosec // uint -> int conversion is safe
+		"HasNextPage": offset+resultsPerPage < uint(sc),
 		"SearchParams": searchParams{
 			Q: qs,
 		},

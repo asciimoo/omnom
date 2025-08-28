@@ -109,13 +109,6 @@ func setIntArg(cmd *cobra.Command, arg string, dest *int) {
 	}
 }
 
-func setInt64Arg(cmd *cobra.Command, arg string, dest *int64) {
-	if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
-		//nolint: gosec // conversion is safe. TODO use uint by default
-		*dest = int64(v)
-	}
-}
-
 func setUintArg(cmd *cobra.Command, arg string, dest *uint) {
 	if v, err := cmd.Flags().GetUint(arg); err == nil && cmd.Flags().Changed(arg) {
 		*dest = v
@@ -129,7 +122,7 @@ var listenCmd = &cobra.Command{
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, args []string) {
 		setStrArg(cmd, "address", &cfg.Server.Address)
-		setInt64Arg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
+		setUintArg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
 		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
 		setBoolArg(cmd, "create-snapshot-from-webapp", &cfg.App.CreateSnapshotFromWebapp)
 		setBoolArg(cmd, "secure-cookie", &cfg.Server.SecureCookie)
@@ -187,6 +180,21 @@ var showUserCmd = &cobra.Command{
 			}
 			fmt.Printf("%20s: %v\n", fname, f.Interface())
 		}
+	},
+}
+
+var showUnreadCmd = &cobra.Command{
+	Use:    "show-unread USERNAME",
+	Short:  "show unread details",
+	Long:   `show-unread USERNAME`,
+	Args:   cobra.ExactArgs(1),
+	PreRun: initDB,
+	Run: func(cmd *cobra.Command, args []string) {
+		u := model.GetUser(args[0])
+		if u == nil {
+			exit(1, "Cannot find user")
+		}
+		fmt.Println(model.GetUnreadFeedItemCount(u.ID))
 	},
 }
 
@@ -430,12 +438,12 @@ func init() {
 	rootCmd.AddCommand(createConfigCmd)
 	rootCmd.AddCommand(createBookmarkCmd)
 	rootCmd.AddCommand(updateFeedsCmd)
+	rootCmd.AddCommand(showUnreadCmd)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
 	listenCmd.Flags().String("data-directory", "./static/data", "Data directory location to store snapshots and resources using file system storage")
-	//nolint: gosec // conversion is safe. TODO use uint by default
-	listenCmd.Flags().Uint("results-per-page", uint(dcfg.App.ResultsPerPage), "Number of bookmarks/snapshots per page")
+	listenCmd.Flags().Uint("results-per-page", dcfg.App.ResultsPerPage, "Number of bookmarks/snapshots per page")
 	//nolint: gosec // conversion is safe. TODO use uint by default
 	listenCmd.Flags().Uint("webapp-snapshotter-timeout", uint(dcfg.App.WebappSnapshotterTimeout), "Timeout duration for webapp snapshotter (seconds)")
 	listenCmd.Flags().Bool("create-bookmark-from-webapp", dcfg.App.CreateSnapshotFromWebapp, "Allow creating snapshots from webapp (requires chromium)")
