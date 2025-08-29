@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"maps"
 	"net/http"
 	"net/url"
 	"path"
@@ -66,11 +67,11 @@ var tplFuncMap = template.FuncMap{
 	},
 	"AddURLParam": addURLParam,
 	"Truncate":    truncate,
-	"KVData": func(values ...interface{}) (map[string]interface{}, error) {
+	"KVData": func(values ...any) (map[string]any, error) {
 		if len(values)%2 != 0 {
 			return nil, errors.New("invalid dict call")
 		}
-		dict := make(map[string]interface{}, len(values)/2)
+		dict := make(map[string]any, len(values)/2)
 		for i := 0; i < len(values); i += 2 {
 			key, ok := values[i].(string)
 			if !ok {
@@ -88,7 +89,7 @@ var tplFuncMap = template.FuncMap{
 		}
 		return baseURL(u)
 	},
-	"HasAttr": func(v interface{}, name string) bool {
+	"HasAttr": func(v any, name string) bool {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Ptr {
 			rv = rv.Elem()
@@ -189,7 +190,7 @@ func createRenderer(tplFS fs.FS) multitemplate.Renderer {
 	return r
 }
 
-func render(c *gin.Context, status int, page string, vars map[string]interface{}) {
+func render(c *gin.Context, status int, page string, vars map[string]any) {
 	session := sessions.Default(c)
 	u, _ := c.Get("user")
 	cfg, _ := c.Get("config")
@@ -247,9 +248,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 		fullURL += "?" + c.Request.URL.RawQuery
 	}
 	tplVars["URL"] = fullURL
-	for k, v := range vars {
-		tplVars[k] = v
-	}
+	maps.Copy(tplVars, vars)
 	allowManualLogin := true
 	if cfg.(*config.Config).Server.RemoteUserHeader != "" {
 		allowManualLogin = false
@@ -266,7 +265,7 @@ func render(c *gin.Context, status int, page string, vars map[string]interface{}
 	c.HTML(status, page, tplVars)
 }
 
-func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
+func renderJSON(c *gin.Context, status int, vars map[string]any) {
 	delete(vars, "DisableSignup")
 	delete(vars, "OAuth")
 	delete(vars, "Tr")
@@ -274,7 +273,7 @@ func renderJSON(c *gin.Context, status int, vars map[string]interface{}) {
 	c.IndentedJSON(status, vars)
 }
 
-func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
+func renderRSS(c *gin.Context, status int, vars map[string]any) {
 	k, ok := c.Get("RSS")
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -284,7 +283,7 @@ func renderRSS(c *gin.Context, status int, vars map[string]interface{}) {
 		return
 	}
 	c.Header("Content-Type", "application/rss+xml; charset=utf-8")
-	tplVars := map[string]interface{}{
+	tplVars := map[string]any{
 		"RSS":  vars[k.(string)],
 		"Type": k.(string),
 		"FullURL": func(u string) string {
@@ -418,8 +417,8 @@ func createEngine(cfg *config.Config) *gin.Engine {
 }
 
 func openStaticFS(name string, staticfs fs.FS, snapshotfs fs.FS) (fs.File, bool, error) {
-	if strings.HasPrefix(name, "data/") {
-		name := strings.TrimPrefix(name, "data/")
+	if after, ok := strings.CutPrefix(name, "data/"); ok {
+		name := after
 		f, err := snapshotfs.Open(name)
 		return f, true, err
 	}

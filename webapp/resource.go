@@ -92,7 +92,7 @@ func addResource(c *gin.Context) {
 		}
 	}
 	model.DB.Save(s)
-	c.JSON(200, map[string]interface{}{
+	c.JSON(200, map[string]any{
 		"success": true,
 	})
 }

@@ -74,7 +74,7 @@ func Init(c *config.Config) error {
 	return nil
 }
 
-func Send(to string, subject string, msgType string, args map[string]interface{}) error {
+func Send(to string, subject string, msgType string, args map[string]any) error {
 	if disabled {
 		return nil
 	}
@@ -116,7 +116,7 @@ func SetSender(s string) {
 	sender = s
 }
 
-func (t *Templates) RenderHTML(tname string, args map[string]interface{}) (string, error) {
+func (t *Templates) RenderHTML(tname string, args map[string]any) (string, error) {
 	m := templates.HTML.Lookup(tname + ".html.tpl")
 	if m == nil {
 		return "", ErrTemplateNotFound
@@ -133,7 +133,7 @@ func (t *Templates) RenderHTML(tname string, args map[string]interface{}) (strin
 	return s, nil
 }
 
-func (t *Templates) RenderText(tname string, args map[string]interface{}) (string, error) {
+func (t *Templates) RenderText(tname string, args map[string]any) (string, error) {
 	m := templates.Text.Lookup(tname + ".txt.tpl")
 	if m == nil {
 		return "", ErrTemplateNotFound

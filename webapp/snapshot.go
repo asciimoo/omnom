@@ -87,7 +87,7 @@ func snapshotWrapper(c *gin.Context) {
 		setNotification(c, nError, err.Error(), false)
 		return
 	}
-	render(c, http.StatusOK, "snapshot-wrapper", map[string]interface{}{
+	render(c, http.StatusOK, "snapshot-wrapper", map[string]any{
 		"Bookmark":       b,
 		"Snapshot":       s,
 		"hideFooter":     true,
@@ -147,7 +147,7 @@ func downloadSnapshot(c *gin.Context) {
 			}
 		case html.EndTagToken:
 			tn, _ := doc.TagName()
-			if !writeBytes(c.Writer, []byte(fmt.Sprintf(`</%s>`, tn))) {
+			if !writeBytes(c.Writer, fmt.Appendf(nil, `</%s>`, tn)) {
 				return
 			}
 		}
@@ -157,7 +157,7 @@ func downloadSnapshot(c *gin.Context) {
 func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 	for {
 		aName, aVal, moreAttr := doc.TagAttr()
-		if !writeBytes(out, []byte(fmt.Sprintf(` %s="`, aName))) {
+		if !writeBytes(out, fmt.Appendf(nil, ` %s="`, aName)) {
 			return
 		}
 		if attributeHasResource(tagName, aName, aVal) {
@@ -168,7 +168,7 @@ func generateTagAttributes(tagName []byte, doc *html.Tokenizer, out io.Writer) {
 				gres, err := gzip.NewReader(res)
 				if err == nil {
 					ext := filepath.Ext(href)
-					if !writeBytes(out, []byte(fmt.Sprintf("data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0]))) {
+					if !writeBytes(out, fmt.Appendf(nil, "data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])) {
 						return
 					}
 					if ext == ".css" {
@@ -214,7 +214,7 @@ func generateCSS(in io.Reader) io.Reader {
 				res, err := storage.GetResource(filepath.Base(href))
 				if err == nil {
 					defer res.Close()
-					writeBytes(out, []byte(fmt.Sprintf("url(\"data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0])))
+					writeBytes(out, fmt.Appendf(nil, "url(\"data:%s;base64,", strings.Split(mime.TypeByExtension(ext), ";")[0]))
 					err := writeB64(res, out)
 					if err != nil {
 						log.Error().Err(err).Msg("CSS IO error")
@@ -311,7 +311,7 @@ func snapshots(c *gin.Context) {
 	cq := model.DB.Model(&model.Snapshot{}).Joins("left join bookmarks on bookmarks.id = snapshots.bookmark_id").Where("bookmarks.url like ?", "%"+qs+"%").Where("bookmarks.public == true or bookmarks.user_id == ?", uid)
 	cq.Count(&sc)
 	q.Order("snapshots.created_at").Find(&ss)
-	render(c, http.StatusOK, "snapshots", map[string]interface{}{
+	render(c, http.StatusOK, "snapshots", map[string]any{
 		"Snapshots":     ss,
 		"SnapshotCount": sc,
 		"Pageno":        pageno,
@@ -369,7 +369,7 @@ func snapshotDetails(c *gin.Context) {
 		}
 		rs[mType][mSubtype] = append(rs[mType][mSubtype], v)
 	}
-	render(c, http.StatusOK, "snapshot-details", map[string]interface{}{
+	render(c, http.StatusOK, "snapshot-details", map[string]any{
 		"Snapshot":      s,
 		"Resources":     rs,
 		"ResourceCount": len(res),

@@ -83,7 +83,7 @@ func (l *Localizer) Msg(msg string) string {
 	return tm
 }
 
-func (l *Localizer) Data(msg string, data map[string]interface{}) string {
+func (l *Localizer) Data(msg string, data map[string]any) string {
 	m := &i18n.LocalizeConfig{
 		MessageID:    msg,
 		TemplateData: data,

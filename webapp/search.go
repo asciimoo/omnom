@@ -62,7 +62,7 @@ func search(c *gin.Context) {
 		log.Error().Err(err).Msg("DB error")
 	}
 	res := mergeUnreadItems(fRes, bRes, ipp)
-	render(c, http.StatusOK, "search", map[string]interface{}{
+	render(c, http.StatusOK, "search", map[string]any{
 		"Items":     res,
 		"ItemCount": resCount,
 		"Query":     q,

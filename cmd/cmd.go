@@ -474,10 +474,10 @@ func init() {
 
 	out := zerolog.ConsoleWriter{
 		Out: os.Stderr,
-		FormatTimestamp: func(i interface{}) string {
+		FormatTimestamp: func(i any) string {
 			return i.(string)
 		},
-		FormatLevel: func(i interface{}) string {
+		FormatLevel: func(i any) string {
 			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
 		},
 	}

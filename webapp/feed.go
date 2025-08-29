@@ -34,7 +34,7 @@ func feeds(c *gin.Context) {
 	fis := model.GetUnreadFeedItems(uid, ipp)
 	bis := model.GetUnreadBookmarkItems(uid, ipp)
 	is := mergeUnreadItems(fis, bis, ipp)
-	render(c, http.StatusOK, "feeds", map[string]interface{}{
+	render(c, http.StatusOK, "feeds", map[string]any{
 		"Feeds":           fs,
 		"UnreadItems":     is,
 		"UnreadItemCount": model.GetUnreadFeedItemCount(uid) + model.GetUnreadBookmarkCount(uid),
@@ -79,7 +79,7 @@ func searchFeedItems(c *gin.Context) {
 			}
 		}
 	}
-	render(c, http.StatusOK, "feed-search", map[string]interface{}{
+	render(c, http.StatusOK, "feed-search", map[string]any{
 		"Feeds":       fs,
 		"Items":       res,
 		"ItemCount":   resCount,
@@ -113,7 +113,7 @@ func editFeedForm(c *gin.Context) {
 	if err != nil || f == nil {
 		return
 	}
-	render(c, http.StatusOK, "edit-feed", map[string]interface{}{
+	render(c, http.StatusOK, "edit-feed", map[string]any{
 		"Feed": f,
 	})
 }
@@ -132,7 +132,7 @@ func editFeed(c *gin.Context) {
 	} else {
 		setNotification(c, nError, "Failed to save feed", true)
 	}
-	render(c, http.StatusOK, "edit-feed", map[string]interface{}{
+	render(c, http.StatusOK, "edit-feed", map[string]any{
 		"Feed": f,
 	})
 }

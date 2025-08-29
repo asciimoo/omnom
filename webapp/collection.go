@@ -55,7 +55,7 @@ func saveCollection(c *gin.Context) {
 func showCollections(c *gin.Context) {
 	u := model.GetUserBySubmissionToken(c.PostForm("token"))
 	if u == nil {
-		c.IndentedJSON(http.StatusOK, make([]interface{}, 0))
+		c.IndentedJSON(http.StatusOK, make([]any, 0))
 		return
 	}
 	c.IndentedJSON(http.StatusOK, model.GetCollections(u.ID))

@@ -85,7 +85,7 @@ func signup(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
-	tplVars := map[string]interface{}{
+	tplVars := map[string]any{
 		"OAuthID":       session.Get("oauth_id"),
 		"OAuthEmail":    session.Get("oauth_email"),
 		"OAuthUsername": session.Get("oauth_username"),
@@ -140,7 +140,7 @@ func signup(c *gin.Context) {
 				*u.Email,
 				"Successful registration to Omnom",
 				"login",
-				map[string]interface{}{
+				map[string]any{
 					"Token":    u.LoginToken,
 					"Username": u.Username,
 					"URL":      fmt.Sprintf("%s?token=%s", getFullURL(c, URLFor("Login")), u.LoginToken),
@@ -183,7 +183,7 @@ func login(c *gin.Context) {
 				*u.Email,
 				fmt.Sprintf("Omnom login verification for %s", u.Username),
 				"login",
-				map[string]interface{}{
+				map[string]any{
 					"Token":    u.LoginToken,
 					"Username": u.Username,
 					"URL":      fmt.Sprintf("%s?token=%s", getFullURL(c, URLFor("Login")), u.LoginToken),
@@ -243,7 +243,7 @@ func logout(c *gin.Context) {
 
 func profile(c *gin.Context) {
 	u, _ := c.Get("user")
-	tplData := map[string]interface{}{}
+	tplData := map[string]any{}
 	if u == nil {
 		c.Redirect(http.StatusFound, baseURL("/"))
 		return

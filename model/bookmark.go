@@ -74,7 +74,7 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 	}
 	if tags != "" {
 		b.Tags = make([]Tag, 0, 8)
-		for _, t := range strings.Split(tags, ",") {
+		for t := range strings.SplitSeq(tags, ",") {
 			t = strings.TrimSpace(t)
 			b.Tags = append(b.Tags, GetOrCreateTag(t))
 		}

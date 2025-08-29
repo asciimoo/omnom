@@ -140,7 +140,7 @@ type apInboxRequestObject struct {
 
 type apContext struct {
 	ID    string
-	Parts []interface{}
+	Parts []any
 }
 
 type apFollowResponseItem struct {
@@ -268,7 +268,7 @@ func apIdentityResponse(c *gin.Context, user *model.User) {
 	}
 	j, err := json.Marshal(apIdentity{
 		Context: &apContext{
-			Parts: []interface{}{
+			Parts: []any{
 				"https://www.w3.org/ns/activitystreams",
 				"https://w3id.org/security/v1",
 			},
@@ -497,7 +497,7 @@ func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
 	}
 	signature := sigParts[3]
 	sigHeaders := make([]string, 0, 3)
-	for _, h := range strings.Split(sigParts[2], " ") {
+	for h := range strings.SplitSeq(sigParts[2], " ") {
 		if h == "(request-target)" {
 			method := strings.ToLower(c.Request.Method)
 			// TODO perhaps it is better to use the path information from
@@ -566,7 +566,7 @@ func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey)
 	d := time.Now().UTC().Format(http.TimeFormat)
 	hash := sha256.Sum256(data)
 	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(hash[:]))
-	sigData := []byte(fmt.Sprintf("(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", u.Path, u.Host, d, digest))
+	sigData := fmt.Appendf(nil, "(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", u.Path, u.Host, d, digest)
 	sigHash := sha256.Sum256(sigData)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
 	if err != nil {
@@ -611,7 +611,7 @@ func apFetchActor(us string, keyID string, key *rsa.PrivateKey) (*apIdentity, er
 		return nil, err
 	}
 	d := time.Now().UTC().Format(http.TimeFormat)
-	sigData := []byte(fmt.Sprintf("(request-target): get %s\nhost: %s\ndate: %s", u.Path, u.Host, d))
+	sigData := fmt.Appendf(nil, "(request-target): get %s\nhost: %s\ndate: %s", u.Path, u.Host, d)
 	sigHash := sha256.Sum256(sigData)
 	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
 	if err != nil {
@@ -686,7 +686,7 @@ func (c *apContext) UnmarshalJSON(data []byte) error {
 		return json.Unmarshal(data, &c.ID)
 	}
 	if data[0] == '[' && data[len(data)-1] == ']' {
-		d := []interface{}{}
+		d := []any{}
 		err := json.Unmarshal(data, &d)
 		c.Parts = d
 		return err

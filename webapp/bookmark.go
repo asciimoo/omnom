@@ -107,7 +107,7 @@ func bookmarks(c *gin.Context) {
 		q = q.Order("bookmarks.updated_at desc")
 	}
 	q.Find(&bs)
-	args := map[string]interface{}{
+	args := map[string]any{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
@@ -167,7 +167,7 @@ func myBookmarks(c *gin.Context) {
 	q.Find(&bs)
 
 	cols := model.GetCollectionTree(uid)
-	render(c, http.StatusOK, "my-bookmarks", map[string]interface{}{
+	render(c, http.StatusOK, "my-bookmarks", map[string]any{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
 		"BookmarkCount": bookmarkCount,
@@ -339,7 +339,7 @@ func addBookmark(c *gin.Context) {
 	snapshotFile, _, err := c.Request.FormFile("snapshot")
 	if err != nil {
 		log.Debug().Msg("No snpashot found")
-		c.JSON(http.StatusOK, map[string]interface{}{
+		c.JSON(http.StatusOK, map[string]any{
 			"success":      true,
 			"bookmark_url": baseURL(fmt.Sprintf("/bookmark?id=%d", b.ID)),
 		})
@@ -381,7 +381,7 @@ func addBookmark(c *gin.Context) {
 		sSize = s.Size
 		sKey = key
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
+	c.JSON(http.StatusOK, map[string]any{
 		"success":       true,
 		"bookmark_url":  baseURL(fmt.Sprintf("/bookmark?id=%d", b.ID)),
 		"snapshot_url":  baseURL(fmt.Sprintf("/static/data/snapshots/%s/%s.gz", sKey[:2], sKey)),
@@ -391,7 +391,7 @@ func addBookmark(c *gin.Context) {
 }
 
 func checkBookmark(c *gin.Context) {
-	resp := make(map[string]interface{})
+	resp := make(map[string]any)
 	tok, ok := c.GetQuery("token")
 	if !ok {
 		resp["error"] = "missing token"
@@ -436,7 +436,7 @@ func viewBookmark(c *gin.Context) {
 	if !b.Public && (u == nil || u.(*model.User).ID != b.UserID) {
 		return
 	}
-	render(c, http.StatusOK, "view-bookmark", map[string]interface{}{
+	render(c, http.StatusOK, "view-bookmark", map[string]any{
 		"Bookmark": b,
 	})
 }
@@ -461,7 +461,7 @@ func editBookmark(c *gin.Context) {
 	if b.Collection != nil {
 		col = b.Collection.Name
 	}
-	render(c, http.StatusOK, "edit-bookmark", map[string]interface{}{
+	render(c, http.StatusOK, "edit-bookmark", map[string]any{
 		"Bookmark":          b,
 		"Collections":       cols,
 		"CurrentCollection": col,
