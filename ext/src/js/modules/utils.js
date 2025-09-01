@@ -204,6 +204,21 @@ async function validateOptions(serverUrl, token) {
     });
 }
 
+function getOmnomSettings(cb) {
+    chrome.storage.local.get(['omnom_url', 'omnom_token', 'omnom_public'], function(data) {
+        if(!data['omnom_url']) {
+            data['omnom_url'] = '';
+        }
+        if(!data['omnom_token']) {
+            data['omnom_token'] = '';
+        }
+        if(!data['omnom_public']) {
+            data['omnom_public'] = false;
+        }
+        cb(data);
+    });
+}
+
 export {
     UrlResolver,
     absoluteURL,
@@ -215,6 +230,7 @@ export {
     copyScript,
     executeScriptToPromise,
     fullURL,
+    getOmnomSettings,
     getOmnomToken,
     getOmnomUrl,
     getSiteUrl,

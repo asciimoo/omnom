@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 import {
+    getOmnomSettings,
     renderError,
     renderSuccess,
     validateOptions
@@ -60,9 +61,9 @@ export default function () {
     function restoreOptions() {
         const optionsElement = document.getElementById('omnom-options');
         if (optionsElement) {
-            chrome.storage.local.get(['omnom_url', 'omnom_token', 'omnom_public'], function (data) {
-                document.querySelector('#url').value = data.omnom_url || '';
-                document.querySelector('#token').value = data.omnom_token || '';
+            getOmnomSettings(function (data) {
+                document.querySelector('#url').value = data.omnom_url;
+                document.querySelector('#token').value = data.omnom_token;
                 document.querySelector('#public').checked = data.omnom_public;
                 isFormValid();
             });

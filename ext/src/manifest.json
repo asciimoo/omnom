@@ -1,6 +1,6 @@
 {
 	"name": "omnom",
-	"version": "0.23.0",
+	"version": "0.24.0",
 	"manifest_version": 3,
 	"description": "Bookmarking & snapshotting extension for omnom services.",
 	"content_scripts": [
@@ -32,6 +32,9 @@
 		"page": "options.html",
 		"open_in_tab": true
 	},
+	"externally_connectable": {
+		"matches": ["http://*/*", "https://*/*"]
+	},
     "host_permissions": [
         "*://*/*"
 	],
@@ -39,5 +42,6 @@
 		"activeTab",
 		"storage",
         "scripting"
-    ]
+    ],
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAliCrON1ieSLUILRxIQwXyU8tli2WoTezCqbE2YHdMZ9cA2E9/WctA/KjaFf/z/n2WBXJNHbPpkeABHoOazqKqCY01unRMT3Me6Uw3cHNlKr5AKxh7nbDA1VeMzbGeyQQHwnfofQvVB2FnyAsqHs4eqGvgCZBjQI/ruSEAKNlu9rE9Gt78Uzxk5LNtrlNWbSIELk/nCGx9bK9T1DB59PxeigcKlIkAok10YVAghgQ1jomoeQhGRYA3Vhu5nM76yB4D5F1uL/Do8Vgrs6NPQrAWX9Kxl4Xe/RUgPSaGSffYnpc1F3+bR5yskDoThwuaUikFs2EcUooeBNkGc5jelTw8QIDAQAB"
 }

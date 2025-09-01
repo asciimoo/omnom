@@ -11,6 +11,9 @@
     {{ block "head" . }} {{ end }}
 </head>
 <body id="omnom-webapp">
+<input type="hidden" id="has_user" value="{{ if .User }}1{{ else }}0{{ end }}" />
+<input type="hidden" id="base_url" value="{{ BaseURL "/" }}" />
+<div id="modal" class="modal"></div>
 <div class="webapp__content {{ block "content-class" . }}{{ end }}">
 <nav class="navbar {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
   <div class="navbar__container{{ if ne .Page "index" }} shadow-bottom{{ end }}">
@@ -110,6 +113,15 @@
 </footer>
 {{ end }}
 </div>
+<template id="tpl-modal">
+    <div class="modal-background"></div>
+    <div class="modal-content card p-5">
+        <h2 class="title is-4">{{/* .Tr.Msg "XY" */}}</h2>
+        <button class="button tpl-yes is-large">{{/* .Tr.Msg "Yes" */}}</button>
+        <button class="button tpl-no is-large" aria-label="close">{{/* .Tr.Msg "No" */}}</button>
+    </div>
+</template>
+<script src="{{ BaseURL "/static/js/site.js" }}"></script>
 </body>
 </html>
 

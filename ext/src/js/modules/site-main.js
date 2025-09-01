@@ -46,6 +46,20 @@ async function handleGetDomMessage(msg, commChan) {
     }
 }
 
+// messages from background.js
+chrome.runtime.onMessage.addListener(function(msg) {
+    if(msg.action != "verify-settings-save") {
+        return;
+    }
+    if(confirm("Do you want to use this account from your Omnom extension?")) {
+        chrome.runtime.sendMessage({"action": "accept-settings"});
+    } else {
+        // TODO do not display this message again
+        chrome.runtime.sendMessage({"action": "reject-settings"});
+    }
+});
+
 export default function () {
     initComms();
+
 }
