@@ -60,8 +60,8 @@ var tplFuncMap = template.FuncMap{
 	"Replace":    strings.ReplaceAll,
 	"ToLower":    strings.ToLower,
 	"Capitalize": strings.Title,
-	"inc":        func(i int64) int64 { return i + 1 },
-	"dec":        func(i int64) int64 { return i - 1 },
+	"inc":        func(i uint) uint { return i + 1 },
+	"dec":        func(i uint) uint { return i - 1 },
 	"SnapshotURL": func(key string) string {
 		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
 	},
