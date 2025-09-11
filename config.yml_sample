@@ -17,6 +17,9 @@ server:
 db:
   type: "sqlite"
   connection: "./db.sqlite3"
+  # or use postgresql:
+  #type: "postgresql"
+  #connection: "host=localhost user=omnom password=omnom dbname=omnom port=5432 sslmode=disable TimeZone=Europe/Budapest"
 storage:
   fs:
     root_dir: "./static/data"

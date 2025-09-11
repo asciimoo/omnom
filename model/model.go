@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	//"gorm.io/driver/postgres"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 )
 
@@ -28,18 +28,18 @@ func Init(c *config.Config) error {
 	}
 	var err error
 	switch c.DB.Type {
-	case "sqlite":
+	case "sqlite", "sqlite3":
 		DB, err = gorm.Open(sqlite.Open(c.DB.Connection), dbCfg)
 		if err != nil {
 			return err
 		}
+	case "postgresql", "postgres", "psql":
+		DB, err = gorm.Open(postgres.Open(c.DB.Connection), dbCfg)
+		if err != nil {
+			return err
+		}
 	default:
-		return fmt.Errorf("unknown database type")
-		//dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Europe/Budapest"
-		//DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-		//if err != nil {
-		//	panic(err)
-		//}
+		return fmt.Errorf("unknown database type: %s", c.DB.Type)
 	}
 	err = migrate()
 	if err != nil {
@@ -53,7 +53,15 @@ func Init(c *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup join table for users and feed items: %w", err)
 	}
-	err = DB.AutoMigrate(
+	err = automigrate()
+	if err != nil {
+		return fmt.Errorf("auto migration of database '%s' has failed: %w", c.DB.Connection, err)
+	}
+	return nil
+}
+
+func automigrate() error {
+	return DB.AutoMigrate(
 		&User{},
 		&Bookmark{},
 		&Snapshot{},
@@ -68,10 +76,6 @@ func Init(c *config.Config) error {
 		&UserFeed{},
 		&UserFeedItem{},
 	)
-	if err != nil {
-		return fmt.Errorf("auto migration of database '%s' has failed: %w", c.DB.Connection, err)
-	}
-	return nil
 }
 
 type Database struct {
