@@ -383,13 +383,12 @@ iframe {
             padding-left: 3em;
         }
 
-        i {
-            margin-left: 1rem;
+        i, a {
             color: var(--color-gray);
         }
 
         a {
-            color: var(--color-gray);
+            margin-left: 1rem;
         }
         details {
           position: relative;
@@ -598,4 +597,7 @@ iframe {
 #search-input::placeholder {
   color: var(--color-menu-white);
   opacity: 0.6;
+}
+.navbar a:focus-visible, .navbar input:focus-visible {
+  outline: 2px solid blue;
 }

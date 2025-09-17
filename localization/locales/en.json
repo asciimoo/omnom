@@ -112,5 +112,7 @@
     "search results": "Search results",
     "feed search": "Feed search",
     "unread": "Unread",
-    "sign up": "Sign up"
+    "sign up": "Sign up",
+    "view": "View",
+    "favicon of": "Favicon of {{.Title}}"
 }

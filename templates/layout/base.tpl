@@ -189,7 +189,7 @@
         <div class="bookmark__favicon">
             <span class="icon">
             {{ if .Bookmark.Favicon }}
-              <img src="{{ .Bookmark.Favicon | ToURL }}" alt="favicon" />
+              <img src="{{ .Bookmark.Favicon | ToURL }}" alt="{{ .Tr.Msgf "favicon of" "Title" .Bookmark.Title }}" />
             {{ end }}
             </span>
         </div>
@@ -202,7 +202,7 @@
                   <span class="has-text-black">{{ .Bookmark.CreatedAt | ToDate }}</span>
                   <a href="{{ URLFor "User" .Bookmark.User.Username }}">@{{ .Bookmark.User.Username }}</span></a>
                   {{ if and (eq .Bookmark.UserID $.UID) (ne .Bookmark.Collection nil) .Bookmark.Collection.ID }}
-                  <a href="{{ URLFor "my bookmarks" }}?collection={{ .Bookmark.Collection.Name }}"><span class="icon"><i class="fas fa-folder"></i></span>{{ .Bookmark.Collection.Name }}</a>
+                  <a href="{{ URLFor "my bookmarks" }}?collection={{ .Bookmark.Collection.Name }}" title="{{ .Tr.Msg "collection" }}"><span class="icon"><i class="fas fa-folder"></i></span>{{ .Bookmark.Collection.Name }}</a>
                   {{ end }}
                   {{ if .Bookmark.Tags }}
                   <span class="bookmark__tags">
@@ -240,13 +240,9 @@
         </details>
         {{ end }}
           <span class="tag">{{ if .Bookmark.Public }}{{ .Tr.Msg "public" }}{{ else }}{{ .Tr.Msg "private" }}{{ end }}</span>
-          <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}">
-              <i class="fas fa-eye"></i>
-          </a>
+          <a href="{{ URLFor "Bookmark" }}?id={{ .Bookmark.ID }}" title="{{ .Tr.Msg "view" }}"><i class="fas fa-eye"></i></a>
           {{ if eq .UID .Bookmark.UserID }}
-          <a href="{{ URLFor "Edit bookmark" }}?id={{ .Bookmark.ID }}">
-              <i class="fas fa-pencil-alt"></i>
-          </a>
+          <a href="{{ URLFor "Edit bookmark" }}?id={{ .Bookmark.ID }}" title="{{ .Tr.Msg "edit" }}"><i class="fas fa-pencil-alt"></i></a>
           {{ end }}
           <!--<i class="fas fa-heart"></i>
           <i class="fas fa-share-alt"></i>-->

@@ -5,7 +5,6 @@
 package webapp
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -25,6 +24,7 @@ import (
 	"github.com/asciimoo/omnom/static"
 	"github.com/asciimoo/omnom/storage"
 	"github.com/asciimoo/omnom/templates"
+	"github.com/asciimoo/omnom/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -67,21 +67,8 @@ var tplFuncMap = template.FuncMap{
 	},
 	"AddURLParam": addURLParam,
 	"Truncate":    truncate,
-	"KVData": func(values ...any) (map[string]any, error) {
-		if len(values)%2 != 0 {
-			return nil, errors.New("invalid dict call")
-		}
-		dict := make(map[string]any, len(values)/2)
-		for i := 0; i < len(values); i += 2 {
-			key, ok := values[i].(string)
-			if !ok {
-				return nil, errors.New("dict keys must be strings")
-			}
-			dict[key] = values[i+1]
-		}
-		return dict, nil
-	},
-	"FormatSize": formatSize,
+	"KVData":      utils.KVData,
+	"FormatSize":  formatSize,
 	"ResourceURL": func(s string) string {
 		u, full := storage.GetResourceURL(s)
 		if full {

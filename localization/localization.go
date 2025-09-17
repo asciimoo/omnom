@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/asciimoo/omnom/utils"
+
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
@@ -83,7 +85,12 @@ func (l *Localizer) Msg(msg string) string {
 	return tm
 }
 
-func (l *Localizer) Data(msg string, data map[string]any) string {
+func (l *Localizer) Msgf(msg string, values ...any) string {
+	data, err := utils.KVData(values...)
+	if err != nil {
+		log.Debug().Err(err).Str("id", msg).Msg("Invalid translation data")
+		return msg
+	}
 	m := &i18n.LocalizeConfig{
 		MessageID:    msg,
 		TemplateData: data,
@@ -92,7 +99,7 @@ func (l *Localizer) Data(msg string, data map[string]any) string {
 	if err != nil {
 		tem, err := defaultLocalizer.l.Localize(m)
 		if err != nil {
-			log.Debug().Err(err).Str("id", msg).Msg("Missing translation")
+			log.Debug().Err(err).Str("id", msg).Msg("Missing or invalid translation")
 			return msg
 		}
 		return tem
