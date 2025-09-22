@@ -188,7 +188,7 @@ function populateCollections() {
             o.setAttribute('value', col.id);
             el.querySelector("select").appendChild(o);
         }
-    });
+    }).catch(error => console.log("error while fetching collections:", error));
 }
 
 /* ---------------------------------*

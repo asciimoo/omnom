@@ -9,8 +9,8 @@
         justify-content: space-between;
         width: 100%;
         font-size: 1.1rem;
-        color: $secondary-color;
-        border-bottom: 1px solid $tertiary-color;
+        color: --var(secondary-color);
+        border-bottom: 1px solid --var(tertiary-color);
         padding-bottom: 0.4rem;
         margin-bottom: 1rem;
     }
@@ -30,8 +30,9 @@
         }
 
         button,.input-small {
-            color: $secondary-color;
-            border-color: $secondary-color;
+            color: #fff;
+            border-color: #fff;
+            background-color: transparent;
         }
     }
 
@@ -47,7 +48,7 @@
 
     .plus-icon {
         margin: 0 0.5rem;
-        color: $tertiary-color;
+        color: --var(tertiary-color);
     }
 
     .input-small {
@@ -56,7 +57,7 @@
 }
 .options-page__container {
     .button.is-primary, .button.is-primary:hover {
-        color: $color-white;
-        border-color: $primary-color;
-    }    
+        color: --var(color-white);
+        border-color: --var(primary-color);
+    }
 }

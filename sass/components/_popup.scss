@@ -1,6 +1,14 @@
-#popup {
-    height: 99%;
-    border: 1px solid $primary-color;
+body, input, select, textarea {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+body {
+    height: 100%;
+}
+
+input, select, textarea {
+  border: 1px solid var(--color-black);
 }
 
 input[type="submit"] {
@@ -11,7 +19,7 @@ input[type="submit"] {
 
     &__container {
         input[type="text"], input:not([type]), textarea {
-            padding: 0.4em;
+            padding: 0.2em 0.4em;
             width: 100%;
         }
 
@@ -20,8 +28,9 @@ input[type="submit"] {
             width: 100%;
         }
         width: 22rem;
-        padding: 0.2rem 1.5rem 0.5rem 1.5rem;
         font-size: 100% !important;
+        border: 1px solid var(--primary-color);
+        min-height: 100%;
 
         h2 {
             font-size: $small-font;
@@ -34,6 +43,8 @@ input[type="submit"] {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 0 1em;
+        background: linear-gradient(90deg, var(--alternative-color) 10%, rgba(52,121,134,1) 100%);
 
         button {
           padding: 0.2em;
@@ -41,7 +52,10 @@ input[type="submit"] {
     }
 
     &__title {
-        @extend %omnomTitle;
+      span {
+        color: #fff;
+      }
+      @extend %omnomTitle;
     }
 
     &__form {
@@ -54,7 +68,7 @@ input[type="submit"] {
           margin: 0.4em;
           padding: 0.2em;
           display: inline-block;
-          border: 1px solid $primary-color;
+          border: 1px solid var(--primary-color);
         }
     }
 
@@ -66,8 +80,11 @@ input[type="submit"] {
         gap: 5px;
 
         .button {
-            border-color: $secondary-color;
-            color: $secondary-color;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            color: #fff;
+            padding: 0.5em;
+            background-color: rgba(0, 0, 0, 0.2);
         }
     }
 
@@ -80,10 +97,13 @@ input[type="submit"] {
 
         .button.is-primary,
         .button.is-primary:hover {
-            background-color: $primary-color;
-            color: $color-white;
+            background-color: var(--primary-color-light);
         }
     }
+}
+
+#omnom-content {
+  padding: 0.2rem 1rem 0.5rem 1rem;
 }
 
 .hidden {
@@ -92,7 +112,13 @@ input[type="submit"] {
 .error {
   font-size: 1.2em;
   text-align: center;
-  background: $color-muted-red;
-  border: 2px solid $color-red;
+  background: var(--color-muted-red);
+  border: 2px solid var(--color-red);
   padding: 1em;
+}
+a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, label:focus-visible {
+  outline: 2px solid var(--primary-color);
+}
+.field-row {
+  margin-top: 0;
 }
