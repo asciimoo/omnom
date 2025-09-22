@@ -11,6 +11,10 @@ input, select, textarea {
   border: 1px solid var(--color-black);
 }
 
+a {
+  color: var(--color-orange);
+}
+
 input[type="submit"] {
   padding: 0.4em;
 }
@@ -48,6 +52,7 @@ input[type="submit"] {
 
         button {
           padding: 0.2em;
+          cursor: pointer;
         }
     }
 
