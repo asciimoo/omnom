@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/utils"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,7 +18,17 @@ import (
 	"gorm.io/driver/sqlite"
 )
 
+type DBTypedef int
+
+const (
+	Sqlite DBTypedef = iota
+	Psql
+)
+
+const DBTypeErr = utils.ErrString("Unknown database type")
+
 var DB *gorm.DB
+var DBType = Sqlite
 
 func Init(c *config.Config) error {
 	dbCfg := &gorm.Config{}
@@ -33,13 +44,15 @@ func Init(c *config.Config) error {
 		if err != nil {
 			return err
 		}
+		DBType = Sqlite
 	case "postgresql", "postgres", "psql":
 		DB, err = gorm.Open(postgres.Open(c.DB.Connection), dbCfg)
 		if err != nil {
 			return err
 		}
+		DBType = Psql
 	default:
-		return fmt.Errorf("unknown database type: %s", c.DB.Type)
+		return DBTypeErr
 	}
 	err = migrate()
 	if err != nil {

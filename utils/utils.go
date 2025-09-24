@@ -4,6 +4,12 @@ import (
 	"errors"
 )
 
+type ErrString string
+
+func (e ErrString) Error() string {
+	return string(e)
+}
+
 func KVData(values ...any) (map[string]any, error) {
 	if len(values)%2 != 0 {
 		return nil, errors.New("invalid dict call")
