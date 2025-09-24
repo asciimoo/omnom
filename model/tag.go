@@ -30,3 +30,17 @@ func GetOrCreateTag(tag string) Tag {
 	}
 	return t
 }
+
+func GetTagsFromText(s string) ([]Tag, error) {
+	var res []Tag
+	var err error
+	switch DBType {
+	case Sqlite:
+		err = DB.Raw("WITH cte AS (SELECT ? AS namevar) SELECT tags.* FROM cte, tags WHERE instr(lower(cte.namevar), lower(tags.text)) > 0;", s).Scan(&res).Error
+	case Psql:
+		err = DB.Raw("WITH cte AS (SELECT ? AS namevar) SELECT tags.* FROM cte, tags WHERE position(lower(tags.text) IN lower(cte.namevar)) > 0;", s).Scan(&res).Error
+	default:
+		return nil, DBTypeErr
+	}
+	return res, err
+}
