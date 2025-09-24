@@ -40,7 +40,7 @@ func GetTagsFromText(s string) ([]Tag, error) {
 	case Psql:
 		err = DB.Raw("WITH cte AS (SELECT ? AS namevar) SELECT tags.* FROM cte, tags WHERE position(lower(tags.text) IN lower(cte.namevar)) > 0;", s).Scan(&res).Error
 	default:
-		return nil, DBTypeErr
+		return nil, ErrDBType
 	}
 	return res, err
 }

@@ -25,7 +25,7 @@ const (
 	Psql
 )
 
-const DBTypeErr = utils.ErrString("Unknown database type")
+const ErrDBType = utils.StringError("Unknown database type")
 
 var DB *gorm.DB
 var DBType = Sqlite
@@ -52,7 +52,7 @@ func Init(c *config.Config) error {
 		}
 		DBType = Psql
 	default:
-		return DBTypeErr
+		return ErrDBType
 	}
 	err = migrate()
 	if err != nil {

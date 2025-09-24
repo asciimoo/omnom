@@ -4,9 +4,9 @@ import (
 	"errors"
 )
 
-type ErrString string
+type StringError string
 
-func (e ErrString) Error() string {
+func (e StringError) Error() string {
 	return string(e)
 }
 
