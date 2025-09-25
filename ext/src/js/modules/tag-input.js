@@ -41,6 +41,7 @@ function deleteTag(chipElement, tagChipContainer, tags) {
 }
 
 function renderTags(tags, tagChipContainer) {
+    tagChipContainer.innerHTML = '';
     const fragment = document.createDocumentFragment();
     tags.forEach(tag => {
         renderTag(tag, fragment);
@@ -52,6 +53,11 @@ function TagInputController(inputElement, chipContainer) {
     let tags = [];
     this.getTags = () => (tags);
     this.renderTags = () => renderTags(tags, chipContainer);
+    this.addTags = (new_tags) => {
+        for(let t of new_tags) {
+            addTag(t.text ? t.text : t, chipContainer, tags);
+        }
+    };
     inputElement?.addEventListener('keydown', (event) => { checkAddTrigger(event, chipContainer, tags, inputElement) })
     //inputElement?.addEventListener('input', (event) => { checkAddTrigger(event, chipContainer, tags, inputElement) })
     inputElement?.addEventListener('change', (event) => { addTag(event.target.value, chipContainer, tags); inputElement.value = '' });

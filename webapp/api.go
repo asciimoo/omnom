@@ -310,18 +310,24 @@ func init() {
 			},
 		},
 		&Endpoint{
-			Name:         "Collections",
-			Path:         "/collections",
+			Name:         "Page info",
+			Path:         "/page_info",
 			Method:       POST,
 			AuthRequired: false,
-			Handler:      showCollections,
-			Description:  "List all collections of a user in JSON format",
+			Handler:      pageInfo,
+			Description:  "View information about a given webpage - mainly used by the addon",
 			Args: []*EndpointArg{
 				&EndpointArg{
 					Name:        "token",
 					Type:        "string",
 					Required:    true,
 					Description: "Extension token. It can be found on the profile page",
+				},
+				&EndpointArg{
+					Name:        "text",
+					Type:        "string",
+					Required:    false,
+					Description: "Page text. Returning all the matching tags if specified",
 				},
 			},
 		},

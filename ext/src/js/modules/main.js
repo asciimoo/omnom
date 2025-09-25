@@ -12,6 +12,7 @@ import {
     checkStatus,
     copyScript,
     executeScriptToPromise,
+    extractVisibleTextBlocks,
     getOmnomToken,
     getOmnomUrl,
     getSiteUrl,
@@ -162,33 +163,41 @@ async function fillFormFields() {
         document.getElementById('notes').value = selection[0].result;
     }
 
-    populateCollections();
+    await fetchPageInfo();
 
     //fill tags
     tagInput.renderTags();
 
 }
 
-function populateCollections() {
+async function fetchPageInfo() {
+    let pageTextData = await executeScriptToPromise(extractVisibleTextBlocks);
+    let pageText = '';
+    if(pageTextData && pageTextData[0]) {
+        pageText = pageTextData[0].result.join(' ');
+    }
     const requestOptions = {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `token=`+getOmnomToken()
+        body: `token=`+getOmnomToken()+'&text='+encodeURIComponent(pageText),
     };
-    fetch(`${getOmnomUrl()}collections`, requestOptions).then(async r => {
-        let collections = await r.json();
-        if(!Array.isArray(collections) || collections.length < 1){
-            return;
+    fetch(`${getOmnomUrl()}page_info`, requestOptions).then(async r => {
+        let pageInfo = await r.json();
+        if(Array.isArray(pageInfo.collections) && pageInfo.collections.length > 0){
+            let el = document.querySelector("#collectionfield");
+            el.classList.remove("hidden");
+            for(let col of pageInfo.collections) {
+                let o = document.createElement('option');
+                o.innerText = col.name;
+                o.setAttribute('value', col.id);
+                el.querySelector("select").appendChild(o);
+            }
         }
-        let el = document.querySelector("#collectionfield");
-        el.classList.remove("hidden");
-        for(let col of collections) {
-            let o = document.createElement('option');
-            o.innerText = col.name;
-            o.setAttribute('value', col.id);
-            el.querySelector("select").appendChild(o);
+        if(Array.isArray(pageInfo.tags) && pageInfo.tags.length > 0) {
+            console.log(pageInfo.tags);
+            tagInput.addTags(pageInfo.tags);
         }
-    }).catch(error => console.log("error while fetching collections:", error));
+    }).catch(error => console.log("error while fetching page info:", error));
 }
 
 /* ---------------------------------*
