@@ -22,10 +22,10 @@ function checkAddTrigger(event, chipContainer, tags, inputElement) {
 }
 
 function renderTag(value, tagChipContainer, tags) {
-    const tagTemplate = `<div class="control chip-control">
+    const tagTemplate = `<div class="control chip-control" aria-label="tag ${value}">
         <span class="tag is-rounded">
             ${value}
-            <button type="button" class="delete is-small" aria-label="Delete tag"><span class="icon"><i class="fas fa-times"></i></span></button>
+            <button type="button" class="delete is-small" aria-label="Delete tag ${value}"><span class="icon"><i class="fas fa-times"></i></span></button>
         </span>
     </div>`
     const template = document.createElement('template');
