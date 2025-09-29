@@ -55,14 +55,6 @@
                                         placeholder="Add your notes here"></textarea>
                                 </div>
                             </div>
-                            <div class="field hidden" id="collectionfield">
-                                <label class="label">Collection</label>
-                                <div class="control">
-                                    <select name="collection">
-                                        <option value="0">---</option>
-                                    </select>
-                                </div>
-                            </div>
                             <div class="field">
                                 <label class="label">Tags (comma separated)</label>
                                 <div class="control tags-input">
@@ -76,10 +68,16 @@
                             <div class="field">
                                 <input id="public" type="checkbox" name="public" class="switch is-rounded">
                                 <label class="label" for="public">Public</label>
-                            </div>
-                            <div class="field">
                                 <input id="unread" type="checkbox" name="unread" class="switch is-rounded">
                                 <label class="label" for="unread">Unread</label>
+                            </div>
+                            <div class="field hidden" id="collectionfield">
+                                <label class="label">Collection</label>
+                                <div class="control">
+                                    <select name="collection">
+                                        <option value="0">---</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="field">
                                 <label class="label">Snapshot title</label>
