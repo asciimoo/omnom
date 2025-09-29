@@ -105,6 +105,14 @@
     "bookmark": "Könyvjelző",
     "edit feed": "Hírfolyam szerkesztése",
     "delete feed": "Hírfolyam törlése",
-    "dark theme": "",
-    "light theme": ""
+    "dark theme": "Sötét téma",
+    "light theme": "Világos téma",
+    "experimental snapshot feature": "A szerver oldali pillanatkép készítés kísérleti funkció, mindig ellenőrizze az eredményt",
+    "include read items": "Olvasott elemek megjelenítése is",
+    "no results found": "Nem található eredmény",
+    "search results": "Találatok",
+    "feed search": "Hírfolyam kereső",
+    "unread": "Olvasatlan",
+    "view": "Megmutat",
+    "favicon of": "{{.Title}} ikonja"
 }

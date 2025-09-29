@@ -106,5 +106,11 @@
     "edit feed": "编辑订阅源",
     "delete feed": "删除订阅源",
     "dark theme": "深色主题",
-    "light theme": "浅色主题"
+    "light theme": "浅色主题",
+    "experimental snapshot feature": "服务器端快照创建是一项实验性功能，请务必检查输出",
+    "include read items": "包含已读项",
+    "no results found": "未找到结果",
+    "search results": "搜索结果",
+    "feed search": "订阅源搜索",
+    "unread": "未读"
 }
