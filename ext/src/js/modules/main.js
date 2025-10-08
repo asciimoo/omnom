@@ -194,7 +194,6 @@ async function fetchPageInfo() {
             }
         }
         if(Array.isArray(pageInfo.tags) && pageInfo.tags.length > 0) {
-            console.log(pageInfo.tags);
             tagInput.addTags(pageInfo.tags);
         }
     }).catch(error => console.log("error while fetching page info:", error));
