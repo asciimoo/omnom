@@ -47,6 +47,10 @@ class Sanitizer {
             // TODO check if initial-value requires sanitization
             return rule.cssText;
         };
+        this.sanitizeViewTransitionRule = async (rule, baseURL) => {
+            // TODO check if initial-value requires sanitization
+            return rule.cssText;
+        };
         this.sanitizeContainerRule = async (rule, baseURL) => {
             let cssResult = await this.sanitizeCSS(rule.cssRules, baseURL);
             return `@container ${rule.conditionText}{${cssResult}}`;
@@ -206,6 +210,7 @@ class Sanitizer {
             ['CSSLayerBlockRule', this.sanitizeLayerBlockRule],
             ['CSSLayerStatementRule', this.sanitizeLayerStatementRule],
             ['CSSPropertyRule', this.sanitizePropertyRule],
+            ['CSSViewTransitionRule', this.sanitizeViewTransitionRule],
             ['CSSNamespaceRule', this.unknownRule], // XML only
             ['CSSCounterStyleRule', this.sanitizeCounterStyleRule],
             ['CSSSupportsRule', this.sanitizeSupportsRule],
