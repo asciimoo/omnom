@@ -232,6 +232,16 @@ func (c *Config) setDefaultStorage() {
 	}
 }
 
+func (c *Config) BaseURL(u string) string {
+	if strings.HasPrefix(u, "/") && strings.HasSuffix(c.Server.BaseURL, "/") {
+		u = u[1:]
+	}
+	if !strings.HasPrefix(u, "/") && !strings.HasSuffix(c.Server.BaseURL, "/") {
+		u = "/" + u
+	}
+	return c.Server.BaseURL + u
+}
+
 func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
 	if ap.PrivK == nil {
 		var err error

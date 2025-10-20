@@ -370,13 +370,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	authorized := e.Group("/")
 	authorized.Use(authRequiredMiddleware)
 
-	bu := cfg.Server.BaseURL
-	baseURL = func(u string) string {
-		if strings.HasPrefix(u, "/") && strings.HasSuffix(bu, "/") {
-			u = u[1:]
-		}
-		return bu + u
-	}
+	baseURL = cfg.BaseURL
 	// TODO handle GET arguments as well
 	URLFor = func(e string, paths ...string) string {
 		for _, ep := range Endpoints {
