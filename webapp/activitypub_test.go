@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"testing"
 
+	ap "github.com/asciimoo/omnom/activitypub"
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
@@ -84,7 +85,7 @@ func TestAPIdentity(t *testing.T) {
 	if !assert.Equal(t, 200, w.Code) {
 		return
 	}
-	var ru apIdentity
+	var ru ap.Identity
 
 	err = json.Unmarshal(w.Body.Bytes(), &ru)
 	if !assert.Nil(t, err) {
@@ -116,7 +117,7 @@ func TestAPWebfinger(t *testing.T) {
 		return
 	}
 
-	var wf apWebfinger
+	var wf ap.Webfinger
 	err = json.Unmarshal(w.Body.Bytes(), &wf)
 	if !assert.Nil(t, err) {
 		log.Debug().Bytes("body", w.Body.Bytes()).Msg("failed to parse JSON")
@@ -162,7 +163,7 @@ func TestAPActorOutbox(t *testing.T) {
 	req, _ := http.NewRequest("GET", URLFor("activitypub outbox", "test"), nil)
 	req.Header.Add("Accept", "application/activity+json")
 	router.ServeHTTP(w, req)
-	var o apOutbox
+	var o ap.Outbox
 
 	err = json.Unmarshal(w.Body.Bytes(), &o)
 	if !assert.Nil(t, err) {
@@ -176,7 +177,7 @@ func TestAPActorOutbox(t *testing.T) {
 }
 
 func TestAPActorParse(t *testing.T) {
-	i := &apIdentity{}
+	i := &ap.Identity{}
 	err := json.Unmarshal(testActorJSON, i)
 	if !assert.Nil(t, err) {
 		log.Debug().Msg("failed to parse actor")

@@ -1,7 +1,6 @@
 package webapp
 
 import (
-	"bytes"
 	"crypto"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -11,13 +10,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
 
+	ap "github.com/asciimoo/omnom/activitypub"
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 
@@ -27,10 +26,8 @@ import (
 )
 
 const (
-	apRequestTimeout = 10 * time.Second
-	followAction     = "Follow"
-	unfollowAction   = "Undo"
-	jsonNull         = "null"
+	followAction   = "Follow"
+	unfollowAction = "Undo"
 )
 
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
@@ -38,133 +35,6 @@ const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
 Bookmarked by <a href="https://github.com/asciimoo/omnom">Omnom</a> - <a href="%[4]s">view bookmark</a>`
 
 var apSigHeaderRe = regexp.MustCompile(`keyId="([^"]+)".*,headers="([^"]+)",.*signature="([^"]+)"`)
-
-type apOutbox struct {
-	Context      string          `json:"@context"`
-	ID           string          `json:"id"`
-	Type         string          `json:"type"`
-	Summary      string          `json:"summary"`
-	TotalItems   int64           `json:"totalItems"`
-	OrderedItems []*apOutboxItem `json:"orderedItems"`
-}
-
-type apOutboxItem struct {
-	Context   string         `json:"@context"`
-	ID        string         `json:"id"`
-	Type      string         `json:"type"`
-	Actor     string         `json:"actor"`
-	To        []string       `json:"to"`
-	Cc        []string       `json:"cc"`
-	Published string         `json:"published"`
-	Object    apOutboxObject `json:"object"`
-	//Signature *apSignature   `json:"signature,omitempty"`
-}
-
-type apOutboxObject struct {
-	ID           string            `json:"id"`
-	Type         string            `json:"type"`
-	Content      string            `json:"content"`
-	URL          string            `json:"url"`
-	URI          string            `json:"uri"`
-	Summary      string            `json:"summary"`
-	AttributedTo string            `json:"attributedTo"`
-	To           []string          `json:"to"`
-	Cc           []string          `json:"cc"`
-	Published    string            `json:"published"`
-	Tag          []apTag           `json:"tag"`
-	Replies      map[string]string `json:"replies"`
-}
-
-type apTag struct {
-	Type string `json:"type"`
-	Href string `json:"href"`
-	Name string `json:"name"`
-}
-
-type apIdentity struct {
-	Context           *apContext `json:"@context"`
-	ID                string     `json:"id"`
-	Type              string     `json:"type"`
-	Following         *string    `json:"following,omitempty"`
-	Followers         *string    `json:"followers,omitempty"`
-	Inbox             string     `json:"inbox"`
-	Outbox            string     `json:"outbox"`
-	PreferredUsername string     `json:"preferredUsername"`
-	Name              string     `json:"name"`
-	Summary           string     `json:"summary"`
-	URL               string     `json:"url"`
-	Discoverable      bool       `json:"discoverable"`
-	Memorial          bool       `json:"memorial"`
-	Icon              *apImage   `json:"icon"`
-	Image             *apImage   `json:"image"`
-	PubKey            apPubKey   `json:"publicKey"`
-}
-
-type apImage struct {
-	Type      string `json:"type"`
-	MediaType string `json:"mediaType"`
-	URL       string `json:"url"`
-}
-
-type apPubKey struct {
-	ID           string `json:"id"`
-	Owner        string `json:"owner"`
-	PublicKeyPem string `json:"publicKeyPem"`
-}
-
-type apWebfinger struct {
-	Subject string   `json:"subject"`
-	Aliases []string `json:"aliases"`
-	Links   []apLink `json:"links"`
-}
-
-type apLink struct {
-	Rel  string `json:"rel"`
-	Href string `json:"href"`
-	Type string `json:"type"`
-}
-
-type apInboxRequest struct {
-	ID     string               `json:"id"`
-	Type   string               `json:"type"`
-	Actor  string               `json:"actor"`
-	Object apInboxRequestObject `json:"object"`
-}
-
-type apInboxRequestObject struct {
-	ID     string `json:"id"`
-	Type   string `json:"type"`
-	Actor  string `json:"actor"`
-	Object string `json:"object"`
-}
-
-type apContext struct {
-	ID    string
-	Parts []any
-}
-
-type apFollowResponseItem struct {
-	Context string                 `json:"@context"`
-	ID      string                 `json:"id"`
-	Type    string                 `json:"type"`
-	Actor   string                 `json:"actor"`
-	Object  apFollowResponseObject `json:"object"`
-}
-
-type apFollowResponseObject struct {
-	ID     string `json:"id"`
-	Type   string `json:"type"`
-	Actor  string `json:"actor"`
-	Object string `json:"object"`
-}
-
-// https://docs.joinmastodon.org/spec/security/#ld
-//type apSignature struct {
-//	Type    string `json:"type"`
-//	Creator string `json:"creator"`
-//	Created string `json:"created"`
-//	Sig     string `json:"signatureValue"`
-//}
 
 func apOutboxResponse(c *gin.Context) {
 	user := model.GetUser(c.Param("username"))
@@ -188,13 +58,13 @@ func apOutboxResponse(c *gin.Context) {
 	}
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	u := getFullURL(c, URLFor("User", user.Username))
-	resp := apOutbox{
+	resp := ap.Outbox{
 		Context:      "https://www.w3.org/ns/activitystreams",
 		ID:           u,
 		Type:         "OrderedCollection",
 		Summary:      "Recent bookmarks of " + u,
 		TotalItems:   bc,
-		OrderedItems: make([]*apOutboxItem, len(bs)),
+		OrderedItems: make([]*ap.OutboxItem, len(bs)),
 	}
 	for i, b := range bs {
 		item := apCreateBookmarkItem(c, b, u)
@@ -211,7 +81,7 @@ func apOutboxResponse(c *gin.Context) {
 	}
 }
 
-func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOutboxItem {
+func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.OutboxItem {
 	id := getFullURL(c, fmt.Sprintf("%s?id=%d", URLFor("Bookmark"), b.ID))
 	published := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	title := truncate(b.Title, 300)
@@ -219,7 +89,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 	if b.Notes != "" {
 		body = fmt.Sprintf("<p>%s</p>", truncate(b.Notes, 350-len(title)))
 	}
-	item := &apOutboxItem{
+	item := &ap.OutboxItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      id + "#activity",
 		Type:    "Create",
@@ -229,7 +99,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 		},
 		Cc:        []string{},
 		Published: published,
-		Object: apOutboxObject{
+		Object: ap.OutboxObject{
 			ID:           id,
 			Type:         "Note",
 			Summary:      "",
@@ -242,13 +112,13 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *apOu
 			},
 			Cc:        []string{},
 			Published: published,
-			Tag:       make([]apTag, len(b.Tags)),
+			Tag:       make([]ap.Tag, len(b.Tags)),
 			Replies:   map[string]string{},
 		},
 	}
 	for i, t := range b.Tags {
 		tagBase := getFullURL(c, fmt.Sprintf("%s?tag=", URLFor("Public bookmarks")))
-		item.Object.Tag[i] = apTag{
+		item.Object.Tag[i] = ap.Tag{
 			Type: "Hashtag",
 			Href: tagBase + t.Text,
 			Name: t.Text,
@@ -266,8 +136,8 @@ func apIdentityResponse(c *gin.Context, user *model.User) {
 		log.Error().Err(err).Msg("Failed to serialize JSON")
 		return
 	}
-	j, err := json.Marshal(apIdentity{
-		Context: &apContext{
+	j, err := json.Marshal(ap.Identity{
+		Context: &ap.Context{
 			Parts: []any{
 				"https://www.w3.org/ns/activitystreams",
 				"https://w3id.org/security/v1",
@@ -281,17 +151,17 @@ func apIdentityResponse(c *gin.Context, user *model.User) {
 		Name:              user.Username,
 		URL:               id,
 		Discoverable:      true,
-		Icon: &apImage{
+		Icon: &ap.Image{
 			Type:      "Image",
 			MediaType: "image/png",
 			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
 		},
-		Image: &apImage{
+		Image: &ap.Image{
 			Type:      "Image",
 			MediaType: "image/png",
 			URL:       getFullURL(c, "/static/icons/addon_icon.png"),
 		},
-		PubKey: apPubKey{
+		PubKey: ap.PubKey{
 			ID:           id + "#key",
 			Owner:        id,
 			PublicKeyPem: string(pk),
@@ -316,7 +186,7 @@ func apInboxResponse(c *gin.Context) {
 		})
 		return
 	}
-	d := &apInboxRequest{}
+	d := &ap.InboxRequest{}
 	err = json.Unmarshal(body, d)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse JSON")
@@ -350,7 +220,7 @@ func apInboxResponse(c *gin.Context) {
 	})
 }
 
-func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+func apInboxFollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
 		log.Debug().Msg("Unknown user")
@@ -363,7 +233,7 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	actor, err := apFetchActor(d.Actor, d.Object.ID+"#key", key)
+	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
 		return
@@ -372,12 +242,12 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
-	data, err := json.Marshal(apFollowResponseItem{
+	data, err := json.Marshal(ap.FollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
 		Type:    "Accept",
 		Actor:   d.Object.ID,
-		Object: apFollowResponseObject{
+		Object: ap.FollowResponseObject{
 			ID:     d.ID,
 			Type:   followAction,
 			Actor:  d.Actor,
@@ -388,7 +258,7 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to serialize AP inbox response")
 		return
 	}
-	err = apSendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
+	err = ap.SendSignedPostRequest(actor.Inbox, d.Object.ID+"#key", data, key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to send HTTP request")
 		return
@@ -399,7 +269,7 @@ func apInboxFollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
 		return
 	}
 }
-func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) {
+func apInboxUnfollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
 		log.Debug().Msg("Unknown user")
@@ -412,7 +282,7 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	actor, err := apFetchActor(d.Actor, d.Object.ID+"#key", key)
+	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
 		return
@@ -421,12 +291,12 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
-	data, err := json.Marshal(apFollowResponseItem{
+	data, err := json.Marshal(ap.FollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
 		Type:    "Accept",
 		Actor:   d.Object.ID,
-		Object: apFollowResponseObject{
+		Object: ap.FollowResponseObject{
 			ID:     d.ID,
 			Type:   unfollowAction,
 			Actor:  d.Actor,
@@ -437,7 +307,7 @@ func apInboxUnfollowResponse(c *gin.Context, d *apInboxRequest, payload []byte) 
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to serialize AP inbox response")
 		return
 	}
-	err = apSendSignedPostRequest(actor.Inbox, d.Object.Object+"#key", data, key)
+	err = ap.SendSignedPostRequest(actor.Inbox, d.Object.Object+"#key", data, key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to send HTTP request")
 		return
@@ -467,7 +337,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark) {
 		if item == nil {
 			continue
 		}
-		actor, err := apFetchActor(f.Follower, u+"#key", key)
+		actor, err := ap.FetchActor(f.Follower, u+"#key", key)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to fetch actor")
 			continue
@@ -479,7 +349,7 @@ func apNotifyFollowers(c *gin.Context, b *model.Bookmark) {
 			log.Error().Err(err).Msg("Failed to marshal bookmark")
 			continue
 		}
-		err = apSendSignedPostRequest(actor.Inbox, u+"#key", data, key)
+		err = ap.SendSignedPostRequest(actor.Inbox, u+"#key", data, key)
 		if err != nil {
 			log.Error().Err(err).Str("actor", f.Follower).Msg("Failed to send HTTP request")
 			continue
@@ -558,84 +428,6 @@ func apCheckSignature(c *gin.Context, key string, payload []byte) error {
 	return nil
 }
 
-func apSendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) error {
-	u, err := url.Parse(us)
-	if err != nil {
-		return err
-	}
-	d := time.Now().UTC().Format(http.TimeFormat)
-	hash := sha256.Sum256(data)
-	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(hash[:]))
-	sigData := fmt.Appendf(nil, "(request-target): post %s\nhost: %s\ndate: %s\ndigest: %s", u.Path, u.Host, d, digest)
-	sigHash := sha256.Sum256(sigData)
-	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to sign request data")
-		return err
-	}
-	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date digest",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
-	cli := &http.Client{Timeout: apRequestTimeout}
-	req, err := http.NewRequest("POST", us, bytes.NewReader(data))
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to create signed POST request")
-		return err
-	}
-	req.Header.Set("Host", u.Host)
-	req.Header.Set("Date", d)
-	req.Header.Set("Digest", digest)
-	req.Header.Set("Signature", sigHeader)
-	req.Header.Set("Content-Type", "application/activity+json; charset=utf-8")
-	req.Header.Set("Accept", "application/activity+json")
-	r, err := cli.Do(req)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to send accept response")
-		return err
-	}
-	defer r.Body.Close()
-	rb, _ := io.ReadAll(r.Body)
-	if bytes.Contains(rb, []byte("error")) {
-		log.Error().Bytes("payload", rb).Msg("Accept response contains error")
-		return errors.New("invalid response")
-	}
-	return nil
-}
-
-func apFetchActor(us string, keyID string, key *rsa.PrivateKey) (*apIdentity, error) {
-	u, err := url.Parse(us)
-	if err != nil {
-		return nil, err
-	}
-	c := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", us, nil)
-	if err != nil {
-		return nil, err
-	}
-	d := time.Now().UTC().Format(http.TimeFormat)
-	sigData := fmt.Appendf(nil, "(request-target): get %s\nhost: %s\ndate: %s", u.Path, u.Host, d)
-	sigHash := sha256.Sum256(sigData)
-	sig, err := rsa.SignPKCS1v15(nil, key, crypto.SHA256, sigHash[:])
-	if err != nil {
-		return nil, errors.New("failed to sign data")
-	}
-	sigHeader := fmt.Sprintf(`keyId="%s",headers="(request-target) host date",signature="%s",algorithm="rsa-sha256"`, keyID, base64.StdEncoding.EncodeToString(sig))
-	req.Header.Set("Host", u.Host)
-	req.Header.Set("Date", d)
-	req.Header.Set("Signature", sigHeader)
-	req.Header.Set("Content-Type", "application/activity+json; charset=utf-8")
-	req.Header.Set("Accept", "application/activity+json")
-	r, err := c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
-	i := &apIdentity{}
-	err = json.NewDecoder(r.Body).Decode(i)
-	if i.ID == "" || i.Inbox == "" || i.Outbox == "" {
-		return nil, errors.New("mandatory actor data is missing")
-	}
-	return i, err
-}
-
 func apWebfingerResponse(c *gin.Context) {
 	c.Header("Content-Type", "application/activity+json; charset=utf-8")
 	s := c.Query("resource")
@@ -645,12 +437,12 @@ func apWebfingerResponse(c *gin.Context) {
 		uname = sParts[1]
 	}
 	u := getFullURL(c, URLFor("User", uname))
-	j, err := json.Marshal(apWebfinger{
+	j, err := json.Marshal(ap.Webfinger{
 		Subject: s,
 		Aliases: []string{u},
-		Links: []apLink{
-			apLink{Rel: "self", Type: "application/activity+json", Href: u},
-			apLink{Rel: "http://webfinger.net/rel/profile-page", Type: "text/html", Href: u},
+		Links: []ap.Link{
+			ap.Link{Rel: "self", Type: "application/activity+json", Href: u},
+			ap.Link{Rel: "http://webfinger.net/rel/profile-page", Type: "text/html", Href: u},
 		},
 	})
 	if err != nil {
@@ -660,61 +452,4 @@ func apWebfingerResponse(c *gin.Context) {
 	if err != nil {
 		log.Error().Msg("Failed to write response")
 	}
-}
-
-func (i *apInboxRequestObject) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 || string(data) == jsonNull {
-		return nil
-	}
-	if data[0] == '"' && data[len(data)-1] == '"' {
-		return json.Unmarshal(data, &i.ID)
-	}
-	if data[0] == '{' && data[len(data)-1] == '}' {
-		type T struct {
-			ID     string `json:"id"`
-			Type   string `json:"type"`
-			Actor  string `json:"actor"`
-			Object string `json:"object"`
-		}
-		return json.Unmarshal(data, (*T)(i))
-	}
-	return nil
-}
-
-func (c *apContext) UnmarshalJSON(data []byte) error {
-	if data[0] == '"' && data[len(data)-1] == '"' {
-		return json.Unmarshal(data, &c.ID)
-	}
-	if data[0] == '[' && data[len(data)-1] == ']' {
-		d := []any{}
-		err := json.Unmarshal(data, &d)
-		c.Parts = d
-		return err
-	}
-	return nil
-}
-
-func (c *apContext) MarshalJSON() ([]byte, error) {
-	if c.ID != "" {
-		return json.Marshal(c.ID)
-	}
-	return json.Marshal(c.Parts)
-}
-
-func (i *apImage) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 || string(data) == jsonNull {
-		return nil
-	}
-	if data[0] == '"' && data[len(data)-1] == '"' {
-		return json.Unmarshal(data, &i.URL)
-	}
-	if data[0] == '{' && data[len(data)-1] == '}' {
-		type T struct {
-			Type      string `json:"type"`
-			MediaType string `json:"mediaType"`
-			URL       string `json:"url"`
-		}
-		return json.Unmarshal(data, (*T)(i))
-	}
-	return nil
 }
