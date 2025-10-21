@@ -108,18 +108,7 @@ func addURLParam(base string, param string) string {
 func getFullURLPrefix(c *gin.Context) string {
 	ccfg, _ := c.Get("config")
 	cfg := ccfg.(*config.Config)
-	if cfg.Server.BaseURL != "" {
-		return cfg.Server.BaseURL
-	}
-	fullURLPrefix := ""
-	if strings.HasPrefix(baseURL("/"), "/") {
-		fullURLPrefix = "http://"
-		if c.Request.TLS != nil {
-			fullURLPrefix = "https://"
-		}
-		fullURLPrefix += c.Request.Host
-	}
-	return fullURLPrefix
+	return cfg.Server.BaseURL
 }
 
 func getFullURL(c *gin.Context, u string) string {
@@ -450,7 +439,7 @@ func Run(cfg *config.Config) {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := createEngine(cfg)
-	log.Info().Str("Address", cfg.Server.Address).Msg("Starting server")
+	log.Info().Str("Address", cfg.Server.Address).Str("URL", cfg.BaseURL("/")).Msg("Starting server")
 	err := engine.Run(cfg.Server.Address)
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot start server")

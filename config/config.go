@@ -10,6 +10,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -148,6 +150,7 @@ func CreateDefaultConfig() *Config {
 		},
 		Server: Server{
 			Address:      "127.0.0.1:7331",
+			BaseURL:      "http://127.0.0.1:7331",
 			SecureCookie: false,
 		},
 		DB: DB{
@@ -193,6 +196,13 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 		if _, ok := oauth.Providers[pn]; !ok {
 			return nil, errors.New("invalid oauth provider: " + pn)
 		}
+	}
+	if c.Server.BaseURL == "" {
+		c.Server.BaseURL = fmt.Sprintf("http://%s", c.Server.Address)
+	}
+	pu, err := url.Parse(c.Server.BaseURL)
+	if err != nil || pu.Scheme == "" || pu.Host == "" {
+		return nil, errors.New("Invalid Server.BaseURL - use 'https://domain.tld/xy/' format")
 	}
 	if strings.HasSuffix(c.Server.BaseURL, "/") {
 		c.Server.BaseURL = c.Server.BaseURL[:len(c.Server.BaseURL)-1]
