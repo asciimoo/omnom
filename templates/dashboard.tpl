@@ -34,7 +34,7 @@
         {{ end }}
     </div>
     {{ else }}
-    {{ block "info" (.Tr.Msg "add tag tip") }}{{ end }}
+    {{ block "info" KVData "info" (.Tr.Msg "add tag tip") }}{{ end }}
     {{ end }}
     {{ if .Bookmarks }}
       <h4 class="title">{{ .Tr.Msg "my latest bookmarks" }}</h4>
