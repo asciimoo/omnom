@@ -15,7 +15,6 @@ function initComms() {
     chrome.runtime.onMessage.addListener(function(msg) {
         if(msg.action != "verify-settings-save") {
             console.log("Invalid message from background.js:", msg);
-            return true;
         }
         if(confirm("Do you want to use this account from your Omnom extension?")) {
             chrome.runtime.sendMessage({"action": "accept-settings"});
@@ -23,7 +22,6 @@ function initComms() {
             // TODO do not display this message again
             chrome.runtime.sendMessage({"action": "reject-settings"});
         }
-        return true;
     });
 
     // messages from popup.js
