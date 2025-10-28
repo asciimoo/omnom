@@ -202,7 +202,7 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 	}
 	pu, err := url.Parse(c.Server.BaseURL)
 	if err != nil || pu.Scheme == "" || pu.Host == "" {
-		return nil, errors.New("Invalid Server.BaseURL - use 'https://domain.tld/xy/' format")
+		return nil, errors.New("invalid Server.BaseURL - use 'https://domain.tld/xy/' format")
 	}
 	if strings.HasSuffix(c.Server.BaseURL, "/") {
 		c.Server.BaseURL = c.Server.BaseURL[:len(c.Server.BaseURL)-1]
