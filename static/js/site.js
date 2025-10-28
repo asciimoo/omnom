@@ -16,25 +16,27 @@ function sendMsg(msg, responseHandler) {
     }
 }
 
-sendMsg({"action": "ping", "url": baseUrl}, (resp) => {
-    if(!resp || !resp.url) {
-        return;
-    }
-    if(hasUser && resp.url != "same") {
-        fetch(baseUrl + "profile?format=json", {"method": "POST"}).then((r) => {
-            if(r.ok) {
-                return r.json();
-            }
-        }).then((j) => {
-            sendMsg({"action": "set-settings", "token": j.AddonTokens[0].text, "url": baseUrl}, console.log);
-        });
-    }
-    // TODO consider security ->
-    //if(!hasUser && resp.url == "same") {
-    //    console.log("show option to sign in");
-    //}
+window.onload = () => {
+    sendMsg({"action": "ping", "url": baseUrl}, (resp) => {
+        if(!resp || !resp.url) {
+            return;
+        }
+        if(hasUser && resp.url != "same") {
+            fetch(baseUrl + "profile?format=json", {"method": "POST"}).then((r) => {
+                if(r.ok) {
+                    return r.json();
+                }
+            }).then((j) => {
+                sendMsg({"action": "set-settings", "token": j.AddonTokens[0].text, "url": baseUrl}, console.log);
+            });
+        }
+        // TODO consider security ->
+        //if(!hasUser && resp.url == "same") {
+        //    console.log("show option to sign in");
+        //}
 
-});
+    });
+}
 
 //function createModal(onSuccess) {
 //    let temp = document.getElementById("tpl-modal");
