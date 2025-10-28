@@ -54,13 +54,16 @@ function handlePing(msg, sender, send) {
 }
 
 function handleSetSettings(msg, sender, send) {
-    if(pending_settings) {
-        send("settings pending");
-        return;
-    }
     msg['send'] = send;
     pending_settings = msg;
-    chrome.tabs.sendMessage(sender.tab.id, {"action": "verify-settings-save"});
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        console.log(tabs[0].id);
+    });
+    chrome.tabs.sendMessage(sender.tab.id, {"action": "verify-settings-save"})
+        .then(resp => {
+            console.log("settings response received from page context", msg, resp);
+        })
+        .catch(err => console.log("failed to receive msg from page:", err, msg, sender.tab));
 }
 
 function handleAcceptSettings(msg, sender) {

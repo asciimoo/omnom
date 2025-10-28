@@ -10,6 +10,23 @@ const messageHandlers = new Map([
 ]);
 
 function initComms() {
+
+    // messages from background.js
+    chrome.runtime.onMessage.addListener(function(msg) {
+        if(msg.action != "verify-settings-save") {
+            console.log("Invalid message from background.js:", msg);
+            return true;
+        }
+        if(confirm("Do you want to use this account from your Omnom extension?")) {
+            chrome.runtime.sendMessage({"action": "accept-settings"});
+        } else {
+            // TODO do not display this message again
+            chrome.runtime.sendMessage({"action": "reject-settings"});
+        }
+        return true;
+    });
+
+    // messages from popup.js
     chrome.runtime.onConnect.addListener(port => {
         port.onMessage.addListener((msg, commChan) => {
             // TODO generate static extension id and check the full ID, not just the schema
@@ -45,19 +62,6 @@ async function handleGetDomMessage(msg, commChan) {
         console.log("Failed to deliver domData message", chrome.runtime.lastError);
     }
 }
-
-// messages from background.js
-chrome.runtime.onMessage.addListener(function(msg) {
-    if(msg.action != "verify-settings-save") {
-        return;
-    }
-    if(confirm("Do you want to use this account from your Omnom extension?")) {
-        chrome.runtime.sendMessage({"action": "accept-settings"});
-    } else {
-        // TODO do not display this message again
-        chrome.runtime.sendMessage({"action": "reject-settings"});
-    }
-});
 
 export default function () {
     initComms();
