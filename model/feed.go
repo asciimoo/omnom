@@ -16,7 +16,8 @@ import (
 type FeedType string
 
 const (
-	RSSFeed FeedType = "rss"
+	RSSFeed         FeedType = "rss"
+	ActivityPubFeed FeedType = "ap"
 )
 
 type Feed struct {
@@ -99,8 +100,8 @@ func GetUserFeeds(uid uint, unread bool) ([]*UserFeedSummary, error) {
 		q = q.Select("user_feeds.*, count(user_feed_items.id) as count")
 	}
 	err := q.Joins("join feeds on feeds.id == user_feeds.feed_id").
-		Joins("join feed_items on feed_items.feed_id == feeds.id").
-		Joins("join user_feed_items on user_feed_items.feed_item_id == feed_items.id").
+		Joins("left join feed_items on feed_items.feed_id == feeds.id").
+		Joins("left join user_feed_items on user_feed_items.feed_item_id == feed_items.id").
 		Where("user_feeds.user_id = ?", uid).
 		Group("feeds.id").
 		Order("count desc, user_feeds.name").
