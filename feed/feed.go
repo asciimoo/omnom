@@ -210,15 +210,12 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 			f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
 		}
 	case model.ActivityPubFeed:
-		var user model.User
-		err := model.DB.Where("id = ?", uid).First(&user).Error
+		userURL, err := getUserURL(cfg, uid)
 		if err != nil {
 			return nil, err
 		}
-		pk := cfg.ActivityPub.PrivK
-		// TODO get users endpoint url from api _somehow_
-		userURL := cfg.BaseURL("/users/" + user.Username)
 		userKey := userURL + "#key"
+		pk := cfg.ActivityPub.PrivK
 		actor, err := ap.FetchActor(fu, userKey, pk)
 		if err != nil {
 			return nil, err
@@ -257,6 +254,41 @@ func AddFeed(cfg *config.Config, name, u string, uid uint) error {
 		log.Error().Err(errUnknownFeedType).Str("Type", f.Type)
 	}
 	return nil
+}
+
+func DeleteFeed(cfg *config.Config, uf *model.UserFeed) error {
+	f, err := model.GetFeedByID(uf.FeedID)
+	if err != nil {
+		return err
+	}
+	switch model.FeedType(f.Type) {
+	case model.ActivityPubFeed:
+		userURL, err := getUserURL(cfg, uf.UserID)
+		if err != nil {
+			return err
+		}
+		userKey := userURL + "#key"
+		pk := cfg.ActivityPub.PrivK
+		actor, err := ap.FetchActor(f.URL, userKey, pk)
+		if err != nil {
+			return err
+		}
+		err = ap.SendUnfollowRequest(actor.Inbox, userURL, pk)
+		if err != nil {
+			return err
+		}
+	}
+	return model.DeleteUserFeed(uf)
+}
+
+func getUserURL(cfg *config.Config, uid uint) (string, error) {
+	var user model.User
+	err := model.DB.Where("id = ?", uid).First(&user).Error
+	if err != nil {
+		return "", err
+	}
+	// TODO get users endpoint url from api _somehow_
+	return cfg.BaseURL("/users/" + user.Username), nil
 }
 
 func createUserFeed(name string, f *model.Feed, uid uint) error {

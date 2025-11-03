@@ -126,6 +126,7 @@ func editFeed(c *gin.Context) {
 	if c.PostForm("name") != "" {
 		f.Name = c.PostForm("name")
 	}
+	// TODO resolve activitypub feed changes
 	err = model.DB.Save(f).Error
 	if err == nil {
 		setNotification(c, nInfo, "Feed saved", true)
@@ -142,7 +143,8 @@ func deleteFeed(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	err = model.DeleteUserFeed(f)
+	cfg, _ := c.Get("config")
+	err = feed.DeleteFeed(cfg.(*config.Config), f)
 	if err == nil {
 		setNotification(c, nInfo, "Feed deleted", true)
 	} else {
