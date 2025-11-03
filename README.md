@@ -1,6 +1,7 @@
 # Omnom
 
 [![Translation status](https://hosted.weblate.org/widget/omnom/svg-badge.svg)](https://hosted.weblate.org/engage/omnom/)
+[![GoDoc](https://godoc.org/github.com/asciimoo/omnom?status.svg)](https://pkg.go.dev/github.com/asciimoo/omnom)
 
 
 Bookmarking with website snapshots.
