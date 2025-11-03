@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -106,10 +108,11 @@ type Link struct {
 }
 
 type InboxRequest struct {
-	ID     string             `json:"id"`
-	Type   string             `json:"type"`
-	Actor  string             `json:"actor"`
-	Object InboxRequestObject `json:"object"`
+	Context string             `json:"@context,omitempty"`
+	ID      string             `json:"id,omitempty"`
+	Type    string             `json:"type,omitempty"`
+	Actor   string             `json:"actor,omitempty"`
+	Object  InboxRequestObject `json:"object,omitempty"`
 }
 
 type InboxRequestObject struct {
@@ -183,6 +186,47 @@ func SendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) e
 		return errors.New("invalid response")
 	}
 	return nil
+}
+
+func SendFollowRequest(us, userURL string, key *rsa.PrivateKey) error {
+	id := userURL + "#" + uuid.NewString()
+	r := InboxRequest{
+		Context: "https://www.w3.org/ns/activitystreams",
+		ID:      id,
+		Type:    "Follow",
+		Actor:   userURL,
+		Object: InboxRequestObject{
+			ID: us,
+		},
+	}
+	data, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	return SendSignedPostRequest(us, userURL+"#key", data, key)
+}
+
+func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
+	id := userURL + "#" + uuid.NewString()
+	r := InboxRequest{
+		Context: "https://www.w3.org/ns/activitystreams",
+		ID:      id,
+		Type:    "Undo",
+		Actor:   userURL,
+		Object: InboxRequestObject{
+			ID:     us + "#" + uuid.NewString(),
+			Type:   "Follow",
+			Actor:  userURL,
+			Object: us,
+		},
+	}
+	data, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	return SendSignedPostRequest(us, userURL+"#key", data, key)
 }
 
 func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error) {

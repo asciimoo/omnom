@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	ap "github.com/asciimoo/omnom/activitypub"
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
 
@@ -23,6 +25,8 @@ import (
 )
 
 var htmlSanitizerPolicy *bluemonday.Policy
+
+var errUnknownFeedType = errors.New("unknown feed type")
 
 const (
 	srcAttr = "src"
@@ -120,7 +124,14 @@ func Update() error {
 	}
 	log.Debug().Msg("Updating feeds")
 	for _, f := range feeds {
-		updateRSSFeed(f)
+		switch model.FeedType(f.Type) {
+		case model.RSSFeed:
+			updateRSSFeed(f)
+		case model.ActivityPubFeed:
+			continue
+		default:
+			log.Error().Err(errUnknownFeedType).Str("type", f.Type).Str("url", f.URL).Msg("Failed to update feed")
+		}
 	}
 	return nil
 }
@@ -175,7 +186,7 @@ func updateRSSFeed(f *model.Feed) {
 	log.Debug().Int64("new items", added).Str("feed", f.Name).Msg("Feed updated")
 }
 
-func createFeed(name, u string) (*model.Feed, error) {
+func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, error) {
 	ftype, fu, err := getFeedInfo(u)
 	if err != nil {
 		return nil, err
@@ -183,6 +194,7 @@ func createFeed(name, u string) (*model.Feed, error) {
 	f := &model.Feed{
 		Name: name,
 		URL:  fu,
+		Type: string(ftype),
 	}
 	// TODO parse feed URL if u's content is HTML
 	// TODO add support for ActivityPub feeds
@@ -192,36 +204,57 @@ func createFeed(name, u string) (*model.Feed, error) {
 		if err != nil {
 			return nil, err
 		}
-		f.Type = string(model.RSSFeed)
 		if feed.Image != nil {
 			f.Favicon = fetchImageAsInlineURL(feed.Image.URL)
 		} else {
 			f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
 		}
+	case model.ActivityPubFeed:
+		var user model.User
+		err := model.DB.Where("id = ?", uid).First(&user).Error
+		if err != nil {
+			return nil, err
+		}
+		pk := cfg.ActivityPub.PrivK
+		// TODO get users endpoint url from api _somehow_
+		userURL := cfg.BaseURL("/users/" + user.Username)
+		userKey := userURL + "#key"
+		actor, err := ap.FetchActor(fu, userKey, pk)
+		if err != nil {
+			return nil, err
+		}
+		err = ap.SendFollowRequest(actor.Inbox, userURL, pk)
+		if err != nil {
+			return nil, err
+		}
+		f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
 	default:
-		return nil, errors.New("unsupported feed type; " + err.Error())
+		return nil, errUnknownFeedType
 	}
-	return f, model.DB.Create(f).Error
+	err = model.DB.Create(f).Error
+	if err != nil {
+		return f, err
+	}
+	err = createUserFeed(name, f, uid)
+	return f, err
 }
 
-func AddFeed(name, u string, uid uint) error {
+func AddFeed(cfg *config.Config, name, u string, uid uint) error {
 	f, err := model.GetFeedByURL(u)
 	if f == nil || err != nil {
 		var err error
-		f, err = createFeed(name, u)
+		f, err = createFeed(cfg, name, u, uid)
 		if err != nil {
 			return err
 		}
 	}
-	err = createUserFeed(name, f, uid)
-	if err != nil {
-		return err
-	}
 	switch model.FeedType(f.Type) {
 	case model.RSSFeed:
 		updateRSSFeed(f)
+	case model.ActivityPubFeed:
+		break
 	default:
-		log.Error().Str("Type", f.Type).Msg("Unsupported feed type")
+		log.Error().Err(errUnknownFeedType).Str("Type", f.Type)
 	}
 	return nil
 }
@@ -240,16 +273,26 @@ func createUserFeed(name string, f *model.Feed, uid uint) error {
 }
 
 func getFeedInfo(u string) (model.FeedType, string, error) {
-	resp, err := http.Get(u) //nolint: gosec //safe url
+	req, err := http.NewRequest("GET", u, nil) //nolint: gosec //safe url
+	if err != nil {
+		return "", "", err
+	}
+	//cli := &http.Client{Timeout: TODO}
+	cli := &http.Client{}
+	req.Header.Set("Accept", "application/rss+xml;q=0.7, application/rdf+xml;q=0.65, application/atom+xml;q=0.6, application/xml;q=0.5, text/xml;q=0.4, text/html;q=0.9, text/json;q=0.8, application/activity+json;q=1")
+	resp, err := cli.Do(req)
 	if err != nil {
 		return "", "", err
 	}
 	defer resp.Body.Close()
 	ct := strings.ToLower(resp.Header.Get("Content-Type"))
+	if isAPFeed(ct) {
+		return model.ActivityPubFeed, u, nil
+	}
 	if isRSSFeed(ct) {
 		return model.RSSFeed, u, nil
 	}
-	if strings.Contains(ct, "html") {
+	if strings.Contains(ct, "html") || strings.Contains(ct, "xml") {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return "", "", err
@@ -261,6 +304,10 @@ func getFeedInfo(u string) (model.FeedType, string, error) {
 
 func isRSSFeed(s string) bool {
 	return strings.Contains(s, "xml") || strings.Contains(s, "rss") || strings.Contains(s, "atom") || strings.Contains(s, "rdf") || strings.Contains(s, "feed+json")
+}
+
+func isAPFeed(s string) bool {
+	return strings.Contains(s, "activity+json")
 }
 
 func parseHTMLFeedInfo(u string, body []byte) (model.FeedType, string, error) {
@@ -297,6 +344,9 @@ func parseHTMLFeedInfo(u string, body []byte) (model.FeedType, string, error) {
 				if !moreAttr {
 					break
 				}
+			}
+			if isAlternate && href != "" && isAPFeed(ftype) {
+				return model.ActivityPubFeed, resolveURL(pu, href), nil
 			}
 			if isAlternate && href != "" && isRSSFeed(ftype) {
 				return model.RSSFeed, resolveURL(pu, href), nil

@@ -156,7 +156,8 @@ func addFeed(c *gin.Context) {
 	name := c.PostForm("name")
 	u, _ := c.Get("user")
 	uid := u.(*model.User).ID
-	err := feed.AddFeed(name, url, uid)
+	cfg, _ := c.Get("config")
+	err := feed.AddFeed(cfg.(*config.Config), name, url, uid)
 	if err != nil {
 		setNotification(c, nError, "Failed to save feed: "+err.Error(), true)
 	} else {
