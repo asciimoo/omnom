@@ -108,7 +108,7 @@ type Link struct {
 }
 
 type InboxRequest struct {
-	Context string             `json:"@context,omitempty"`
+	Context *Context           `json:"@context,omitempty"`
 	ID      string             `json:"id,omitempty"`
 	Type    string             `json:"type,omitempty"`
 	Actor   string             `json:"actor,omitempty"`
@@ -191,7 +191,7 @@ func SendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) e
 func SendFollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 	id := userURL + "#" + uuid.NewString()
 	r := InboxRequest{
-		Context: "https://www.w3.org/ns/activitystreams",
+		Context: &Context{ID: "https://www.w3.org/ns/activitystreams"},
 		ID:      id,
 		Type:    "Follow",
 		Actor:   userURL,
@@ -210,7 +210,7 @@ func SendFollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 	id := userURL + "#" + uuid.NewString()
 	r := InboxRequest{
-		Context: "https://www.w3.org/ns/activitystreams",
+		Context: &Context{ID: "https://www.w3.org/ns/activitystreams"},
 		ID:      id,
 		Type:    "Undo",
 		Actor:   userURL,
