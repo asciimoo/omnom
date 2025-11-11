@@ -236,10 +236,6 @@ func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 		notFoundView(c)
 		return
 	}
-	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
-		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
-		return
-	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
 	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
