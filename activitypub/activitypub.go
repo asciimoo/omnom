@@ -108,18 +108,28 @@ type Link struct {
 }
 
 type InboxRequest struct {
-	Context *Context           `json:"@context,omitempty"`
-	ID      string             `json:"id,omitempty"`
-	Type    string             `json:"type,omitempty"`
-	Actor   string             `json:"actor,omitempty"`
-	Object  InboxRequestObject `json:"object,omitempty"`
+	Context      *Context            `json:"@context,omitempty"`
+	ID           string              `json:"id,omitempty"`
+	Type         string              `json:"type,omitempty"`
+	Actor        string              `json:"actor,omitempty"`
+	AttributedTo string              `json:"attributedTo,omitempty"`
+	Object       *InboxRequestObject `json:"object,omitempty"`
+	To           []string            `json:"to,omitempty"`
+	Cc           []string            `json:"cc,omitempty"`
+	Published    string              `json:"published,omitempty"`
+	Tag          []Tag               `json:"tag,omitempty"`
+	Replies      map[string]string   `json:"replies,omitempty"`
 }
 
 type InboxRequestObject struct {
-	ID     string `json:"id"`
-	Type   string `json:"type"`
-	Actor  string `json:"actor"`
-	Object string `json:"object"`
+	ID           string `json:"id,omitempty"`
+	Type         string `json:"type,omitempty"`
+	Actor        string `json:"actor,omitempty"`
+	URL          string `json:"url,omitempty"`
+	Object       string `json:"object,omitempty"`
+	Content      string `json:"content,omitempty"`
+	AttributedTo string `json:"attributedTo,omitempty"`
+	inlineID     bool
 }
 
 type Context struct {
@@ -183,28 +193,28 @@ func SendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) e
 	defer r.Body.Close()
 	rb, _ := io.ReadAll(r.Body)
 	if bytes.Contains(rb, []byte("error")) {
-		return errors.New("invalid response")
+		return errors.New("invalid response: " + string(rb))
 	}
 	return nil
 }
 
-func SendFollowRequest(us, userURL string, key *rsa.PrivateKey) error {
+func SendFollowRequest(inURL, actorURL, userURL string, key *rsa.PrivateKey) error {
 	id := userURL + "#" + uuid.NewString()
 	r := InboxRequest{
 		Context: &Context{ID: "https://www.w3.org/ns/activitystreams"},
 		ID:      id,
 		Type:    "Follow",
 		Actor:   userURL,
-		Object: InboxRequestObject{
-			ID: us,
+		Object: &InboxRequestObject{
+			ID:       actorURL,
+			inlineID: true,
 		},
 	}
 	data, err := json.Marshal(r)
 	if err != nil {
 		return err
 	}
-
-	return SendSignedPostRequest(us, userURL+"#key", data, key)
+	return SendSignedPostRequest(inURL, userURL+"#key", data, key)
 }
 
 func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
@@ -214,7 +224,7 @@ func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 		ID:      id,
 		Type:    "Undo",
 		Actor:   userURL,
-		Object: InboxRequestObject{
+		Object: &InboxRequestObject{
 			ID:     us + "#" + uuid.NewString(),
 			Type:   "Follow",
 			Actor:  userURL,
@@ -303,6 +313,16 @@ func (i *Image) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// required for json conversion
+type shadowInboxRequestObject InboxRequestObject
+
+func (i *InboxRequestObject) MarshalJSON() ([]byte, error) {
+	if i.inlineID {
+		return json.Marshal(i.ID)
+	}
+	return json.Marshal((*shadowInboxRequestObject)(i))
+}
+
 func (i *InboxRequestObject) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 || string(data) == jsonNull {
 		return nil
@@ -311,13 +331,7 @@ func (i *InboxRequestObject) UnmarshalJSON(data []byte) error {
 		return json.Unmarshal(data, &i.ID)
 	}
 	if data[0] == '{' && data[len(data)-1] == '}' {
-		type T struct {
-			ID     string `json:"id"`
-			Type   string `json:"type"`
-			Actor  string `json:"actor"`
-			Object string `json:"object"`
-		}
-		return json.Unmarshal(data, (*T)(i))
+		return json.Unmarshal(data, (*shadowInboxRequestObject)(i))
 	}
 	return nil
 }

@@ -148,6 +148,7 @@ func deleteFeed(c *gin.Context) {
 	if err == nil {
 		setNotification(c, nInfo, "Feed deleted", true)
 	} else {
+		log.Error().Err(err).Str("Feed", f.Name).Msg("Failed to delete feed")
 		setNotification(c, nError, "Failed to delete feed", true)
 	}
 	c.Redirect(http.StatusFound, URLFor("feeds"))

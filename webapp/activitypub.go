@@ -18,6 +18,7 @@ import (
 
 	ap "github.com/asciimoo/omnom/activitypub"
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/feed"
 	"github.com/asciimoo/omnom/model"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,9 @@ import (
 )
 
 const (
+	createAction   = "Create"
 	followAction   = "Follow"
+	noteAction     = "Note"
 	unfollowAction = "Undo"
 )
 
@@ -92,7 +95,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.O
 	item := &ap.OutboxItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      id + "#activity",
-		Type:    "Create",
+		Type:    createAction,
 		Actor:   actor,
 		To: []string{
 			"https://www.w3.org/ns/activitystreams#Public",
@@ -101,7 +104,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.O
 		Published: published,
 		Object: ap.OutboxObject{
 			ID:           id,
-			Type:         "Note",
+			Type:         noteAction,
 			Summary:      "",
 			Content:      fmt.Sprintf(contentTpl, b.URL, title, body, id),
 			URL:          b.URL,
@@ -208,6 +211,8 @@ func apInboxResponse(c *gin.Context) {
 		go apInboxFollowResponse(c, d, body)
 	case unfollowAction:
 		go apInboxUnfollowResponse(c, d, body)
+	case createAction:
+		go apInboxCreateResponse(c, d, body)
 	default:
 		log.Debug().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -218,6 +223,44 @@ func apInboxResponse(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]string{
 		"status": "OK",
 	})
+}
+
+func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
+	if d.Object.Type != noteAction {
+		return
+	}
+	// TODO refactor redundant code from inbox response functions
+	user := model.GetUser(c.Param("username"))
+	if user == nil {
+		log.Debug().Msg("Unknown user")
+		notFoundView(c)
+		return
+	}
+	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
+		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
+		return
+	}
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
+	if err != nil {
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
+		return
+	}
+	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
+		return
+	}
+	f, err := model.GetFeedByURL(d.Actor)
+	if err != nil {
+		log.Error().Err(err).Str("URL", d.Actor).Msg("No feed found")
+		return
+	}
+	err = feed.AddActivityPubFeedItem(f, user, d)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to add AP feed item")
+		return
+	}
 }
 
 func apInboxFollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {

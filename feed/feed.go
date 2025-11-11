@@ -186,6 +186,39 @@ func updateRSSFeed(f *model.Feed) {
 	log.Debug().Int64("new items", added).Str("feed", f.Name).Msg("Feed updated")
 }
 
+func AddActivityPubFeedItem(f *model.Feed, u *model.User, d *ap.InboxRequest) error {
+	pu, err := url.Parse(f.URL)
+	if err != nil {
+		return err
+	}
+	c := d.Object.Content
+	a := d.Actor
+	if d.Object.AttributedTo != "" && d.Object.AttributedTo != a {
+		a = fmt.Sprintf("%s -> %s", a, d.Object.AttributedTo)
+	}
+	fi, err := model.GetFeedItem(f.ID, d.Object.URL)
+	if err != nil {
+		return err
+	}
+	if fi != nil {
+		return nil
+	}
+	fi = &model.FeedItem{
+		Title:   a,
+		Content: sanitizeHTML(pu, c),
+		URL:     d.Object.URL,
+		FeedID:  f.ID,
+	}
+	fi.Content, err = saveResources(fi.Content)
+	if err != nil {
+		return err
+	}
+	if model.AddFeedItem(fi) != 1 {
+		return errors.New("failed to add feed item to DB")
+	}
+	return nil
+}
+
 func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, error) {
 	ftype, fu, err := getFeedInfo(u)
 	if err != nil {
@@ -196,8 +229,6 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 		URL:  fu,
 		Type: string(ftype),
 	}
-	// TODO parse feed URL if u's content is HTML
-	// TODO add support for ActivityPub feeds
 	switch ftype {
 	case model.RSSFeed:
 		feed, err := createRSSFeed(fu)
@@ -220,7 +251,8 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 		if err != nil {
 			return nil, err
 		}
-		err = ap.SendFollowRequest(actor.Inbox, userURL, pk)
+		f.URL = actor.URL
+		err = ap.SendFollowRequest(actor.Inbox, fu, userURL, pk)
 		if err != nil {
 			return nil, err
 		}
@@ -271,11 +303,12 @@ func DeleteFeed(cfg *config.Config, uf *model.UserFeed) error {
 		pk := cfg.ActivityPub.PrivK
 		actor, err := ap.FetchActor(f.URL, userKey, pk)
 		if err != nil {
-			return err
+			log.Info().Err(err).Msg("Failed to fetch actor")
+			break
 		}
 		err = ap.SendUnfollowRequest(actor.Inbox, userURL, pk)
 		if err != nil {
-			return err
+			log.Info().Err(err).Msg("Failed to send unfollow request")
 		}
 	}
 	return model.DeleteUserFeed(uf)
