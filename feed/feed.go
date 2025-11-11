@@ -197,10 +197,7 @@ func AddActivityPubFeedItem(f *model.Feed, u *model.User, d *ap.InboxRequest) er
 		a = fmt.Sprintf("%s -> %s", a, d.Object.AttributedTo)
 	}
 	fi, err := model.GetFeedItem(f.ID, d.Object.URL)
-	if err != nil {
-		return err
-	}
-	if fi != nil {
+	if fi != nil && err == nil {
 		return nil
 	}
 	fi = &model.FeedItem{
