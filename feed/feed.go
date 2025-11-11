@@ -251,7 +251,7 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 		if err != nil {
 			return nil, err
 		}
-		f.URL = actor.URL
+		f.URL = actor.ID
 		err = ap.SendFollowRequest(actor.Inbox, fu, userURL, pk)
 		if err != nil {
 			return nil, err
