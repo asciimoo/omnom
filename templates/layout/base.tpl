@@ -433,7 +433,7 @@
             </p>
             <p class="subtitle is-6"><span class="tag">{{ .Item.FeedName }}</span> {{ .Item.CreatedAt | ToDateTime }}</p>
             {{ if .Item.Content }}
-            <article class="rss content">{{ .Item.Content | ToHTML }}</article>
+            <article class="{{ .Item.FeedType }} content">{{ .Item.Content | ToHTML }}</article>
             {{ end }}
         </div>
     </div>
