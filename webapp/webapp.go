@@ -271,30 +271,30 @@ func renderRSS(c *gin.Context, status int, vars map[string]any) {
 }
 
 func registerEndpoint(r *gin.RouterGroup, e *Endpoint) {
-	var h gin.HandlerFunc
-	if e.RSS != "" {
-		h = RSSEndpointWrapper(e.Handler, e.RSS)
-	} else {
-		h = e.Handler
-	}
+	hs := make([]gin.HandlerFunc, 0, 2)
 	if len(e.Args) > 0 {
-		h = validateArgsWrapper(h, e.Method, e.Args)
+		hs = append(hs, createValidateArgsMiddleware(e.Method, e.Args))
+	}
+	if e.RSS != "" {
+		hs = append(hs, RSSEndpointWrapper(e.Handler, e.RSS))
+	} else {
+		hs = append(hs, e.Handler)
 	}
 	switch e.Method {
 	case GET:
-		r.GET(e.Path, h)
+		r.GET(e.Path, hs...)
 	case POST:
-		r.POST(e.Path, h)
+		r.POST(e.Path, hs...)
 	case PUT:
-		r.PUT(e.Path, h)
+		r.PUT(e.Path, hs...)
 	case PATCH:
-		r.PATCH(e.Path, h)
+		r.PATCH(e.Path, hs...)
 	case HEAD:
-		r.HEAD(e.Path, h)
+		r.HEAD(e.Path, hs...)
 	}
 }
 
-func validateArgsWrapper(h gin.HandlerFunc, method string, args []*EndpointArg) gin.HandlerFunc {
+func createValidateArgsMiddleware(method string, args []*EndpointArg) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		for _, a := range args {
 			if !a.Required || a.SkipAutoValidation {
@@ -312,10 +312,11 @@ func validateArgsWrapper(h gin.HandlerFunc, method string, args []*EndpointArg) 
 				render(c, http.StatusNotFound, "error", gin.H{
 					"Title": "Missing argument",
 				})
+				c.Abort()
 				return
 			}
 		}
-		h(c)
+		c.Next()
 	}
 }
 
@@ -581,10 +582,19 @@ func LocalizationMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 func CSRFMiddleware() gin.HandlerFunc {
 	protection := csrf.New()
+	exceptions := []string{
+		".addBookmark",
+		".addResource",
+		".pageInfo",
+		".checkToken",
+	}
 	return func(c *gin.Context) {
-		if strings.HasSuffix(c.HandlerName(), ".addBookmark") || strings.HasSuffix(c.HandlerName(), ".addResource") {
-			c.Next()
-			return
+		h := c.HandlerName()
+		for _, e := range exceptions {
+			if strings.HasSuffix(h, e) {
+				c.Next()
+				return
+			}
 		}
 		err := protection.Check(c.Request)
 		if err != nil {
