@@ -209,8 +209,7 @@ func apInboxResponse(c *gin.Context) {
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	uk := d.Object.ID + "#key"
-	actor, err := ap.FetchActor(d.Actor, uk, key)
+	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
 	if err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -218,7 +217,7 @@ func apInboxResponse(c *gin.Context) {
 		})
 		return
 	}
-	if err := apCheckSignature(c, actor, uk, body); err != nil {
+	if err := apCheckSignature(c, actor, body); err != nil {
 		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate signature")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid signature",
@@ -444,7 +443,7 @@ func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
 	return signature, hash[:], nil
 }
 
-func apCheckSignature(c *gin.Context, actor *ap.Identity, keyID string, payload []byte) error {
+func apCheckSignature(c *gin.Context, actor *ap.Identity, payload []byte) error {
 	pubKey := actor.PubKey.PublicKeyPem
 	pHash := sha256.Sum256(payload)
 	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(pHash[:]))
