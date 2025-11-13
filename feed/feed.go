@@ -471,27 +471,35 @@ func resolveURLs(base *url.URL, h string) string {
 	if h == "" {
 		return ""
 	}
-	doc, err := html.Parse(strings.NewReader(h))
+	frags, err := html.ParseFragment(strings.NewReader(h), &html.Node{
+		Type:     html.ElementNode,
+		Data:     "body",
+		DataAtom: atom.Body})
 	if err != nil {
 		log.Debug().Err(err).Str("HTML", h).Msg("Failed to parse HTML")
 		return ""
 	}
-	for n := range doc.Descendants() {
-		if n.Type != html.ElementNode {
-			continue
-		}
-		for i, a := range n.Attr {
-			if a.Key == srcAttr || a.Key == "href" {
-				n.Attr[i] = html.Attribute{Key: a.Key, Val: resolveURL(base, a.Val)}
+	chunks := make([]string, 0, len(frags))
+	for _, doc := range frags {
+		for n := range doc.Descendants() {
+			if n.Type != html.ElementNode {
+				continue
+			}
+			for i, a := range n.Attr {
+				if a.Key == srcAttr || a.Key == "href" {
+					n.Attr[i] = html.Attribute{Key: a.Key, Val: resolveURL(base, a.Val)}
+				}
 			}
 		}
+		var out strings.Builder
+		err = html.Render(&out, doc)
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to render HTML")
+			continue
+		}
+		chunks = append(chunks, out.String())
 	}
-	var out strings.Builder
-	err = html.Render(&out, doc)
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to render HTML")
-	}
-	return out.String()
+	return strings.Join(chunks, "")
 }
 
 func resolveURL(base *url.URL, u string) string {
@@ -518,30 +526,38 @@ func saveResources(h string) (string, error) {
 	if h == "" {
 		return "", nil
 	}
-	doc, err := html.Parse(strings.NewReader(h))
+	frags, err := html.ParseFragment(strings.NewReader(h), &html.Node{
+		Type:     html.ElementNode,
+		Data:     "body",
+		DataAtom: atom.Body})
 	if err != nil {
+		log.Debug().Err(err).Str("HTML", h).Msg("Failed to parse HTML")
 		return "", err
 	}
-	for n := range doc.Descendants() {
-		if n.Type != html.ElementNode || n.DataAtom != atom.Img {
-			continue
-		}
-		for i, a := range n.Attr {
-			if a.Key == srcAttr {
-				key, err := saveResource(a.Val)
-				if err != nil {
-					return "", err
+	chunks := make([]string, 0, len(frags))
+	for _, doc := range frags {
+		for n := range doc.Descendants() {
+			if n.Type != html.ElementNode || n.DataAtom != atom.Img {
+				continue
+			}
+			for i, a := range n.Attr {
+				if a.Key == srcAttr {
+					key, err := saveResource(a.Val)
+					if err != nil {
+						return "", err
+					}
+					n.Attr[i] = html.Attribute{Key: a.Key, Val: fmt.Sprintf("/static/data/resources/%s/%s", key[:2], key)}
 				}
-				n.Attr[i] = html.Attribute{Key: a.Key, Val: fmt.Sprintf("/static/data/resources/%s/%s", key[:2], key)}
 			}
 		}
+		var out strings.Builder
+		err = html.Render(&out, doc)
+		if err != nil {
+			return "", err
+		}
+		chunks = append(chunks, out.String())
 	}
-	var out strings.Builder
-	err = html.Render(&out, doc)
-	if err != nil {
-		return "", err
-	}
-	return out.String(), nil
+	return strings.Join(chunks, ""), nil
 }
 
 func saveResource(u string) (string, error) {
