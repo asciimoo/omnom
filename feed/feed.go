@@ -436,11 +436,15 @@ func fetchImageAsInlineURL(u string) string {
 		return ""
 	}
 	defer r.Body.Close()
+	ct := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(ct, "image/") {
+		return ""
+	}
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return ""
 	}
-	return fmt.Sprintf("data:%s;base64,%s", r.Header.Get("Content-Type"), base64.StdEncoding.EncodeToString(data))
+	return fmt.Sprintf("data:%s;base64,%s", ct, base64.StdEncoding.EncodeToString(data))
 }
 
 func getFaviconURL(u string) string {
