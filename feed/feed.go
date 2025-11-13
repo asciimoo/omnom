@@ -481,15 +481,9 @@ func resolveURLs(base *url.URL, h string) string {
 	}
 	chunks := make([]string, 0, len(frags))
 	for _, doc := range frags {
+		resolveElementURLs(base, doc)
 		for n := range doc.Descendants() {
-			if n.Type != html.ElementNode {
-				continue
-			}
-			for i, a := range n.Attr {
-				if a.Key == srcAttr || a.Key == "href" {
-					n.Attr[i] = html.Attribute{Key: a.Key, Val: resolveURL(base, a.Val)}
-				}
-			}
+			resolveElementURLs(base, n)
 		}
 		var out strings.Builder
 		err = html.Render(&out, doc)
@@ -500,6 +494,17 @@ func resolveURLs(base *url.URL, h string) string {
 		chunks = append(chunks, out.String())
 	}
 	return strings.Join(chunks, "")
+}
+
+func resolveElementURLs(base *url.URL, n *html.Node) {
+	if n.Type != html.ElementNode {
+		return
+	}
+	for i, a := range n.Attr {
+		if a.Key == srcAttr || a.Key == "href" {
+			n.Attr[i] = html.Attribute{Key: a.Key, Val: resolveURL(base, a.Val)}
+		}
+	}
 }
 
 func resolveURL(base *url.URL, u string) string {
@@ -536,19 +541,9 @@ func saveResources(h string) (string, error) {
 	}
 	chunks := make([]string, 0, len(frags))
 	for _, doc := range frags {
+		rewriteResourceAttributes(doc)
 		for n := range doc.Descendants() {
-			if n.Type != html.ElementNode || n.DataAtom != atom.Img {
-				continue
-			}
-			for i, a := range n.Attr {
-				if a.Key == srcAttr {
-					key, err := saveResource(a.Val)
-					if err != nil {
-						return "", err
-					}
-					n.Attr[i] = html.Attribute{Key: a.Key, Val: fmt.Sprintf("/static/data/resources/%s/%s", key[:2], key)}
-				}
-			}
+			rewriteResourceAttributes(n)
 		}
 		var out strings.Builder
 		err = html.Render(&out, doc)
@@ -558,6 +553,21 @@ func saveResources(h string) (string, error) {
 		chunks = append(chunks, out.String())
 	}
 	return strings.Join(chunks, ""), nil
+}
+func rewriteResourceAttributes(n *html.Node) {
+	if n.Type != html.ElementNode || n.DataAtom != atom.Img {
+		return
+	}
+	for i, a := range n.Attr {
+		if a.Key == srcAttr {
+			key, err := saveResource(a.Val)
+			if err != nil {
+				// TODO how to handle?
+				continue
+			}
+			n.Attr[i] = html.Attribute{Key: a.Key, Val: fmt.Sprintf("/static/data/resources/%s/%s", key[:2], key)}
+		}
+	}
 }
 
 func saveResource(u string) (string, error) {
