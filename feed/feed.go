@@ -193,17 +193,21 @@ func AddActivityPubFeedItem(f *model.Feed, u *model.User, d *ap.InboxRequest) er
 	}
 	c := d.Object.Content
 	a := d.Actor
+	uri := d.Object.ID
+	if d.Object.URL != "" {
+		uri = d.Object.URL
+	}
 	if d.Object.AttributedTo != "" && d.Object.AttributedTo != a {
 		a = fmt.Sprintf("%s -> %s", a, d.Object.AttributedTo)
 	}
-	fi, err := model.GetFeedItem(f.ID, d.Object.URL)
+	fi, err := model.GetFeedItem(f.ID, uri)
 	if fi != nil && err == nil {
 		return nil
 	}
 	fi = &model.FeedItem{
 		Title:   a,
 		Content: sanitizeHTML(pu, c),
-		URL:     d.Object.URL,
+		URL:     uri,
 		FeedID:  f.ID,
 	}
 	fi.Content, err = saveResources(fi.Content)
