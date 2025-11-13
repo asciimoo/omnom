@@ -427,11 +427,13 @@
             {{ end }}
             <p class="title is-5">
                 <a href="{{ .Item.URL }}">{{ .Item.Title }}</a>
+            </p>
+            <p class="subtitle is-6">
+                <span class="tag">{{ .Item.FeedName }}</span> {{ .Item.CreatedAt | ToDateTime }}
                 {{ if ne .Item.OriginalAuthor "" }}
-                <br>Reposted from <a href="{{ .Item.OriginalAuthor }}">{{ .Item.OriginalAuthor }}</a>
+                <br /><b>Reposted from <a href="{{ .Item.OriginalAuthor }}">{{ .Item.OriginalAuthor }}</a></b>
                 {{ end }}
             </p>
-            <p class="subtitle is-6"><span class="tag">{{ .Item.FeedName }}</span> {{ .Item.CreatedAt | ToDateTime }}</p>
             {{ if .Item.Content }}
             <article class="{{ .Item.FeedType }} content">{{ .Item.Content | ToHTML }}</article>
             {{ end }}
