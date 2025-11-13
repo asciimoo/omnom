@@ -253,7 +253,11 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 		if err != nil {
 			return nil, err
 		}
-		f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
+		if actor.Icon.URL != "" {
+			f.Favicon = fetchImageAsInlineURL(actor.Icon.URL)
+		} else {
+			f.Favicon = fetchImageAsInlineURL(getFaviconURL(u))
+		}
 	default:
 		return nil, errUnknownFeedType
 	}
