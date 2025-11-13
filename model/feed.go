@@ -42,12 +42,13 @@ type UserFeed struct {
 
 type FeedItem struct {
 	CommonFields
-	URL     string  `gorm:"uniqueIndex:feeditemuidx" json:"url"`
-	Title   string  `json:"title"`
-	Content string  `json:"content"`
-	FeedID  uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
-	Feed    *Feed   `json:"feed"`
-	Users   []*User `gorm:"many2many:user_feed_items;" json:"-"`
+	URL            string  `gorm:"uniqueIndex:feeditemuidx" json:"url"`
+	Title          string  `json:"title"`
+	Content        string  `json:"content"`
+	OriginalAuthor string  `json:"original_author"`
+	FeedID         uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
+	Feed           *Feed   `json:"feed"`
+	Users          []*User `gorm:"many2many:user_feed_items;" json:"-"`
 }
 
 type UserFeedItem struct {
