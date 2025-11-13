@@ -234,7 +234,7 @@ func apInboxResponse(c *gin.Context) {
 	case announceAction:
 		go apInboxAnnounceResponse(c, d)
 	default:
-		log.Debug().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message")
+		log.Debug().Str("type", d.Type).Bytes("msg", body).Msg("Unhandled ActivityPub inbox message")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Unknown action type",
 		})
