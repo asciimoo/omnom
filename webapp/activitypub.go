@@ -27,6 +27,7 @@ import (
 )
 
 const (
+	announceAction = "Announce"
 	createAction   = "Create"
 	followAction   = "Follow"
 	noteAction     = "Note"
@@ -206,13 +207,33 @@ func apInboxResponse(c *gin.Context) {
 		})
 		return
 	}
+	cfg, _ := c.Get("config")
+	key := cfg.(*config.Config).ActivityPub.PrivK
+	uk := d.Object.ID + "#key"
+	actor, err := ap.FetchActor(d.Actor, uk, key)
+	if err != nil {
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Network error",
+		})
+		return
+	}
+	if err := apCheckSignature(c, actor, uk, body); err != nil {
+		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate signature")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid signature",
+		})
+		return
+	}
 	switch d.Type {
 	case followAction:
-		go apInboxFollowResponse(c, d, body)
+		go apInboxFollowResponse(c, d, actor)
 	case unfollowAction:
-		go apInboxUnfollowResponse(c, d, body)
+		go apInboxUnfollowResponse(c, d, actor)
 	case createAction:
-		go apInboxCreateResponse(c, d, body)
+		go apInboxCreateResponse(c, d)
+	case announceAction:
+		go apInboxAnnounceResponse(c, d)
 	default:
 		log.Debug().Str("type", d.Type).Msg("Unhandled ActivityPub inbox message")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -225,7 +246,21 @@ func apInboxResponse(c *gin.Context) {
 	})
 }
 
-func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
+func apInboxAnnounceResponse(c *gin.Context, d *ap.InboxRequest) {
+	obj, err := ap.FetchObject(d.Object.ID)
+	if err != nil {
+		log.Error().Err(err).Str("ID", d.Object.ID).Msg("Failed to fetch object")
+		return
+	}
+	if obj.Type != "Note" {
+		log.Error().Err(err).Str("Type", obj.Type).Msg("Unsupported object type")
+		return
+	}
+	d.Object = obj
+	apInboxCreateResponse(c, d)
+}
+
+func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest) {
 	if d.Object.Type != noteAction {
 		return
 	}
@@ -234,17 +269,6 @@ func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 	if user == nil {
 		log.Debug().Msg("Unknown user")
 		notFoundView(c)
-		return
-	}
-	cfg, _ := c.Get("config")
-	key := cfg.(*config.Config).ActivityPub.PrivK
-	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
-	if err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
-		return
-	}
-	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
 		return
 	}
 	f, err := model.GetFeedByURL(d.Actor)
@@ -259,7 +283,7 @@ func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 	}
 }
 
-func apInboxFollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
+func apInboxFollowResponse(c *gin.Context, d *ap.InboxRequest, actor *ap.Identity) {
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
 		log.Debug().Msg("Unknown user")
@@ -267,20 +291,11 @@ func apInboxFollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 		return
 	}
 	if !strings.HasPrefix(d.Object.ID, getFullURLPrefix(c)) {
-		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
+		log.Error().Msg("Inbox request objectID points to different host")
 		return
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
-	if err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
-		return
-	}
-	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
-		return
-	}
 	data, err := json.Marshal(ap.FollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
@@ -308,7 +323,7 @@ func apInboxFollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
 		return
 	}
 }
-func apInboxUnfollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte) {
+func apInboxUnfollowResponse(c *gin.Context, d *ap.InboxRequest, actor *ap.Identity) {
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
 		log.Debug().Msg("Unknown user")
@@ -316,20 +331,11 @@ func apInboxUnfollowResponse(c *gin.Context, d *ap.InboxRequest, payload []byte)
 		return
 	}
 	if !strings.HasPrefix(d.Object.Object, getFullURLPrefix(c)) {
-		log.Error().Bytes("payload", payload).Msg("Inbox request objectID points to different host")
+		log.Error().Msg("Inbox request objectID points to different host")
 		return
 	}
 	cfg, _ := c.Get("config")
 	key := cfg.(*config.Config).ActivityPub.PrivK
-	actor, err := ap.FetchActor(d.Actor, d.Object.ID+"#key", key)
-	if err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to fetch actor information")
-		return
-	}
-	if err := apCheckSignature(c, actor.PubKey.PublicKeyPem, payload); err != nil {
-		log.Error().Err(err).Str("actor", d.Actor).Msg("Failed to validate actor signature")
-		return
-	}
 	data, err := json.Marshal(ap.FollowResponseItem{
 		Context: "https://www.w3.org/ns/activitystreams",
 		ID:      getFullURL(c, "/"+uuid.New().String()),
@@ -438,14 +444,15 @@ func apParseSigHeader(c *gin.Context, digest string) (string, []byte, error) {
 	return signature, hash[:], nil
 }
 
-func apCheckSignature(c *gin.Context, key string, payload []byte) error {
+func apCheckSignature(c *gin.Context, actor *ap.Identity, keyID string, payload []byte) error {
+	pubKey := actor.PubKey.PublicKeyPem
 	pHash := sha256.Sum256(payload)
 	digest := fmt.Sprintf("SHA-256=%s", base64.StdEncoding.EncodeToString(pHash[:]))
 	signature, hash, err := apParseSigHeader(c, digest)
 	if err != nil {
 		return fmt.Errorf("failed to parse signature header: %w", err)
 	}
-	pb, _ := pem.Decode([]byte(key))
+	pb, _ := pem.Decode([]byte(pubKey))
 	if pb == nil || pb.Type != "PUBLIC KEY" {
 		return errors.New("failed to decode PEM block containing public key")
 	}

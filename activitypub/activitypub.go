@@ -239,12 +239,30 @@ func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 	return SendSignedPostRequest(us, userURL+"#key", data, key)
 }
 
+func FetchObject(u string) (*InboxRequestObject, error) {
+	c := &http.Client{Timeout: apRequestTimeout}
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/activity+json; charset=utf-8")
+	req.Header.Set("Accept", "application/activity+json")
+	r, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+	o := &InboxRequestObject{}
+	err = json.NewDecoder(r.Body).Decode(o)
+	return o, err
+}
+
 func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error) {
 	u, err := url.Parse(us)
 	if err != nil {
 		return nil, err
 	}
-	c := &http.Client{Timeout: 10 * time.Second}
+	c := &http.Client{Timeout: apRequestTimeout}
 	req, err := http.NewRequest("GET", us, nil)
 	if err != nil {
 		return nil, err
