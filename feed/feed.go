@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"mime"
 	"net/http"
@@ -24,6 +25,10 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
+const imgTplStr = `<hr /><img src="{{ .Src }}" alt="{{ .Alt }}" />`
+
+var imgTpl *template.Template
+
 var htmlSanitizerPolicy *bluemonday.Policy
 
 var errUnknownFeedType = errors.New("unknown feed type")
@@ -33,6 +38,12 @@ const (
 )
 
 func init() {
+	var err error
+	imgTpl = template.New("image template")
+	imgTpl, err = imgTpl.Parse(imgTplStr)
+	if err != nil {
+		panic(err)
+	}
 	p := bluemonday.NewPolicy()
 	p.AllowElements(
 		"a",
@@ -192,6 +203,20 @@ func AddActivityPubFeedItem(f *model.Feed, u *model.User, d *ap.InboxRequest) er
 		return err
 	}
 	c := d.Object.Content
+	for _, att := range d.Object.Attachments {
+		if strings.Contains(att.MediaType, "image") && att.URL != "" {
+			var out strings.Builder
+			err := imgTpl.Execute(&out, map[string]string{
+				"Src": att.URL,
+				"Alt": att.Name,
+			})
+			if err != nil {
+				log.Debug().Err(err).Msg("Failed to render image template")
+				continue
+			}
+			c += out.String()
+		}
+	}
 	a := d.Actor
 	uri := d.Object.ID
 	if d.Object.URL != "" {

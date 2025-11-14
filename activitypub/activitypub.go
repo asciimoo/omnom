@@ -122,13 +122,14 @@ type InboxRequest struct {
 }
 
 type InboxRequestObject struct {
-	ID           string `json:"id,omitempty"`
-	Type         string `json:"type,omitempty"`
-	Actor        string `json:"actor,omitempty"`
-	URL          string `json:"url,omitempty"`
-	Object       string `json:"object,omitempty"`
-	Content      string `json:"content,omitempty"`
-	AttributedTo string `json:"attributedTo,omitempty"`
+	ID           string        `json:"id,omitempty"`
+	Type         string        `json:"type,omitempty"`
+	Actor        string        `json:"actor,omitempty"`
+	URL          string        `json:"url,omitempty"`
+	Object       string        `json:"object,omitempty"`
+	Content      string        `json:"content,omitempty"`
+	AttributedTo string        `json:"attributedTo,omitempty"`
+	Attachments  []*Attachment `json:"attachment,omitempty"`
 	inlineID     bool
 }
 
@@ -150,6 +151,13 @@ type FollowResponseObject struct {
 	Type   string `json:"type"`
 	Actor  string `json:"actor"`
 	Object string `json:"object"`
+}
+
+type Attachment struct {
+	Type      string `json:"type"`
+	MediaType string `json:"mediaType"`
+	URL       string `json:"url"`
+	Name      string `json:"name"`
 }
 
 // https://docs.joinmastodon.org/spec/security/#ld
