@@ -4,24 +4,27 @@
 [![GoDoc](https://godoc.org/github.com/asciimoo/omnom?status.svg)](https://pkg.go.dev/github.com/asciimoo/omnom)
 
 
-Bookmarking with website snapshots.
+A web content preservation service
 
 
-Access & share previously visited pages without worrying about modifications or availability.
-
+ - Bookmark with website snapshots
+ - Aggregate feeds
+ - Follow ActivityPub streams
 
 Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more information.
 
 
 ## Features
 
- - Websites are captured as your browser renders it - saves the displayed content of dynamic pages as well
  - Self hosted
- - Web interface with multiuser support
- - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
+ - Bookmarking
+ - RSS reader
  - [Fediverse/ActivityPub support](https://github.com/asciimoo/omnom/wiki/Fediverse-support)
- - Private & public bookmarks
+ - Websites are captured as your browser renders it - saves the displayed content of dynamic pages as well
  - Multiple snapshots of the same URL with resource summary and compare/diff views
+ - Web interface with multiuser support
+ - Locally saved multimedia content
+ - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
  - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
 
 
