@@ -435,7 +435,7 @@
             <p class="subtitle is-6">
                 <a href="{{ URLFor "feed search" }}?feed_id={{ .Item.FeedID }}&include_read_items=1" class="tag">{{ .Item.FeedName }}</a> <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
                 {{ if .Item.OriginalAuthorID }}
-                <br /><b>Author: <a href="{{ .Item.OriginalAuthorID }}">
+                <br /><b>Original author: <a href="{{ .Item.OriginalAuthorID }}">
                     {{ if .Item.Favicon }}
                     <figure class="image is-24x24">
                         <img src="{{ .Item.Favicon | ToURL }}" alt="favicon" />
