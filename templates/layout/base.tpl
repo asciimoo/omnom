@@ -426,7 +426,11 @@
             <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="fids" value="{{ .Item.UserFeedItemID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
             {{ end }}
             <p class="title is-5">
-                {{ .Item.FeedName }}<a href="{{ .Item.FeedURL }}">@{{ .Item.FeedAuthorName }}</a>
+                {{ if eq .Item.FeedType "rss" }}
+                    <a href="{{ .Item.URL }}">{{ .Item.FeedName }}</a>
+                {{ else }}
+                    {{ .Item.FeedName }}{{ if .Item.FeedAuthor }}<a href="{{ .Item.FeedURL }}">@{{ .Item.FeedAuthor }}</a>{{ end }}
+                {{ end }}
             </p>
             <p class="subtitle is-6">
                 <a href="{{ URLFor "feed search" }}?feed_id={{ .Item.FeedID }}&include_read_items=1" class="tag">{{ .Item.FeedName }}</a> <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
