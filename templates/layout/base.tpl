@@ -429,7 +429,7 @@
                 {{ if eq .Item.FeedType "rss" }}
                     <a href="{{ .Item.URL }}">{{ .Item.FeedName }}</a>
                 {{ else }}
-                    {{ .Item.FeedName }}{{ if .Item.FeedAuthor }}<a href="{{ .Item.FeedURL }}">@{{ .Item.FeedAuthor }}</a>{{ end }}
+                    {{ if .Item.FeedAuthor }}<a href="{{ .Item.FeedURL }}">@{{ .Item.FeedAuthor }}</a>{{ else }}{{ .Item.FeedName }}{{ end }}
                 {{ end }}
             </p>
             <p class="subtitle is-6">
