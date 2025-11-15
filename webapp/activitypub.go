@@ -263,7 +263,6 @@ func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest) {
 	if d.Object.Type != noteAction {
 		return
 	}
-	// TODO refactor redundant code from inbox response functions
 	user := model.GetUser(c.Param("username"))
 	if user == nil {
 		log.Debug().Msg("Unknown user")
@@ -275,7 +274,8 @@ func apInboxCreateResponse(c *gin.Context, d *ap.InboxRequest) {
 		log.Error().Err(err).Str("URL", d.Actor).Msg("No feed found")
 		return
 	}
-	err = feed.AddActivityPubFeedItem(f, user, d)
+	cfg, _ := c.Get("config")
+	err = feed.AddActivityPubFeedItem(cfg.(*config.Config), f, user, d)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to add AP feed item")
 		return

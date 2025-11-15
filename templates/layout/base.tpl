@@ -416,8 +416,8 @@
     <div class="media">
         <div class="media-left">
             <figure class="image is-48x48">
-                {{ if .Item.Favicon }}
-                <img src="{{ .Item.Favicon | ToURL }}" alt="favicon" />
+                {{ if .Item.FeedFavicon }}
+                <img src="{{ .Item.FeedFavicon | ToURL }}" alt="favicon" />
                 {{ end }}
             </figure>
         </div>
@@ -426,12 +426,19 @@
             <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="fids" value="{{ .Item.UserFeedItemID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
             {{ end }}
             <p class="title is-5">
-                <a href="{{ .Item.URL }}">{{ .Item.Title }}</a>
+                {{ .Item.Title }}
             </p>
             <p class="subtitle is-6">
-                <span class="tag">{{ .Item.FeedName }}</span> {{ .Item.CreatedAt | ToDateTime }}
+                <span class="tag">{{ .Item.FeedName }}</span> <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
                 {{ if ne .Item.OriginalAuthor "" }}
-                <br /><b>Reposted from <a href="{{ .Item.OriginalAuthor }}">{{ .Item.OriginalAuthor }}</a></b>
+                <br /><b>Reposted from <a href="{{ .Item.OriginalAuthor }}">
+                    {{ if .Favicon }}
+                    <figure class="image is-24x24">
+                        <img src="{{ .Item.Favicon | ToURL }}" alt="favicon" />
+                    </figure>
+                    {{ end }}
+                    {{ .Item.OriginalAuthor }}
+                </a></b>
                 {{ end }}
             </p>
             {{ if .Item.Content }}

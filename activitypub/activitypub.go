@@ -14,12 +14,16 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/asciimoo/omnom/storage"
+	"github.com/asciimoo/omnom/utils"
+
 	"github.com/google/uuid"
 )
 
 const (
 	apRequestTimeout = 10 * time.Second
 	jsonNull         = "null"
+	imageType        = "Image"
 )
 
 type Outbox struct {
@@ -299,6 +303,46 @@ func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error)
 		return nil, errors.New("mandatory actor data is missing")
 	}
 	return i, err
+}
+
+func (i *Identity) SaveFavicon() error {
+	var uri string
+	if i.Icon != nil && i.Icon.Type == imageType {
+		uri = i.Icon.URL
+	} else if i.Image != nil {
+		uri = i.Image.URL
+	} else {
+		return nil
+	}
+	c := &http.Client{Timeout: apRequestTimeout}
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return err
+	}
+	r, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	rb, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	// TODO get extension from content type
+	key := storage.Hash([]byte(i.ID)) + "." + utils.GetExtension(uri)
+	return storage.SaveResource(key, rb)
+}
+
+func (i *Identity) GetFaviconPath() string {
+	var uri string
+	if i.Icon != nil && i.Icon.Type == imageType {
+		uri = i.Icon.URL
+	} else if i.Image != nil {
+		uri = i.Image.URL
+	} else {
+		return ""
+	}
+	return storage.Hash([]byte(uri)) + "." + utils.GetExtension(uri)
 }
 
 func (c *Context) UnmarshalJSON(data []byte) error {

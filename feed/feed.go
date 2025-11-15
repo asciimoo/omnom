@@ -197,7 +197,7 @@ func updateRSSFeed(f *model.Feed) {
 	log.Debug().Int64("new items", added).Str("feed", f.Name).Msg("Feed updated")
 }
 
-func AddActivityPubFeedItem(f *model.Feed, u *model.User, d *ap.InboxRequest) error {
+func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d *ap.InboxRequest) error {
 	pu, err := url.Parse(f.URL)
 	if err != nil {
 		return err
@@ -234,6 +234,18 @@ func AddActivityPubFeedItem(f *model.Feed, u *model.User, d *ap.InboxRequest) er
 	}
 	if d.Object.AttributedTo != "" && d.Object.AttributedTo != a {
 		fi.OriginalAuthor = d.Object.AttributedTo
+		userURL, err := getUserURL(cfg, u.ID)
+		if err == nil {
+			userKey := userURL + "#key"
+			pk := cfg.ActivityPub.PrivK
+			oa, err := ap.FetchActor(d.Object.AttributedTo, userKey, pk)
+			if err != nil {
+				err = oa.SaveFavicon()
+				if err != nil {
+					fi.Favicon = oa.GetFaviconPath()
+				}
+			}
+		}
 	}
 	fi.Content, err = saveResources(fi.Content)
 	if err != nil {

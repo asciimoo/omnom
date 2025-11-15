@@ -46,6 +46,7 @@ type FeedItem struct {
 	Title          string  `json:"title"`
 	Content        string  `json:"content"`
 	OriginalAuthor string  `json:"original_author"`
+	Favicon        string  `json:"favicon"`
 	FeedID         uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
 	Feed           *Feed   `json:"feed"`
 	Users          []*User `gorm:"many2many:user_feed_items;" json:"-"`
@@ -62,9 +63,9 @@ type UserFeedItem struct {
 
 type UnreadFeedItem struct {
 	FeedItem
-	FeedName       string
-	FeedType       string
-	Favicon        string
+	FeedName       string `json:"feed_name"`
+	FeedType       string `json:"feed_type"`
+	FeedFavicon    string `json:"feed_favicon"`
 	UserFeedItemID uint
 	Unread         bool
 }
@@ -199,7 +200,7 @@ func AddFeedItem(i *FeedItem) int64 {
 func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 	var res []*UnreadFeedItem
 	DB.
-		Select("feed_items.*, user_feeds.name as feed_name, feeds.type as feed_type, feeds.favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.type as feed_type, feeds.favicon as feed_favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
 		Table("feed_items").
 		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
 		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
