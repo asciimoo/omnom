@@ -250,7 +250,7 @@ func SearchFeedItems(uid, limit uint, query string, feedID uint, includeRead boo
 		q = q.Where("user_feed_items.unread = ?", true)
 	}
 	q = q.Session(&gorm.Session{})
-	q.Order("feed_items.id asc").Limit(int(limit)).Find(&res) //nolint:gosec // TODO
+	q.Order("feed_items.id desc").Limit(int(limit)).Find(&res) //nolint:gosec // TODO
 	q.Count(&resCount)
 	return res, resCount, nil
 }
