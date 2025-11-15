@@ -345,6 +345,16 @@ func (i *Identity) GetFaviconPath() string {
 	return storage.Hash([]byte(uri)) + "." + utils.GetExtension(uri)
 }
 
+func (i *Identity) GetName() string {
+	if i.PreferredUsername != "" {
+		return i.PreferredUsername
+	}
+	if i.Name != "" {
+		return i.Name
+	}
+	return i.ID
+}
+
 func (c *Context) UnmarshalJSON(data []byte) error {
 	if data[0] == '"' && data[len(data)-1] == '"' {
 		return json.Unmarshal(data, &c.ID)

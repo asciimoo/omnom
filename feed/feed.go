@@ -233,13 +233,14 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 		FeedID:  f.ID,
 	}
 	if d.Object.AttributedTo != "" && d.Object.AttributedTo != a {
-		fi.OriginalAuthor = d.Object.AttributedTo
+		fi.OriginalAuthorID = d.Object.AttributedTo
 		userURL, err := getUserURL(cfg, u.ID)
 		if err == nil {
 			userKey := userURL + "#key"
 			pk := cfg.ActivityPub.PrivK
 			oa, err := ap.FetchActor(d.Object.AttributedTo, userKey, pk)
 			if err != nil {
+				fi.OriginalAuthorName = oa.GetName()
 				err = oa.SaveFavicon()
 				if err != nil {
 					fi.Favicon = oa.GetFaviconPath()
@@ -290,6 +291,7 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 			return nil, err
 		}
 		f.URL = actor.ID
+		f.Author = actor.GetName()
 		err = ap.SendFollowRequest(actor.Inbox, fu, userURL, pk)
 		if err != nil {
 			return nil, err

@@ -426,18 +426,18 @@
             <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="fids" value="{{ .Item.UserFeedItemID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
             {{ end }}
             <p class="title is-5">
-                {{ .Item.Title }}
+                {{ .Item.FeedName }}<a href="{{ .Item.FeedURL }}">@{{ .Item.FeedAuthorName }}</a>
             </p>
             <p class="subtitle is-6">
                 <span class="tag">{{ .Item.FeedName }}</span> <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
-                {{ if ne .Item.OriginalAuthor "" }}
-                <br /><b>Reposted from <a href="{{ .Item.OriginalAuthor }}">
-                    {{ if .Favicon }}
+                {{ if .Item.OriginalAuthorID }}
+                <br /><b>Author: <a href="{{ .Item.OriginalAuthorID }}">
+                    {{ if .Item.Favicon }}
                     <figure class="image is-24x24">
                         <img src="{{ .Item.Favicon | ToURL }}" alt="favicon" />
                     </figure>
                     {{ end }}
-                    {{ .Item.OriginalAuthor }}
+                    @{{ .Item.OriginalAuthorName }}
                 </a></b>
                 {{ end }}
             </p>

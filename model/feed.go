@@ -24,6 +24,7 @@ type Feed struct {
 	CommonFields
 	Name    string      `json:"name"`
 	URL     string      `json:"gorm:"unique" url"`
+	Author  string      `json:"author"`
 	Type    string      `json:"type"`
 	Favicon string      `json:"favicon"`
 	Items   []*FeedItem `json:"items"`
@@ -42,14 +43,15 @@ type UserFeed struct {
 
 type FeedItem struct {
 	CommonFields
-	URL            string  `gorm:"uniqueIndex:feeditemuidx" json:"url"`
-	Title          string  `json:"title"`
-	Content        string  `json:"content"`
-	OriginalAuthor string  `json:"original_author"`
-	Favicon        string  `json:"favicon"`
-	FeedID         uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
-	Feed           *Feed   `json:"feed"`
-	Users          []*User `gorm:"many2many:user_feed_items;" json:"-"`
+	URL                string  `gorm:"uniqueIndex:feeditemuidx" json:"url"`
+	Title              string  `json:"title"`
+	Content            string  `json:"content"`
+	OriginalAuthorID   string  `json:"original_author_id"`
+	OriginalAuthorName string  `json:"original_author_name"`
+	Favicon            string  `json:"favicon"`
+	FeedID             uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
+	Feed               *Feed   `json:"feed"`
+	Users              []*User `gorm:"many2many:user_feed_items;" json:"-"`
 }
 
 type UserFeedItem struct {
@@ -64,6 +66,8 @@ type UserFeedItem struct {
 type UnreadFeedItem struct {
 	FeedItem
 	FeedName       string `json:"feed_name"`
+	FeedAuthor     string `json:"feed_author"`
+	FeedURL        string `json:"feed_url"`
 	FeedType       string `json:"feed_type"`
 	FeedFavicon    string `json:"feed_favicon"`
 	UserFeedItemID uint
@@ -200,7 +204,7 @@ func AddFeedItem(i *FeedItem) int64 {
 func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 	var res []*UnreadFeedItem
 	DB.
-		Select("feed_items.*, user_feeds.name as feed_name, feeds.type as feed_type, feeds.favicon as feed_favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.feed_author as feed_author, feeds.url as feed_url, feeds.type as feed_type, feeds.favicon as feed_favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
 		Table("feed_items").
 		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
 		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
@@ -228,7 +232,7 @@ func SearchFeedItems(uid, limit uint, query string, feedID uint, includeRead boo
 	var res []*UnreadFeedItem
 	var resCount int64
 	q := DB.
-		Select("feed_items.*, user_feeds.name as feed_name, feeds.favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
+		Select("feed_items.*, user_feeds.name as feed_name, feeds.feed_author as feed_author, feeds.url as feed_url, feeds.favicon as feed_favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread").
 		Table("feed_items").
 		Joins("join user_feed_items on feed_items.id == user_feed_items.feed_item_id").
 		Joins("join user_feeds on user_feeds.feed_id == feed_items.feed_id and user_feeds.user_id = ?", uid).
