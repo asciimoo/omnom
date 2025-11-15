@@ -427,7 +427,7 @@
             {{ end }}
             <p class="title is-5">
                 {{ if eq .Item.FeedType "rss" }}
-                    <a href="{{ .Item.URL }}">{{ .Item.FeedName }}</a>
+                    <a href="{{ .Item.URL }}">{{ .Item.Title }}</a>
                 {{ else }}
                     {{ if .Item.FeedAuthor }}<a href="{{ .Item.FeedURL }}">@{{ .Item.FeedAuthor }}</a>{{ else }}{{ .Item.FeedName }}{{ end }}
                 {{ end }}
