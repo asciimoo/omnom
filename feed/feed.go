@@ -239,10 +239,10 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 			userKey := userURL + "#key"
 			pk := cfg.ActivityPub.PrivK
 			oa, err := ap.FetchActor(d.Object.AttributedTo, userKey, pk)
-			if err != nil {
+			if err == nil {
 				fi.OriginalAuthorName = oa.GetName()
 				err = oa.SaveFavicon()
-				if err != nil {
+				if err == nil {
 					fi.Favicon = oa.GetFaviconPath()
 				}
 			}
