@@ -70,10 +70,7 @@ var tplFuncMap = template.FuncMap{
 	"KVData":      utils.KVData,
 	"FormatSize":  formatSize,
 	"ResourceURL": func(s string) string {
-		u, full := storage.GetResourceURL(s)
-		if full {
-			return u
-		}
+		u := storage.GetResourceURL(s)
 		return baseURL(u)
 	},
 	"HasAttr": func(v any, name string) bool {

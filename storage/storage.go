@@ -23,8 +23,7 @@ type Storage interface {
 	SaveResource(string, []byte) error
 	GetResource(string) io.ReadCloser
 	GetResourceSize(string) uint
-	// return values: URL, isFullURL (true/false)
-	GetResourceURL(string) (string, bool)
+	GetResourceURL(string) string
 }
 
 var ErrUninitialized = errors.New("uninitialized storage")
@@ -111,7 +110,7 @@ func GetResourceSize(key string) uint {
 	return store.GetResourceSize(key)
 }
 
-func GetResourceURL(key string) (string, bool) {
+func GetResourceURL(key string) string {
 	if store == nil {
 		panic("Uninitialized storage")
 	}

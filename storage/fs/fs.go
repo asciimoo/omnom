@@ -77,8 +77,8 @@ func (s *FSStorage) GetResourceSize(key string) uint {
 	return uint(fi.Size())
 }
 
-func (s *FSStorage) GetResourceURL(key string) (string, bool) {
-	return filepath.Join("/static/data/resources/", getPrefix(key), key), false
+func (s *FSStorage) GetResourceURL(key string) string {
+	return filepath.Join("/static/data/resources/", getPrefix(key), key)
 }
 
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
