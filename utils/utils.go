@@ -2,6 +2,8 @@ package utils
 
 import (
 	"errors"
+	"net/url"
+	"path/filepath"
 )
 
 type StringError string
@@ -23,4 +25,17 @@ func KVData(values ...any) (map[string]any, error) {
 		dict[key] = values[i+1]
 	}
 	return dict, nil
+}
+
+func GetExtension(s string) string {
+	defaultExt := "ext"
+	pu, err := url.Parse(s)
+	if err != nil {
+		return defaultExt
+	}
+	ext := filepath.Ext(pu.Path)
+	if ext == "" {
+		return defaultExt
+	}
+	return ext
 }
