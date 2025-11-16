@@ -301,10 +301,13 @@ func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error)
 	defer r.Body.Close()
 	i := &Identity{}
 	err = json.NewDecoder(r.Body).Decode(i)
+	if err != nil {
+		return nil, err
+	}
 	if i.ID == "" || i.Inbox == "" || i.Outbox == "" {
 		return nil, errors.New("mandatory actor data is missing")
 	}
-	return i, err
+	return i, nil
 }
 
 func (i *Identity) SaveFavicon() error {
