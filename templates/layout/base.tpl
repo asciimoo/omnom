@@ -444,6 +444,9 @@
                     @{{ .Item.OriginalAuthorName }}
                 </a></b>
                 {{ end }}
+                {{ if .Item.InReplyTo }}
+                <br />Reply to: <a href="{{ .Item.InReplyTo }}">{{ .Item.InReplyTo }}</a>
+                {{ end }}
             </p>
             {{ if .Item.Content }}
             <article class="{{ .Item.FeedType }} content">{{ .Item.Content | ToHTML }}</article>
