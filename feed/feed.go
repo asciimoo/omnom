@@ -202,6 +202,17 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 	if err != nil {
 		return err
 	}
+	uri := d.Object.ID
+	if d.Object.URL != "" {
+		uri = d.Object.URL
+	}
+	fi, err := model.GetFeedItem(f.ID, uri)
+	if fi != nil {
+		if err != nil {
+			log.Debug().Err(err).Msg("Item query error")
+		}
+		return nil
+	}
 	c := d.Object.Content
 	for _, att := range d.Object.Attachments {
 		if strings.Contains(att.MediaType, "image") && att.URL != "" {
@@ -218,14 +229,6 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 		}
 	}
 	a := d.Actor
-	uri := d.Object.ID
-	if d.Object.URL != "" {
-		uri = d.Object.URL
-	}
-	fi, err := model.GetFeedItem(f.ID, uri)
-	if fi != nil && err == nil {
-		return nil
-	}
 	fi = &model.FeedItem{
 		Title:   a,
 		Content: sanitizeHTML(pu, c),
