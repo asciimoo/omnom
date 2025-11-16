@@ -49,6 +49,8 @@ type FeedItem struct {
 	Content            string  `json:"content"`
 	OriginalAuthorID   string  `json:"original_author_id"`
 	OriginalAuthorName string  `json:"original_author_name"`
+	InReplyTo          string  `json:"in_reply_to"`
+	Context            string  `json:"context"`
 	Favicon            string  `json:"favicon"`
 	FeedID             uint    `gorm:"uniqueIndex:feeditemuidx" json:"feed_id"`
 	Feed               *Feed   `json:"feed"`

@@ -230,10 +230,12 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 	}
 	a := d.Actor
 	fi = &model.FeedItem{
-		Title:   a,
-		Content: sanitizeHTML(pu, c),
-		URL:     uri,
-		FeedID:  f.ID,
+		Title:     a,
+		Content:   sanitizeHTML(pu, c),
+		URL:       uri,
+		InReplyTo: d.Object.InReplyTo,
+		Context:   d.Object.Context,
+		FeedID:    f.ID,
 	}
 	if d.Object.AttributedTo != "" && d.Object.AttributedTo != a {
 		fi.OriginalAuthorID = d.Object.AttributedTo

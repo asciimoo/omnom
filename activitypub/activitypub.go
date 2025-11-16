@@ -132,6 +132,8 @@ type InboxRequestObject struct {
 	URL          string        `json:"url,omitempty"`
 	Object       string        `json:"object,omitempty"`
 	Content      string        `json:"content,omitempty"`
+	InReplyTo    string        `json:"inReplyTo,omitempty"`
+	Context      string        `json:"context,omitempty"`
 	AttributedTo string        `json:"attributedTo,omitempty"`
 	Attachments  []*Attachment `json:"attachment,omitempty"`
 	inlineID     bool
