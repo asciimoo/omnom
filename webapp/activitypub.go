@@ -32,6 +32,7 @@ const (
 	followAction   = "Follow"
 	noteAction     = "Note"
 	unfollowAction = "Undo"
+	likeAction     = "Like"
 )
 
 const contentTpl = `<h1><a href="%[1]s">%[2]s</a></h1>
@@ -233,6 +234,11 @@ func apInboxResponse(c *gin.Context) {
 		go apInboxCreateResponse(c, d)
 	case announceAction:
 		go apInboxAnnounceResponse(c, d)
+	case likeAction:
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Not supported",
+		})
+		return
 	default:
 		log.Debug().Str("type", d.Type).Bytes("msg", body).Msg("Unhandled ActivityPub inbox message")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
