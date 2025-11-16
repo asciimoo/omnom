@@ -28,7 +28,7 @@ func KVData(values ...any) (map[string]any, error) {
 }
 
 func GetExtension(s string) string {
-	defaultExt := "ext"
+	defaultExt := ".ext"
 	pu, err := url.Parse(s)
 	if err != nil {
 		return defaultExt

@@ -328,8 +328,7 @@ func (i *Identity) SaveFavicon() error {
 	if err != nil {
 		return err
 	}
-	// TODO get extension from content type
-	key := storage.Hash([]byte(i.ID)) + "." + utils.GetExtension(uri)
+	key := i.GetFaviconPath()
 	return storage.SaveResource(key, rb)
 }
 
@@ -339,10 +338,8 @@ func (i *Identity) GetFaviconPath() string {
 		uri = i.Icon.URL
 	} else if i.Image != nil {
 		uri = i.Image.URL
-	} else {
-		return ""
 	}
-	return storage.Hash([]byte(uri)) + "." + utils.GetExtension(uri)
+	return storage.Hash([]byte(i.ID)) + utils.GetExtension(uri)
 }
 
 func (i *Identity) GetName() string {
