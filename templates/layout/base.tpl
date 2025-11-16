@@ -437,9 +437,9 @@
                 {{ if .Item.OriginalAuthorID }}
                 <br /><b>Original author: <a href="{{ .Item.OriginalAuthorID }}">
                     {{ if .Item.Favicon }}
-                    <figure class="image is-24x24">
-                        <img src="{{ .Item.Favicon | ToURL }}" alt="favicon" />
-                    </figure>
+                    <span class="icon">
+                        <img src="{{ .Item.Favicon | ResourceURL }}" alt="favicon" />
+                    </span>
                     {{ end }}
                     @{{ .Item.OriginalAuthorName }}
                 </a></b>
