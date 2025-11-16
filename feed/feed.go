@@ -207,10 +207,7 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 		uri = d.Object.URL
 	}
 	fi, err := model.GetFeedItem(f.ID, uri)
-	if fi != nil {
-		if err != nil {
-			log.Debug().Err(err).Msg("Item query error")
-		}
+	if fi != nil && err == nil {
 		return nil
 	}
 	c := d.Object.Content
