@@ -433,7 +433,7 @@
                 {{ end }}
             </p>
             <p class="subtitle is-6">
-                <a href="{{ URLFor "feed search" }}?feed_id={{ .Item.FeedID }}&include_read_items=1" class="tag">{{ .Item.FeedName }}</a> <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
+                <a href="{{ URLFor "feed search" }}?feed_id={{ .Item.FeedID }}&include_read_items=1" class="tag">{{ .Item.FeedName }}</a>{{ if not .Bookmark.Unread }} <span class="tag is-muted-primary">{{ .Tr.Msg "archived" }}</span>{{ end }} <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
                 {{ if .Item.OriginalAuthorID }}
                 <br /><b>Original author: <a href="{{ .Item.OriginalAuthorID }}">
                     {{ if .Item.Favicon }}
@@ -469,7 +469,7 @@
             <div class="is-pulled-right"><form method="post" action="{{ URLFor "archive items" }}"><input type="hidden" name="bids" value="{{ .Bookmark.ID }}"><input type="submit" class="button is-info" value="{{ .Tr.Msg "archive item" }}"></form></div>
             {{ end }}
             <p class="title is-5"><a href="{{ .Bookmark.URL }}">{{ .Bookmark.Title }}</a></p>
-            <p class="subtitle is-6"><span class="tag is-muted-primary">{{ .Tr.Msg "bookmark" }}</span> {{ .Bookmark.CreatedAt | ToDateTime }}</p>
+            <p class="subtitle is-6"><span class="tag">{{ .Tr.Msg "bookmark" }}</span>{{ if not .Bookmark.Unread }} <span class="tag is-muted-primary">{{ .Tr.Msg "archived" }}</span>{{ end }} {{ .Bookmark.CreatedAt | ToDateTime }}</p>
         </div>
     </div>
     {{ if .Bookmark.Notes }}

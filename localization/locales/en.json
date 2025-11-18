@@ -115,5 +115,6 @@
     "unread": "Unread",
     "sign up": "Sign up",
     "view": "View",
-    "favicon of": "Favicon of {{.Title}}"
+    "favicon of": "Favicon of {{.Title}}",
+    "archived": "Archived"
 }
