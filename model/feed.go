@@ -7,6 +7,7 @@ package model
 import (
 	"database/sql"
 	"errors"
+	"slices"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -194,12 +195,24 @@ func AddFeedItem(i *FeedItem) int64 {
 	if err != nil {
 		DB.Where("feed_id = ? and url = ?", f.ID, i.URL).First(&i)
 	}
+	uids := make([]uint, len(f.Users))
+	for i, u := range f.Users {
+		uids[i] = u.ID
+	}
+	var uidsWithSameURLItems []uint
+	DB.Distinct("users.id").
+		Table("users").
+		Joins("join user_feed_items on user_feed_items.user_id == users.id").
+		Joins("join feed_items on user_feed_items.feed_item_id == feed_items.id").
+		Where("feed_item.url = ?", i.URL).
+		Where("users.id IN ?", uids).
+		Find(&uidsWithSameURLItems)
 	uis := make([]*UserFeedItem, len(f.Users))
 	for n, u := range f.Users {
 		uis[n] = &UserFeedItem{
 			UserID:     u.ID,
 			FeedItemID: i.ID,
-			Unread:     true,
+			Unread:     !slices.Contains(uidsWithSameURLItems, u.ID),
 		}
 	}
 	return DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&uis).RowsAffected
