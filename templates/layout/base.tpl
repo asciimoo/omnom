@@ -519,7 +519,7 @@
             <div class="is-pulled-right">
                 <a href="{{ URLFor "edit feed" }}?id={{ .ID }}" aria-label="{{ $Tr.Msg "edit feed" }}"><span class="icon"><i class="fas fa-pencil"></i></span></a>
             </div>
-            <a href="{{ URLFor "feed search" }}?feed_id={{ .ID }}{{ if $IncludeRead }}&include_read_items=1{{ end }}">{{ .Name }}</a>{{ if .Count }} <span class="tag is-medium">{{ .Count }}</span>{{ end }}
+            <a href="{{ URLFor "feed search" }}?feed_id={{ .ID }}{{ if or $IncludeRead (eq .Count 0) }}&include_read_items=1{{ end }}">{{ .Name }}</a>{{ if .Count }} <span class="tag is-medium">{{ .Count }}</span>{{ end }}
         </h4>
         {{ end }}
     </div>
