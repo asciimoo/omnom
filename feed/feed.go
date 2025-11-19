@@ -433,7 +433,7 @@ func parseHTMLFeedInfo(u string, body []byte) (model.FeedType, string, error) {
 		switch tt {
 		case html.ErrorToken:
 			return "", "", errors.New("no feed found")
-		case html.StartTagToken:
+		case html.StartTagToken, html.SelfClosingTagToken:
 			tn, hasAttr := doc.TagName()
 			if !hasAttr || !bytes.Equal(tn, []byte("link")) {
 				continue
