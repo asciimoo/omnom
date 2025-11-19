@@ -200,13 +200,16 @@ func AddFeedItem(i *FeedItem) int64 {
 		uids[i] = u.ID
 	}
 	var uidsWithSameURLItems []uint
-	DB.Distinct("users.id").
+	err = DB.Distinct("users.id").
 		Table("users").
 		Joins("join user_feed_items on user_feed_items.user_id == users.id").
 		Joins("join feed_items on user_feed_items.feed_item_id == feed_items.id").
-		Where("feed_item.url = ?", i.URL).
+		Where("feed_items.url = ?", i.URL).
 		Where("users.id IN ?", uids).
-		Find(&uidsWithSameURLItems)
+		Find(&uidsWithSameURLItems).Error
+	if err != nil {
+		log.Error().Msg("DB error")
+	}
 	uis := make([]*UserFeedItem, len(f.Users))
 	for n, u := range f.Users {
 		uis[n] = &UserFeedItem{
