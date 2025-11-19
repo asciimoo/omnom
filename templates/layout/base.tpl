@@ -433,7 +433,7 @@
                 {{ end }}
             </p>
             <p class="subtitle is-6">
-                <a href="{{ URLFor "feed search" }}?feed_id={{ .Item.FeedID }}&include_read_items=1" class="tag">{{ .Item.FeedName }}</a>{{ if not .Bookmark.Unread }} <span class="tag is-muted-primary">{{ .Tr.Msg "archived" }}</span>{{ end }} <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
+                <a href="{{ URLFor "feed search" }}?feed_id={{ .Item.FeedID }}&include_read_items=1" class="tag">{{ .Item.FeedName }}</a>{{ if not .Item.Unread }} <span class="tag is-muted-primary">{{ .Tr.Msg "archived" }}</span>{{ end }} <a href="{{ .Item.URL }}">{{ .Item.CreatedAt | ToDateTime }}</a>
                 {{ if .Item.OriginalAuthorID }}
                 <br /><b>Original author: <a href="{{ .Item.OriginalAuthorID }}">
                     {{ if .Item.Favicon }}
