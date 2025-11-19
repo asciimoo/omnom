@@ -4,7 +4,7 @@
     <div class="columns">
         {{ block "feedSidebar" . }}{{ end }}
         {{ $Tr := .Tr }}
-        <div class="column">
+        <div class="column container">
             {{ if .ItemCount }}
                 {{ if .FeedName }}
                 <h3 class="title">{{ .FeedName }} ({{ .ItemCount }})</h3>

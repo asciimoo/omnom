@@ -4,7 +4,7 @@
     <div class="columns">
         {{ block "feedSidebar" . }}{{ end }}
         {{ $Tr := .Tr }}
-        <div class="column">
+        <div class="column container">
             {{ if .UnreadItemCount }}
                 <h3 class="title">{{ .Tr.Msg "unread items" }} ({{ .UnreadItemCount }})</h3>
                 {{ range .UnreadItems }}

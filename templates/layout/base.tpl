@@ -486,13 +486,15 @@
         <form action="{{ URLFor "feed search" }}" method="get">
             {{ if .FeedID }}<input type="hidden" name="feed_id" value="{{ .FeedID }}" />{{ end }}
             {{ block "textFilter" . }}{{ end }}
+            <div class="is-pulled-right">
+                {{ block "submit" (.Tr.Msg "search") }}{{ end }}
+            </div>
             <div class="checkboxes">
                 <label class="label" for="include_read_items">
                     <input class="switch is-rounded" value="true" type="checkbox" id="include_read_items"  name="include_read_items"{{ if .IncludeRead }} checked="checked"{{ end }}>
                     {{ .Tr.Msg "include read items" }}
                 </label>
             </div>
-            {{ block "submit" (.Tr.Msg "search") }}{{ end }}
         </form>
         <details class="my-4 is-size-4">
             <summary>{{ .Tr.Msg "add feed" }}</summary>
@@ -514,14 +516,16 @@
         </details>
         {{ $Tr := .Tr }}
         {{ $IncludeRead := .IncludeRead }}
-        {{ range .Feeds }}
-        <h4>
-            <div class="is-pulled-right">
-                <a href="{{ URLFor "edit feed" }}?id={{ .ID }}" aria-label="{{ $Tr.Msg "edit feed" }}"><span class="icon"><i class="fas fa-pencil"></i></span></a>
-            </div>
-            <a href="{{ URLFor "feed search" }}?feed_id={{ .ID }}{{ if or $IncludeRead (eq .Count 0) }}&include_read_items=1{{ end }}">{{ .Name }}</a>{{ if .Count }} <span class="tag is-medium">{{ .Count }}</span>{{ end }}
-        </h4>
-        {{ end }}
+        <div class="is-hidden-mobile">
+            {{ range .Feeds }}
+            <h4>
+                <div class="is-pulled-right">
+                    <a href="{{ URLFor "edit feed" }}?id={{ .ID }}" aria-label="{{ $Tr.Msg "edit feed" }}"><span class="icon"><i class="fas fa-pencil"></i></span></a>
+                </div>
+                <a href="{{ URLFor "feed search" }}?feed_id={{ .ID }}{{ if or $IncludeRead (eq .Count 0) }}&include_read_items=1{{ end }}">{{ .Name }}</a>{{ if .Count }} <span class="tag is-medium">{{ .Count }}</span>{{ end }}
+            </h4>
+            {{ end }}
+        </div>
     </div>
 </div>
 {{ end }}
