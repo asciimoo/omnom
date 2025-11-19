@@ -45,7 +45,7 @@
         {{ block "bookmark" KVData "Bookmark" . "UID" $uid "Page" $page "Tr" $Tr }}{{ end }}
       {{ end }}
     {{ else }}
-      {{ block "warning" KVData "Warning" (.Tr.Msg "no bookmark found") "Tr" .Tr }}{{ end }}
+      {{ block "warning" KVData "Warning" (.Tr.Msg "no bookmarks found") "Tr" .Tr }}{{ end }}
     {{ end }}
 </div>
 {{ end }}
