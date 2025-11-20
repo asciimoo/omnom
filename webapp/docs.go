@@ -21,6 +21,8 @@ import (
 	"github.com/yuin/goldmark/renderer"
 )
 
+const indexDocName = "index"
+
 type docPage struct {
 	Name    string
 	Title   string
@@ -107,7 +109,7 @@ func init() {
 			panic("Invalid filename: " + p.Name())
 		}
 		name := strings.TrimSuffix(p.Name(), ".md")
-		if name != "index" {
+		if name != indexDocName {
 			// TODO more accurate validation
 			if len(name) < 5 {
 				msg := "Page filename should start with 'XXX-' prefix where X is a digit"
@@ -130,9 +132,9 @@ func init() {
 		dp := &docPage{
 			Name:    name,
 			Title:   r.Title,
-			Content: template.HTML(buf.String()),
+			Content: template.HTML(buf.String()), //nolint: gosec //trusted source
 		}
-		if name == "index" {
+		if name == indexDocName {
 			indexDocPage = dp
 		} else {
 			docPages[i] = dp
