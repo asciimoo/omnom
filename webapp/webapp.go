@@ -159,6 +159,7 @@ func createRenderer(tplFS fs.FS) multitemplate.Renderer {
 	addTemplate(r, tplFS, true, "user", "user.tpl")
 	addTemplate(r, tplFS, true, "api", "api.tpl")
 	addTemplate(r, tplFS, true, "error", "error.tpl")
+	addTemplate(r, tplFS, true, "docs", "docs.tpl")
 	addTemplate(r, tplFS, false, "rss", "rss.xml")
 	return r
 }
@@ -319,23 +320,32 @@ func createValidateArgsMiddleware(method string, args []*EndpointArg) gin.Handle
 
 func resolveDynamicPath(p string, v []string) string {
 	if len(v) == 0 {
+		if strings.Contains(p, "*") {
+			return strings.SplitN(p, "*", 2)[0]
+		}
 		return p
 	}
-	if !strings.Contains(p, ":") {
+	if !strings.Contains(p, ":") && !strings.Contains(p, "*") {
 		return p
 	}
 	pParts := strings.Split(p, "/")
 	vRef := 0
+	maxParts := 0
 	for i, f := range pParts {
 		if vRef >= len(v) {
 			break
 		}
+		maxParts += 1
 		if strings.HasPrefix(f, ":") {
 			pParts[i] = v[vRef]
 			vRef += 1
 		}
+		if strings.HasPrefix(f, "*") {
+			pParts[i] = v[vRef]
+			break
+		}
 	}
-	return strings.Join(pParts, "/")
+	return strings.Join(pParts[:maxParts], "/")
 }
 
 func createEngine(cfg *config.Config) *gin.Engine {

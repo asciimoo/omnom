@@ -104,7 +104,8 @@
             </div>
             <div class="column is-narrow pl-6">
                 <p><b>{{ .Tr.Msg "support" }}</b></p>
-                <a href="{{ URLFor "API" }}">API</a>
+                <a href="{{ URLFor "docs" }}">{{ .Tr.Msg "help" }}</a>
+                <br /><a href="{{ URLFor "API" }}">API</a>
                 <br /><a href="https://github.com/asciimoo/omnom">GitHub</a>
                 <br /><a href="https://github.com/asciimoo/omnom/wiki">Wiki</a>
             </div>

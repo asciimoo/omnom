@@ -116,5 +116,6 @@
     "sign up": "Sign up",
     "view": "View",
     "favicon of": "Favicon of {{.Title}}",
+    "help": "Help",
     "archived": "Archived"
 }

@@ -50,6 +50,14 @@ func init() {
 			Description:  "Landing page",
 		},
 		&Endpoint{
+			Name:         "Docs",
+			Path:         "/docs/*page",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      documentation,
+			Description:  "Documentation & help",
+		},
+		&Endpoint{
 			Name:         "Signup",
 			Path:         "/signup",
 			Method:       GET,
