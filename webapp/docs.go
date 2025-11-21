@@ -32,7 +32,7 @@ type docPage struct {
 
 var docTOCNames = []string{
 	"index",
-	"addon",
+	"extension",
 }
 
 var docPages []*docPage
