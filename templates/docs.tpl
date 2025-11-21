@@ -7,7 +7,7 @@
                 <ul>
                 {{ $Doc := .Doc }}
                 {{ range .TOC }}
-                    <li><a class="is-size-4{{ if eq $Doc.Name .Name }} has-text-primary{{ end }}" href="{{ URLFor "docs" .Name }}">{{ .Title }}</a></li>
+                    <li><a class="is-size-4{{ if eq $Doc.Name .Name }} is-underlined{{ end }}" href="{{ URLFor "docs" .Name }}">{{ .Title }}</a></li>
                     {{ $TOC := . }}
                     {{ if .Headings }}{{ range $_, $v := .Headings }}
                     <ul class="mx-4">

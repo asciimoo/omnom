@@ -104,7 +104,11 @@ func (r *tRenderer) rewriteAST(n ast.Node, source []byte) error {
 					c.SetAttributeString("id", k)
 				}
 			}
-			c.SetAttributeString("class", "title")
+			if n.Level > 2 {
+				c.SetAttributeString("class", "subtitle has-text-weight-normal")
+			} else {
+				c.SetAttributeString("class", "title")
+			}
 		case ast.KindList:
 			c.SetAttributeString("class", "list")
 		case ast.KindLink:
