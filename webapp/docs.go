@@ -29,7 +29,13 @@ type docPage struct {
 	Content template.HTML
 }
 
+var docTOCNames = []string{
+	"index",
+	"addon",
+}
+
 var docPages []*docPage
+var docTOC []*docPage
 var indexDocPage *docPage
 
 type tRenderer struct {
@@ -101,7 +107,8 @@ func init() {
 		log.Error().Err(err).Msg("Failed to parse documentation pages")
 		panic(err)
 	}
-	docPages = make([]*docPage, len(pages)-1)
+	docPages = make([]*docPage, len(pages))
+	// parse doc pages
 	for i, p := range pages {
 		r := &tRenderer{r: goldmark.DefaultRenderer()}
 		md := goldmark.New(goldmark.WithRenderer(r))
@@ -109,15 +116,6 @@ func init() {
 			panic("Invalid filename: " + p.Name())
 		}
 		name := strings.TrimSuffix(p.Name(), ".md")
-		if name != indexDocName {
-			// TODO more accurate validation
-			if len(name) < 5 {
-				msg := "Page filename should start with 'XXX-' prefix where X is a digit"
-				log.Error().Str("page", p.Name()).Msg(msg)
-				panic(msg)
-			}
-			name = name[4:]
-		}
 		var buf bytes.Buffer
 		fc, err := docs.FS.ReadFile(p.Name())
 		if err != nil {
@@ -136,12 +134,26 @@ func init() {
 		}
 		if name == indexDocName {
 			indexDocPage = dp
-		} else {
-			docPages[i] = dp
 		}
+		docPages[i] = dp
 	}
 	if indexDocPage == nil {
 		panic("Missing index documentation page")
+	}
+	// prepare TOC
+	docTOC = make([]*docPage, len(docTOCNames))
+	for i, n := range docTOCNames {
+		found := false
+		for _, d := range docPages {
+			if d.Name == n {
+				docTOC[i] = d
+				found = true
+				break
+			}
+		}
+		if !found {
+			panic("No document name found with name " + n)
+		}
 	}
 }
 
@@ -150,6 +162,7 @@ func documentation(c *gin.Context) {
 		"Doc":   indexDocPage,
 		"Pages": docPages,
 		"Index": indexDocPage,
+		"TOC":   docTOC,
 	}
 	page := strings.TrimPrefix(c.Param("page"), "/")
 	log.Debug().Msg(page)
