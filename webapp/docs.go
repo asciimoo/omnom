@@ -195,7 +195,6 @@ func documentation(c *gin.Context) {
 		"TOC":   docTOC,
 	}
 	page := strings.TrimPrefix(c.Param("page"), "/")
-	log.Debug().Msg(page)
 	for _, p := range docPages {
 		if p.Name == page {
 			vars["Doc"] = p
