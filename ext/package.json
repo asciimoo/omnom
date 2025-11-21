@@ -1,12 +1,15 @@
 {
   "name": "@asciimoo/omnom-ext",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Omnom extension",
   "scripts": {
     "build": "NODE_ENV=production webpack --stats-error-details",
     "build-test": "TEST=1 NODE_ENV=development webpack --stats-error-details",
     "start": "NODE_ENV=development webpack --stats-error-details --watch"
   },
+  "files": [
+      "omnom-ext.js"
+  ],
   "devDependencies": {
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^10.1.0",
