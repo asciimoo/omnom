@@ -376,7 +376,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 			}
 		}
 		log.Error().Str("Endpoint", e).Msg("Not found")
-		return "/"
+		return baseURL("/")
 	}
 	tplFuncMap["BaseURL"] = baseURL
 	tplFuncMap["URLFor"] = URLFor
