@@ -11,3 +11,6 @@ config.yml
 db.sqlite3
 public.pem
 private.pem
+ext/omnom-ext.js
+ext/omnom-ext.js.map
+ext/src/manifest.json.license
