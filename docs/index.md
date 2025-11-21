@@ -17,7 +17,7 @@ Omnom is a web content preservation service providing
  - Web interface with multiuser support
  - Locally saved multimedia content
  - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
- - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
+ - [Documented API](api)
 
 ## See also
 
