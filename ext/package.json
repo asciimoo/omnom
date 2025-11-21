@@ -1,5 +1,5 @@
 {
-  "name": "ext",
+  "name": "@asciimoo/omnom-ext",
   "version": "1.0.0",
   "description": "Omnom extension",
   "scripts": {
@@ -24,5 +24,21 @@
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.6.0",
     "write-file-webpack-plugin": "^4.5.1"
-  }
+  },
+  "main": "omnom-ext.js",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asciimoo/omnom.git"
+  },
+  "keywords": [
+    "dom-snapshot",
+    "omnom"
+  ],
+  "author": "Adam Tauber",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/asciimoo/omnom/issues"
+  },
+  "homepage": "https://github.com/asciimoo/omnom#readme"
 }

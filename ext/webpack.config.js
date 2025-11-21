@@ -34,7 +34,8 @@ module.exports = {
         options: path.join(__dirname, "src", "js", "options.js"),
         site: path.join(__dirname, "src", "js", "site.js"),
         background: path.join(__dirname, "src", "js", "background.js"),
-        webapp_snapshot: {import: path.join(__dirname, "src", "js", "webapp_snapshot.js"), filename: path.join( "..", "..", "static", "js", "snapshot.js"), library: {name: "webapp_snapshot", type: "umd", umdNamedDefine: true}}
+        webapp_snapshot: {import: path.join(__dirname, "src", "js", "webapp_snapshot.js"), filename: path.join( "..", "..", "static", "js", "snapshot.js"), library: {name: "webapp_snapshot", type: "umd", umdNamedDefine: true}},
+        module: {import: path.join(__dirname, "src", "js", "module.js"), filename: path.join("..", "omnom-ext.js"), library: {name: "module", type: "umd", umdNamedDefine: true}}
     },
     output: {
         path: path.join(__dirname, "build"),
