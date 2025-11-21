@@ -380,6 +380,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	}
 	tplFuncMap["BaseURL"] = baseURL
 	tplFuncMap["URLFor"] = URLFor
+	initDocs()
 	// ROUTES
 	staticFS(e, "/static", static.FS, storage.FS())
 	for _, ep := range Endpoints {

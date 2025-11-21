@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/asciimoo/omnom/docs"
@@ -48,7 +49,7 @@ func (r *tRenderer) Render(w io.Writer, source []byte, n ast.Node) error {
 	if err != nil {
 		return err
 	}
-	err = r.addClasses(n)
+	err = r.rewriteAST(n)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (r *tRenderer) extractTitle(source []byte, n ast.Node) error {
 	return nil
 }
 
-func (r *tRenderer) addClasses(n ast.Node) error {
+func (r *tRenderer) rewriteAST(n ast.Node) error {
 	if n.ChildCount() < 1 {
 		return nil
 	}
@@ -92,8 +93,11 @@ func (r *tRenderer) addClasses(n ast.Node) error {
 			c.SetAttributeString("class", "title")
 		case ast.KindList:
 			c.SetAttributeString("class", "list")
+		case ast.KindLink:
+			n := c.(*ast.Link)
+			n.Destination = []byte(resolveDocURL(string(n.Destination)))
 		}
-		err := r.addClasses(c)
+		err := r.rewriteAST(c)
 		if err != nil {
 			return err
 		}
@@ -101,7 +105,33 @@ func (r *tRenderer) addClasses(n ast.Node) error {
 	return nil
 }
 
-func init() {
+func resolveDocURL(u string) string {
+	pu, err := url.Parse(u)
+	if err != nil {
+		log.Error().Err(err).Str("URL", u).Msg("Failed to parse url in documentation")
+		panic(err)
+	}
+	if pu.Scheme != "" {
+		return u
+	}
+	if strings.HasPrefix(pu.Path, "/") {
+		msg := "Invalid doc link. Use [api_endpoint_name]/[params] format for in-site doc references"
+		log.Error().Err(err).Str("URL", u).Msg(msg)
+		panic(msg)
+	}
+	if strings.Contains(pu.Path, "/") {
+		parts := strings.Split(pu.Path, "/")
+		u = URLFor(parts[0], parts[1:]...)
+	} else {
+		u = URLFor(pu.Path)
+	}
+	if pu.RawQuery != "" {
+		u += "?" + pu.RawQuery
+	}
+	return u
+}
+
+func initDocs() {
 	pages, err := docs.FS.ReadDir(".")
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse documentation pages")
