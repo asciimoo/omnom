@@ -56,6 +56,16 @@ var shadowDOMScript = []byte(`<script>
     processNode(document);
 })()</script>`)
 
+var bookmarkSubmenu = []struct {
+	Name     string
+	Endpoint string
+	PageName string
+}{
+	{"my", "My bookmarks", "my-bookmarks"},
+	{"public", "Public bookmarks", "bookmarks"},
+	{"create", "Create bookmark form", "create-bookmark"},
+}
+
 type browserSnapshotResponse struct {
 	DOM       string `json:"dom"`
 	Favicon   string `json:"favicon"`
@@ -118,6 +128,10 @@ func bookmarks(c *gin.Context) {
 		"OrderBy":      orderBy,
 		"FrequentTags": model.GetFrequentPublicTags(20),
 	}
+	_, ok := c.Get("user")
+	if ok {
+		args["Submenu"] = bookmarkSubmenu
+	}
 	render(c, http.StatusOK, "bookmarks", args)
 }
 
@@ -170,6 +184,7 @@ func myBookmarks(c *gin.Context) {
 	render(c, http.StatusOK, "my-bookmarks", map[string]any{
 		"Bookmarks":     bs,
 		"Pageno":        pageno,
+		"Submenu":       bookmarkSubmenu,
 		"BookmarkCount": bookmarkCount,
 		//nolint: gosec // conversion is safe
 		"HasNextPage":       offset+resultsPerPage < uint(bookmarkCount),
@@ -188,6 +203,7 @@ func createBookmarkForm(c *gin.Context) {
 	cols := model.GetCollectionTree(uid)
 	render(c, http.StatusOK, "create-bookmark", map[string]any{
 		"Collections":           cols,
+		"Submenu":               bookmarkSubmenu,
 		"AllowSnapshotCreation": cfg.(*config.Config).App.CreateSnapshotFromWebapp,
 	})
 }

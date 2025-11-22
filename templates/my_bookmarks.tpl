@@ -35,12 +35,14 @@
                 <div class="is-pulled-right">
                     <a href="{{ URLFor "edit collection form" }}" aria-label="{{ .Tr.Msg "add collection" }}"><span class="icon"><i class="fas fa-plus"></i></span></a>
                 </div>
+                <div class="is-hidden-mobile">
                 {{ if .Collections }}
                     <h3>{{ .Tr.Msg "collections" }}</h3>
                     {{ block "collections" KVData "Collections" .Collections "CurrentCollection" .CurrentCollection "Tr" .Tr }}{{ end }}
                 {{ else }}
                     <h3>{{ .Tr.Msg "no collection" }}</h3>
                 {{ end }}
+                </div>
             </div>
         </div>
         {{ $uid := 0 }}

@@ -2,6 +2,7 @@
 <div class="content">
     <h2 class="title">{{ .User.Username }}
 	<span class="is-size-7 is-italic has-text-grey">{{ or .User.Email (.Tr.Msg "no email provided") }}</span></h2>
+    <p><a href="{{ URLFor "Logout" }}" class="button is-warning">{{ .Tr.Msg "logout" }}</a></p>
     <p>{{ .Tr.Msg "storage usage" }}: <strong>{{ .SnapshotsSize | FormatSize }}</strong></p>
     {{ if .DisplayTokens }}
         {{ if not .AddonTokens }}

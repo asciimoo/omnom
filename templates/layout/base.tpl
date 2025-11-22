@@ -15,8 +15,8 @@
 <input type="hidden" id="base_url" value="{{ BaseURL "/" }}" />
 <div id="modal" class="modal"></div>
 <div class="webapp__content {{ block "content-class" . }}{{ end }}">
-<nav class="navbar {{ block "content-class" . }}{{ end }}" role="navigation" aria-label="main navigation">
-  <div class="navbar__container{{ if ne .Page "index" }} shadow-bottom{{ end }}">
+<nav class="navbar {{ block "content-class" . }}{{ end }}{{ if ne .Page "index" }} shadow-bottom{{ end }}" role="navigation" aria-label="main navigation">
+  <div class="navbar__container">
     <div class="navbar-brand is-size-4">
       <a class="navbar__logo" href="{{ URLFor "Index" }}"><span>om</span><span class="text--primary">nom</span> </a>
       <label for="nav-toggle-state" role="button" class="navbar-burger burger has-text-black" aria-label="menu" aria-expanded="false">
@@ -33,12 +33,10 @@
         {{ if not (eq .Page "index") }}
             <a href="{{ URLFor "Index" }}" class="navbar-item{{ if or (eq .Page "index") (eq .Page "dashboard") }} is-active{{ end }}">{{ .Tr.Msg "home" }}</a>
             {{ if .User }}
-            <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if eq .Page "my-bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "my bookmarks" }}</a>
+            <a href="{{ URLFor "My bookmarks" }}" class="navbar-item{{ if or (eq .Page "my-bookmarks") (eq .Page "bookmarks") (eq .Page "create-bookmark") }} is-active{{ end }}">{{ .Tr.Msg "bookmarks" }}</a>
             <a href="{{ URLFor "Feeds" }}" class="navbar-item{{ if eq .Page "feeds" }} is-active{{ end }}">{{ .Tr.Msg "feeds" }}</a>
-            {{ end }}
+            {{ else }}
             <a href="{{ URLFor "Public bookmarks" }}" class="navbar-item{{ if eq .Page "bookmarks" }} is-active{{ end }}">{{ .Tr.Msg "public bookmarks" }}</a>
-            {{ if .User }}
-            <a href="{{ URLFor "Create bookmark form" }}" class="navbar-item{{ if eq .Page "create-bookmark" }} is-active{{ end }}">{{ .Tr.Msg "create bookmark" }}</a>
             {{ end }}
         {{ end }}
       </div>
@@ -58,10 +56,7 @@
             </div>
         </form>
         {{ if .User }}
-            <a href="{{ URLFor "Profile" }}" class="navbar-item"><i class="fas fa-user"></i> &nbsp; {{ .User.Username }}</a>
-              {{ if .AllowManualLogin }}
-                <div class="navbar-item"><a href="{{ URLFor "Logout" }}" class="button is-outlined is-info">{{ .Tr.Msg "logout" }}</a></div>
-              {{ end }}
+            <a href="{{ URLFor "Profile" }}" class="navbar-item"><i class="fas fa-user"></i> {{ .User.Username }}</a>
         {{ else if .AllowManualLogin }}
             <div class="navbar-item"><a href="{{ URLFor "Login" }}" class="button is-outlined is-info">{{ .Tr.Msg "login" }}</a></div>
             {{ if not .DisableSignup }}<div class="navbar-item"><a href="{{ URLFor "Signup" }}" class="button is-outlined is-info">{{ .Tr.Msg "sign up" }}</a></div>{{ end }}
@@ -69,6 +64,15 @@
       </div>
     </div>
   </div>
+  {{ if .Submenu }}
+  <div class="submenu">
+      <ul>{{ $Tr := .Tr }}{{ $Page := .Page }}
+          {{ range .Submenu }}
+          <li{{ if eq $Page .PageName }} class="is-active"{{ end }}><a href="{{ URLFor .Endpoint }}">{{ $Tr.Msg .Name }}</a></li>
+          {{ end }}
+      </ul>
+  </div>
+  {{ end }}
 </nav>
 
     {{ if .Error }}

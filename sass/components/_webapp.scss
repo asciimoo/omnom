@@ -8,16 +8,16 @@ html {
 
     @include respond(tab-land) {
         // width < 1200?
-        font-size: 75%;
+        font-size: 85%;
     }
 
     @include respond(tab-port) {
         // width < 900?
-        font-size: 62.5%;
+        font-size: 75%;
     }
 
     @include respond(desktop) {
-        font-size: 90%;
+        font-size: 100%;
     }
 }
 
@@ -82,7 +82,21 @@ summary {
   padding: 1em;
 }
 .navbar-burger span {
-    background-color: var(--color-white) !important;
+    background-color: var(--color-menu-white) !important;
+}
+
+.submenu {
+  background: rgba(255,255,255,0.2);
+  color: var(--color-menu-white);
+  padding: 0.4em 3em;
+  li {
+    display: inline;
+    padding: 0 0.4em;
+    margin: 0 0.4em;
+  }
+  .is-active {
+    border-bottom: 1px solid var(--color-menu-white);
+  }
 }
 
 .bd-main-container {
@@ -567,7 +581,12 @@ iframe {
   }
 }
 .collections {
-  margin-right: 1em;
+  margin-right: 0.5em;
+  ul {
+    margin-inline-start: 0.5em;
+    margin-top: 0!important;
+    margin-bottom: 0!important;
+  }
   li {
     list-style: none;
   }

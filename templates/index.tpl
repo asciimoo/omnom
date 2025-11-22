@@ -31,7 +31,7 @@
             <div class="column is-one-fifth-fullhd">
                 <div class="box has-text-centered is-maxheight">
                     <header class="is-size-3">
-                        <span class="icon is-large has-text-info"><i class="fa-solid fa-camera-retro"></i></span><br/>
+                        <span class="icon is-large has-text-info pb-5"><i class="fa-solid fa-camera-retro"></i></span><br/>
                         {{ .Tr.Msg "landing feature 1 title" }}
                     </header>
                     <div class="content has-text-info">
@@ -42,7 +42,7 @@
             <div class="column is-one-fifth-fullhd">
                 <div class="box has-text-centered is-maxheight">
                     <header class="is-size-3">
-                        <span class="icon is-large has-text-info"><i class="fa-regular fa-shield"></i></span><br/>
+                        <span class="icon is-large has-text-info pb-5"><i class="fa-solid fa-user-plus"></i></span><br/>
                         {{ .Tr.Msg "landing feature 2 title" }}
                     </header>
                     <div class="content has-text-info">
@@ -53,7 +53,7 @@
             <div class="column is-one-fifth-fullhd">
                 <div class="box has-text-centered is-maxheight">
                     <header class="is-size-3">
-                        <span class="icon is-large has-text-info"><i class="fa-solid fa-folder"></i></span><br/>
+                        <span class="icon is-large has-text-info pb-5"><i class="fa-solid fa-magnifying-glass"></i></span><br/>
                         {{ .Tr.Msg "landing feature 3 title" }}
                     </header>
                     <div class="content has-text-info">
@@ -86,7 +86,7 @@
         <div class="column">
             <div class="box has-text-centered is-maxheight">
                 <header class="is-size-3">
-                    <span class="icon is-large has-text-primary"><i class="fa-regular fa-search"></i></span><br/>
+                    <span class="icon is-large has-text-primary"><i class="fa-solid fa-folder-open"></i></span><br/>
                     {{ .Tr.Msg "landing feature 5 title" }}
                 </header>
                 <div class="content">
