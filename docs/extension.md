@@ -21,7 +21,7 @@ You can retrieve and generate new addon keys on the profile page (click to your 
 
 Open the Omnom addon popup on any page you would like to bookmark, fill the metadata, then click on the `Save Bookmark` button.
 
-![Omnom extension popup](/static/images/omnom_addon.png)
+![Omnom extension popup](/static/images/docs/omnom_addon.png)
 
 All the fields are optional except the **title**, but more information you have about a bookmark the easier to find it later, so I recommend to add tags and notes to the bookmark.
 
