@@ -1,3 +1,36 @@
+// Package mail provides email sending functionality for Omnom notifications.
+//
+// This package handles SMTP-based email delivery for various application events:
+//   - User login tokens (passwordless authentication)
+//   - Feed update notifications
+//   - System alerts
+//
+// It supports both HTML and plain text email formats using template-based rendering.
+// Templates are embedded in the application and loaded from the templates/mail directory.
+//
+// The package maintains a persistent SMTP connection that is reused across multiple
+// sends for efficiency. If the connection is lost, it automatically reconnects.
+// Email sending can be disabled entirely by leaving the SMTP host empty in configuration.
+//
+// Configuration supports:
+//   - Standard SMTP authentication
+//   - TLS/SSL encryption
+//   - Configurable timeouts
+//   - Custom sender addresses
+//
+// Example usage:
+//
+//	err := mail.Init(cfg)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	err = mail.Send(
+//	    "user@example.com",
+//	    "Welcome to Omnom",
+//	    "welcome",
+//	    map[string]any{"username": "john"},
+//	)
 package mail
 
 import (
@@ -18,9 +51,11 @@ import (
 )
 
 var (
+	// ErrTemplateNotFound is returned when a mail template cannot be found.
 	ErrTemplateNotFound = errors.New("mail template not found")
 )
 
+// Templates holds HTML and text email templates.
 type Templates struct {
 	Text *text.Template
 	HTML *html.Template
@@ -32,6 +67,7 @@ var sender = "Omnom <omnom@127.0.0.1>"
 var disabled = false
 var templates = &Templates{}
 
+// Init initializes the mail client and loads templates.
 func Init(c *config.Config) error {
 	var err error
 	templates.HTML, err = html.New("mail").ParseFS(templatesfs.FS, "mail/*html.tpl")
@@ -74,6 +110,7 @@ func Init(c *config.Config) error {
 	return nil
 }
 
+// Send sends an email using the specified template.
 func Send(to string, subject string, msgType string, args map[string]any) error {
 	if disabled {
 		return nil
@@ -108,14 +145,17 @@ func Send(to string, subject string, msgType string, args map[string]any) error 
 	return err
 }
 
+// Disable enables or disables mail sending.
 func Disable(t bool) {
 	disabled = t
 }
 
+// SetSender sets the sender email address.
 func SetSender(s string) {
 	sender = s
 }
 
+// RenderHTML renders html template with given arguments.
 func (t *Templates) RenderHTML(tname string, args map[string]any) (string, error) {
 	m := templates.HTML.Lookup(tname + ".html.tpl")
 	if m == nil {
@@ -133,6 +173,7 @@ func (t *Templates) RenderHTML(tname string, args map[string]any) (string, error
 	return s, nil
 }
 
+// RenderHTML renders text template with given arguments.
 func (t *Templates) RenderText(tname string, args map[string]any) (string, error) {
 	m := templates.Text.Lookup(tname + ".txt.tpl")
 	if m == nil {

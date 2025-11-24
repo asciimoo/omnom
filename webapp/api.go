@@ -11,13 +11,19 @@ import (
 )
 
 const (
-	GET   string = "GET"
-	POST  string = "POST"
-	PUT   string = "PUT"
+	// GET is HTTP GET request type
+	GET string = "GET"
+	// POST is HTTP POST request type
+	POST string = "POST"
+	// PUT is HTTP PUT request type
+	PUT string = "PUT"
+	// PATCH is HTTP PATCH request type
 	PATCH string = "PATCH"
-	HEAD  string = "HEAD"
+	// HEAD is HTTP HEAD request type
+	HEAD string = "HEAD"
 )
 
+// EndpointArg represents an API endpoint argument.
 type EndpointArg struct {
 	Name               string
 	Type               string
@@ -26,6 +32,7 @@ type EndpointArg struct {
 	SkipAutoValidation bool `json:"-"`
 }
 
+// Endpoint represents an API endpoint definition.
 type Endpoint struct {
 	Name         string
 	Path         string
@@ -37,6 +44,7 @@ type Endpoint struct {
 	RSS          string
 }
 
+// Endpoints contains all registered API endpoints.
 var Endpoints []*Endpoint
 
 func init() {

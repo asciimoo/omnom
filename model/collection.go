@@ -4,6 +4,7 @@
 
 package model
 
+// Collection represents a bookmark collection.
 type Collection struct {
 	CommonFields
 	Name      string `gorm:"uniqueIndex:cuid" json:"name"`
@@ -14,6 +15,7 @@ type Collection struct {
 	Bookmarks []Bookmark    `json:"bookmarks"`
 }
 
+// GetCollectionByName retrieves a collection by its name.
 func GetCollectionByName(uid uint, cname string) *Collection {
 	if cname == "" {
 		return nil
@@ -23,6 +25,7 @@ func GetCollectionByName(uid uint, cname string) *Collection {
 	return c
 }
 
+// GetCollection retrieves a collection by its ID.
 func GetCollection(uid uint, cid string) *Collection {
 	if cid == "" {
 		return nil
@@ -32,12 +35,14 @@ func GetCollection(uid uint, cid string) *Collection {
 	return c
 }
 
+// GetCollections retrieves all collections for a user.
 func GetCollections(uid uint) []*Collection {
 	var cols []*Collection
 	DB.Model(&Collection{}).Where("user_id = ?", uid).Order("name asc").Find(&cols)
 	return cols
 }
 
+// GetCollectionTree retrieves collections organized as a tree structure.
 func GetCollectionTree(uid uint) []*Collection {
 	cols := GetCollections(uid)
 	res := make([]*Collection, 0, len(cols))

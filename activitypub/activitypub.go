@@ -1,3 +1,35 @@
+// Package activitypub implements ActivityPub federation protocol for Omnom.
+//
+// This package enables Omnom to act as an ActivityPub server, allowing users to:
+//   - Follow ActivityPub actors (Mastodon, Pleroma, etc.)
+//   - Receive posts from followed actors in their feed
+//   - Be discovered and followed by other ActivityPub servers
+//   - Serve user profiles via WebFinger
+//
+// The implementation follows the ActivityPub specification (W3C Recommendation)
+// and supports core activities:
+//   - Follow/Unfollow: Subscribe to actor updates
+//   - Accept: Confirm follow requests
+//   - Create: Receive new posts
+//   - Announce: Receive boosts/reblogs
+//
+// HTTP signatures are used to authenticate requests between servers. The package
+// handles signing outgoing requests and verifying incoming requests using RSA keys
+// configured in the application.
+//
+// Key types:
+//   - Actor: Represents a user or service on the federation
+//   - InboxRequest: Incoming activity from another server
+//   - OutboxItem: Outgoing activity to send to followers
+//
+// Example usage:
+//
+//	// Follow an actor
+//	actor, err := activitypub.FetchActor(actorURL, userKey, privateKey)
+//	err = activitypub.SendFollowRequest(actor.Inbox, actorURL, userURL, privateKey)
+//
+//	// Process inbox delivery
+//	err = activitypub.ProcessInboxRequest(request, config, user)
 package activitypub
 
 import (
@@ -26,6 +58,7 @@ const (
 	imageType        = "Image"
 )
 
+// Outbox represents an ActivityPub outbox containing published activities.
 type Outbox struct {
 	Context      string        `json:"@context"`
 	ID           string        `json:"id"`
@@ -35,6 +68,7 @@ type Outbox struct {
 	OrderedItems []*OutboxItem `json:"orderedItems"`
 }
 
+// OutboxItem represents a single activity in an outbox.
 type OutboxItem struct {
 	Context   string       `json:"@context"`
 	ID        string       `json:"id"`
@@ -47,6 +81,7 @@ type OutboxItem struct {
 	//Signature *Signature   `json:"signature,omitempty"`
 }
 
+// OutboxObject represents the object being published in an activity.
 type OutboxObject struct {
 	ID           string            `json:"id"`
 	Type         string            `json:"type"`
@@ -62,12 +97,14 @@ type OutboxObject struct {
 	Replies      map[string]string `json:"replies"`
 }
 
+// Tag represents a tag or mention in ActivityPub content.
 type Tag struct {
 	Type string `json:"type"`
 	Href string `json:"href"`
 	Name string `json:"name"`
 }
 
+// Identity represents an ActivityPub actor (user or service).
 type Identity struct {
 	Context           *Context `json:"@context"`
 	ID                string   `json:"id"`
@@ -87,30 +124,35 @@ type Identity struct {
 	PubKey            PubKey   `json:"publicKey"`
 }
 
+// Image represents an image attachment in ActivityPub.
 type Image struct {
 	Type      string `json:"type"`
 	MediaType string `json:"mediaType"`
 	URL       string `json:"url"`
 }
 
+// PubKey represents a public key for HTTP signature verification.
 type PubKey struct {
 	ID           string `json:"id"`
 	Owner        string `json:"owner"`
 	PublicKeyPem string `json:"publicKeyPem"`
 }
 
+// Webfinger represents a WebFinger response for actor discovery.
 type Webfinger struct {
 	Subject string   `json:"subject"`
 	Aliases []string `json:"aliases"`
 	Links   []Link   `json:"links"`
 }
 
+// Link represents a link in a WebFinger response.
 type Link struct {
 	Rel  string `json:"rel"`
 	Href string `json:"href"`
 	Type string `json:"type"`
 }
 
+// InboxRequest represents an incoming ActivityPub activity delivered to the inbox.
 type InboxRequest struct {
 	Context      *Context            `json:"@context,omitempty"`
 	ID           string              `json:"id,omitempty"`
@@ -125,6 +167,7 @@ type InboxRequest struct {
 	Replies      map[string]string   `json:"replies,omitempty"`
 }
 
+// InboxRequestObject represents the object within an inbox activity.
 type InboxRequestObject struct {
 	ID           string        `json:"id,omitempty"`
 	Type         string        `json:"type,omitempty"`
@@ -139,11 +182,13 @@ type InboxRequestObject struct {
 	inlineID     bool
 }
 
+// Context represents the JSON-LD context for ActivityPub messages.
 type Context struct {
 	ID    string
 	Parts []any
 }
 
+// FollowResponseItem represents a response to a follow request (Accept activity).
 type FollowResponseItem struct {
 	Context string               `json:"@context"`
 	ID      string               `json:"id"`
@@ -152,6 +197,7 @@ type FollowResponseItem struct {
 	Object  FollowResponseObject `json:"object"`
 }
 
+// FollowResponseObject represents the object in a follow response.
 type FollowResponseObject struct {
 	ID     string `json:"id"`
 	Type   string `json:"type"`
@@ -159,6 +205,7 @@ type FollowResponseObject struct {
 	Object string `json:"object"`
 }
 
+// Attachment represents a media attachment in an ActivityPub post.
 type Attachment struct {
 	Type      string `json:"type"`
 	MediaType string `json:"mediaType"`
@@ -174,6 +221,8 @@ type Attachment struct {
 //	Sig     string `json:"signatureValue"`
 //}
 
+// SendSignedPostRequest sends an HTTP POST request with HTTP signature authentication.
+// The request is signed using the provided RSA private key.
 func SendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) error {
 	u, err := url.Parse(us)
 	if err != nil {
@@ -212,6 +261,8 @@ func SendSignedPostRequest(us, keyID string, data []byte, key *rsa.PrivateKey) e
 	return nil
 }
 
+// SendFollowRequest sends a Follow activity to an actor's inbox.
+// This is used to subscribe to an actor's posts.
 func SendFollowRequest(inURL, actorURL, userURL string, key *rsa.PrivateKey) error {
 	id := userURL + "#" + uuid.NewString()
 	r := InboxRequest{
@@ -231,6 +282,7 @@ func SendFollowRequest(inURL, actorURL, userURL string, key *rsa.PrivateKey) err
 	return SendSignedPostRequest(inURL, userURL+"#key", data, key)
 }
 
+// SendUnfollowRequest sends an Undo Follow activity to unsubscribe from an actor.
 func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 	id := userURL + "#" + uuid.NewString()
 	r := InboxRequest{
@@ -253,6 +305,7 @@ func SendUnfollowRequest(us, userURL string, key *rsa.PrivateKey) error {
 	return SendSignedPostRequest(us, userURL+"#key", data, key)
 }
 
+// FetchObject fetches an ActivityPub object from a URL.
 func FetchObject(u string) (*InboxRequestObject, error) {
 	c := &http.Client{Timeout: apRequestTimeout}
 	req, err := http.NewRequest("GET", u, nil)
@@ -271,6 +324,7 @@ func FetchObject(u string) (*InboxRequestObject, error) {
 	return o, err
 }
 
+// FetchActor fetches an actor's profile information with HTTP signature authentication.
 func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error) {
 	u, err := url.Parse(us)
 	if err != nil {
@@ -310,6 +364,7 @@ func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error)
 	return i, nil
 }
 
+// SaveFavicon downloads and saves user favicon as a storage resource.
 func (i *Identity) SaveFavicon() error {
 	var uri string
 	if i.Icon != nil && i.Icon.Type == imageType {
@@ -337,6 +392,8 @@ func (i *Identity) SaveFavicon() error {
 	return storage.SaveResource(key, rb)
 }
 
+// GetFaviconPath returns the storage path for the actor's favicon.
+// The path is based on a hash of the actor ID plus the file extension.
 func (i *Identity) GetFaviconPath() string {
 	var uri string
 	if i.Icon != nil && i.Icon.Type == imageType {
@@ -347,6 +404,8 @@ func (i *Identity) GetFaviconPath() string {
 	return storage.Hash([]byte(i.ID)) + utils.GetExtension(uri)
 }
 
+// GetName returns the best available display name for the actor.
+// Priority: PreferredUsername > Name > ID.
 func (i *Identity) GetName() string {
 	if i.PreferredUsername != "" {
 		return i.PreferredUsername
@@ -357,6 +416,8 @@ func (i *Identity) GetName() string {
 	return i.ID
 }
 
+// UnmarshalJSON implements custom JSON unmarshaling for Context.
+// Handles both string and array representations of JSON-LD contexts.
 func (c *Context) UnmarshalJSON(data []byte) error {
 	if data[0] == '"' && data[len(data)-1] == '"' {
 		return json.Unmarshal(data, &c.ID)
@@ -370,6 +431,8 @@ func (c *Context) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON implements custom JSON marshaling for Context.
+// Returns either a string or array depending on the context content.
 func (c *Context) MarshalJSON() ([]byte, error) {
 	if c.ID != "" {
 		return json.Marshal(c.ID)
@@ -377,6 +440,8 @@ func (c *Context) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.Parts)
 }
 
+// UnmarshalJSON implements custom JSON unmarshaling for Image.
+// Handles both string URLs and object representations.
 func (i *Image) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 || string(data) == jsonNull {
 		return nil
@@ -398,6 +463,8 @@ func (i *Image) UnmarshalJSON(data []byte) error {
 // required for json conversion
 type shadowInboxRequestObject InboxRequestObject
 
+// MarshalJSON implements custom JSON marshaling for InboxRequestObject.
+// Returns just the ID string when inlineID is true, otherwise returns the full object.
 func (i *InboxRequestObject) MarshalJSON() ([]byte, error) {
 	if i.inlineID {
 		return json.Marshal(i.ID)
@@ -405,6 +472,8 @@ func (i *InboxRequestObject) MarshalJSON() ([]byte, error) {
 	return json.Marshal((*shadowInboxRequestObject)(i))
 }
 
+// UnmarshalJSON implements custom JSON unmarshaling for InboxRequestObject.
+// Handles both string IDs and full object representations.
 func (i *InboxRequestObject) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 || string(data) == jsonNull {
 		return nil

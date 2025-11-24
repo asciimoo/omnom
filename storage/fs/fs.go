@@ -2,6 +2,35 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+// Package fs implements filesystem-based storage for Omnom snapshots and resources.
+//
+// This package provides the FSStorage type which implements the storage.Storage
+// interface using the local filesystem. All content is stored in a configurable
+// base directory with the following structure:
+//
+//	<base_dir>/
+//	  snapshots/
+//	    <2-char-prefix>/
+//	      <hash>.html.gz
+//	  resources/
+//	    <2-char-prefix>/
+//	      <hash><extension>
+//
+// All files are compressed with gzip before being written to disk. The two-character
+// prefix directories (based on the first two characters of the content hash) help
+// distribute files across multiple directories to avoid filesystem performance issues.
+//
+// Example usage:
+//
+//	storage, err := fs.New(config.StorageFilesystem{
+//	    RootDir: "./data",
+//	})
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// Storage implements the storage.Storage interface
+//	err = storage.SaveSnapshot(key, content)
 package fs
 
 import (
@@ -15,10 +44,12 @@ import (
 	"github.com/asciimoo/omnom/config"
 )
 
+// FSStorage implements filesystem-based storage for snapshots and resources.
 type FSStorage struct {
 	baseDir string
 }
 
+// New creates a new filesystem storage backend.
 func New(cfg config.StorageFilesystem) (*FSStorage, error) {
 	var err error
 	baseDir, err := filepath.Abs(cfg.RootDir)
@@ -33,6 +64,7 @@ func New(cfg config.StorageFilesystem) (*FSStorage, error) {
 	}, nil
 }
 
+// FS returns the storage directory as an io/fs.FS for filesystem operations.
 func (s *FSStorage) FS() (fs.FS, error) {
 	root, err := os.OpenRoot(s.baseDir)
 	if err != nil {
@@ -41,6 +73,8 @@ func (s *FSStorage) FS() (fs.FS, error) {
 	return root.FS(), nil
 }
 
+// GetSnapshot retrieves a snapshot file by its key.
+// Returns nil if the snapshot doesn't exist or cannot be opened.
 func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {
 	path := s.getSnapshotPath(key)
 	f, err := os.Open(path)
@@ -50,6 +84,8 @@ func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {
 	return f
 }
 
+// GetSnapshotSize returns the size in bytes of a stored snapshot file.
+// Returns 0 if the snapshot doesn't exist or an error occurs.
 func (s *FSStorage) GetSnapshotSize(key string) uint {
 	path := s.getSnapshotPath(key)
 	fi, err := os.Stat(path)
@@ -59,6 +95,8 @@ func (s *FSStorage) GetSnapshotSize(key string) uint {
 	return uint(fi.Size())
 }
 
+// GetResource retrieves a gzip-compressed resource file by its key.
+// Returns nil if the resource doesn't exist or cannot be opened.
 func (s *FSStorage) GetResource(key string) io.ReadCloser {
 	path := s.getResourcePath(key)
 	f, err := os.Open(path)
@@ -68,6 +106,8 @@ func (s *FSStorage) GetResource(key string) io.ReadCloser {
 	return f
 }
 
+// GetResourceSize returns the size in bytes of a stored resource file.
+// Returns 0 if the resource doesn't exist or an error occurs.
 func (s *FSStorage) GetResourceSize(key string) uint {
 	path := s.getResourcePath(key)
 	fi, err := os.Stat(path)
@@ -77,10 +117,14 @@ func (s *FSStorage) GetResourceSize(key string) uint {
 	return uint(fi.Size())
 }
 
+// GetResourceURL constructs the HTTP URL path for accessing a resource.
+// The URL path includes a two-character prefix directory for distribution.
 func (s *FSStorage) GetResourceURL(key string) string {
 	return filepath.Join("/static/data/resources/", getPrefix(key), key)
 }
 
+// SaveSnapshot saves a snapshot to disk with gzip compression.
+// Creates the necessary directory structure if it doesn't exist.
 func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 	path := s.getSnapshotPath(key)
 	err := mkdir(filepath.Dir(path))
@@ -94,6 +138,8 @@ func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 	return os.WriteFile(path, b.Bytes(), 0600)
 }
 
+// SaveResource saves a resource to disk with gzip compression.
+// Creates the necessary directory structure if it doesn't exist.
 func (s *FSStorage) SaveResource(key string, resource []byte) error {
 	path := s.getResourcePath(key)
 	err := mkdir(filepath.Dir(path))

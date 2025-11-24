@@ -1,3 +1,35 @@
+// Package feed handles RSS/Atom and ActivityPub feed processing and aggregation.
+//
+// This package provides functionality for subscribing to, fetching, and processing
+// content from various feed types:
+//   - RSS 2.0 feeds
+//   - Atom feeds
+//   - ActivityPub (Mastodon, Pleroma, etc.)
+//
+// Feed items are fetched periodically via UpdateLoop and stored in the database.
+// Each user can subscribe to multiple feeds, and feed items are marked as read/unread
+// per user. The package handles:
+//   - Feed discovery from URLs (including HTML link rel="alternate")
+//   - Content sanitization to prevent XSS attacks
+//   - Resource downloading and local storage
+//   - ActivityPub federation (following actors, receiving posts)
+//   - URL resolution and normalization
+//   - Duplicate detection
+//
+// HTML content from feeds is sanitized using a whitelist-based policy that allows
+// safe tags and attributes while removing scripts and event handlers. Embedded
+// images and resources are downloaded and stored locally.
+//
+// Example usage:
+//
+//	// Subscribe to a feed
+//	err := feed.AddFeed(cfg, "Hacker News", "https://news.ycombinator.com/rss", userID)
+//
+//	// Update all feeds
+//	err := feed.Update()
+//
+//	// Run periodic updates
+//	go feed.UpdateLoop()
 package feed
 
 import (
@@ -125,6 +157,7 @@ func init() {
 	htmlSanitizerPolicy = p
 }
 
+// Update fetches and updates all feeds.
 func Update() error {
 	feeds, err := model.GetFeeds()
 	if err != nil {
@@ -147,6 +180,7 @@ func Update() error {
 	return nil
 }
 
+// UpdateLoop runs a periodic feed update loop.
 func UpdateLoop() {
 	interval := 60 * time.Minute
 	ticker := time.NewTicker(interval)
@@ -197,6 +231,7 @@ func updateRSSFeed(f *model.Feed) {
 	log.Debug().Int64("new items", added).Str("feed", f.Name).Msg("Feed updated")
 }
 
+// AddActivityPubFeedItem adds an ActivityPub post as a feed item.
 func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d *ap.InboxRequest) error {
 	pu, err := url.Parse(f.URL)
 	if err != nil {
@@ -314,6 +349,7 @@ func createFeed(cfg *config.Config, name, u string, uid uint) (*model.Feed, erro
 	return f, err
 }
 
+// AddFeed adds a new feed subscription for a user.
 func AddFeed(cfg *config.Config, name, u string, uid uint) error {
 	f, err := model.GetFeedByURL(u)
 	if f == nil || err != nil {
@@ -334,6 +370,7 @@ func AddFeed(cfg *config.Config, name, u string, uid uint) error {
 	return nil
 }
 
+// DeleteFeed removes a user's feed subscription.
 func DeleteFeed(cfg *config.Config, uf *model.UserFeed) error {
 	f, err := model.GetFeedByID(uf.FeedID)
 	if err != nil {

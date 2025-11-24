@@ -18,6 +18,8 @@ const (
 	scopeEmail   ScopeValue = "email"
 )
 
+// OIDCOAuth implements OAuth 2.0 authentication for generic OpenID Connect providers.
+// It automatically discovers provider configuration from a well-known URL.
 type OIDCOAuth struct {
 	AuthURL     string `json:"authorization_endpoint"`
 	TokenURL    string `json:"token_endpoint"`
@@ -59,6 +61,8 @@ func (o *OIDCOAuth) fetch(ctx context.Context) error {
 	return nil
 }
 
+// Prepare initializes the OIDC OAuth provider by fetching its configuration.
+// This must be called before using other methods.
 func (o *OIDCOAuth) Prepare(ctx context.Context, req *PrepareRequest) error {
 	if req.configurationURL == "" {
 		return fmt.Errorf("oidc: missing configuration URL")
@@ -89,6 +93,7 @@ func (o *OIDCOAuth) Prepare(ctx context.Context, req *PrepareRequest) error {
 	return nil
 }
 
+// GetRedirectURL constructs the OIDC authorization URL for redirecting users.
 func (o *OIDCOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	params := &url.Values{}
 
@@ -99,6 +104,7 @@ func (o *OIDCOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	return o.AuthURL + "?" + params.Encode()
 }
 
+// GetToken exchanges an authorization code for an access token.
 func (o *OIDCOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Response, error) {
 	params := &url.Values{}
 
@@ -118,6 +124,7 @@ func (o *OIDCOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Resp
 	return http.DefaultClient.Do(tokenReq)
 }
 
+// GetUserInfo fetches user information from the OIDC provider using the access token.
 func (o *OIDCOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*UserInfoResponse, error) {
 	var bearer tokenData
 
@@ -168,6 +175,7 @@ func (o *OIDCOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*U
 	}, nil
 }
 
+// GetScope returns the OAuth scopes required for OIDC authentication.
 func (o *OIDCOAuth) GetScope() (ScopeName, ScopeValue) {
 	str := &strings.Builder{}
 

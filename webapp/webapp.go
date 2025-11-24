@@ -2,6 +2,39 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+// Package webapp provides the HTTP web application and API server for Omnom.
+//
+// This package implements the web interface and REST API using the Gin web framework.
+// It handles:
+//   - User authentication and session management
+//   - HTML page rendering with Go templates
+//   - RESTful API endpoints for bookmarks, feeds, and snapshots
+//   - Static file serving
+//   - OAuth authentication (GitHub, Google, OIDC)
+//   - ActivityPub federation endpoints
+//   - CSRF protection
+//   - Request localization
+//   - RSS/Atom feed generation
+//
+// The web application provides both a browser-based UI and a programmatic API.
+// Browser extensions and mobile apps can use the API with token-based authentication.
+//
+// Key features:
+//   - Passwordless login via email tokens
+//   - OAuth provider integration
+//   - Real-time bookmark management
+//   - Content snapshot viewing with diff support
+//   - Feed aggregation and reading
+//   - Collection-based organization
+//   - Tag-based filtering
+//   - Full-text search
+//
+// The Run function initializes middleware, routes, and starts the HTTP server:
+//
+//	webapp.Run(cfg)
+//
+// API endpoints are documented and can be exported as Markdown using the
+// generate-api-docs-md command.
 package webapp
 
 import (
@@ -35,11 +68,12 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 )
 
+// NotificationType represents the type of notification.
 type NotificationType int
 
 const (
-	ServerAddr string = ":7331"
-	SID        string = "sid"
+	// SID is the default session identifier name
+	SID string = "sid"
 )
 
 const (
@@ -48,6 +82,8 @@ const (
 )
 
 var baseURL func(string) string
+
+// URLFor generates URLs for named routes.
 var URLFor func(string, ...string) string
 
 var tplFuncMap = template.FuncMap{
@@ -444,6 +480,7 @@ func staticFS(e *gin.Engine, prefix string, staticfs fs.FS, snapshotfs fs.FS) {
 	e.HEAD(pattern, handler)
 }
 
+// Run starts the web application server.
 func Run(cfg *config.Config) {
 	gin.SetMode(gin.ReleaseMode)
 
@@ -500,6 +537,7 @@ func authRequiredMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+// ConfigMiddleware initializes session handling for requests.
 func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
 	if cfg.Server.RemoteUserHeader != "" {
 		// Always trust the username sent in the RemoteUserHeader. The user set
@@ -557,6 +595,7 @@ func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// ConfigMiddleware injects configuration into the request context.
 func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("config", cfg)
@@ -564,6 +603,7 @@ func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// LocalizationMiddleware handles request localization.
 func LocalizationMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
@@ -588,6 +628,7 @@ func LocalizationMiddleware(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// CSRFMiddleware provides CSRF protection.
 func CSRFMiddleware() gin.HandlerFunc {
 	protection := csrf.New()
 	exceptions := []string{
@@ -613,6 +654,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 	}
 }
 
+// ErrorLoggerMiddleware logs errors from requests.
 func ErrorLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -660,6 +702,7 @@ func setNotification(c *gin.Context, t NotificationType, n string, persist bool)
 	}
 }
 
+// RSSEndpointWrapper wraps handlers to support RSS feed generation.
 func RSSEndpointWrapper(f gin.HandlerFunc, rssVar string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("RSS", rssVar)

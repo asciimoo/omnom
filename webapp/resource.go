@@ -17,12 +17,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ResourceMeta contains metadata about a webpage resource.
 type ResourceMeta struct {
 	Filename  string `json:"filename"`
 	Mimetype  string `json:"mimetype"`
 	Extension string `json:"extension"`
 }
 
+// ResourceMetas is a collection of ResourceMeta objects.
 type ResourceMetas []ResourceMeta
 
 func addResource(c *gin.Context) {

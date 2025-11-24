@@ -1,3 +1,32 @@
+// Package localization provides internationalization (i18n) support for Omnom.
+//
+// This package handles translation of user interface strings into multiple languages
+// using the go-i18n library. Translation files are JSON-based and embedded in the
+// application at build time.
+//
+// Supported features:
+//   - Multiple language support with automatic fallback to English
+//   - Parameterized message templates
+//   - Language detection from Accept-Language headers
+//   - Embedded translation files
+//
+// Translation files are stored in the locales/ directory with names like en.json,
+// es.json, etc. Each file contains message IDs and their translated strings.
+//
+// The Localizer type provides thread-safe translation lookups for a specific
+// language preference. The global SupportedLanguages slice contains metadata
+// about all available translations.
+//
+// Example usage:
+//
+//	// Create a localizer for a user's preferred languages
+//	loc := localization.NewLocalizer("es", "en")
+//
+//	// Translate a simple message
+//	text := loc.Msg("welcome_message")
+//
+//	// Translate with parameters
+//	text := loc.Msgf("greeting", "name", userName, "count", itemCount)
 package localization
 
 import (
@@ -17,19 +46,24 @@ import (
 //go:embed locales/*.json
 var fs embed.FS
 var bundle *i18n.Bundle
+
+// SupportedLanguages contains all available language translations.
 var SupportedLanguages []*LangInfo
 var defaultLocalizer *Localizer
 
+// LangInfo contains information about a language.
 type LangInfo struct {
 	Abbr        string
 	EnglishName string
 	Name        string
 }
 
+// Localizer provides translation functionality.
 type Localizer struct {
 	l *i18n.Localizer
 }
 
+// NewLocalizer creates a new localizer for the specified languages.
 func NewLocalizer(langs ...string) *Localizer {
 	return &Localizer{
 		l: i18n.NewLocalizer(bundle, langs...),
@@ -69,6 +103,7 @@ func init() {
 	defaultLocalizer = NewLocalizer("en")
 }
 
+// Msg translates a string
 func (l *Localizer) Msg(msg string) string {
 	m := &i18n.Message{
 		ID: msg,
@@ -85,6 +120,8 @@ func (l *Localizer) Msg(msg string) string {
 	return tm
 }
 
+// Msgf translates a string with optional translation settings.
+// See https://pkg.go.dev/github.com/nicksnyder/go-i18n/v2@v2.6.0/i18n#LocalizeConfig for details.
 func (l *Localizer) Msgf(msg string, values ...any) string {
 	data, err := utils.KVData(values...)
 	if err != nil {

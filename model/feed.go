@@ -14,14 +14,18 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// FeedType represents the type of feed.
 type FeedType string
 
 const (
-	RSSFeed           FeedType = "rss"
+	// RSSFeed represents an RSS/Atom feed.
+	RSSFeed FeedType = "rss"
+	// ActivityPubFeed represents an ActivityPub feed.
 	ActivityPubFeed   FeedType = "ap"
 	itemsSelectFields          = "feed_items.*, user_feeds.name as feed_name, feeds.id as feed_id, feeds.author as feed_author, feeds.url as feed_url, feeds.type as feed_type, feeds.favicon as feed_favicon, user_feed_items.id as user_feed_item_id, user_feed_items.unread as unread"
 )
 
+// Feed represents an RSS or ActivityPub feed.
 type Feed struct {
 	CommonFields
 	Name    string      `json:"name"`
@@ -33,6 +37,7 @@ type Feed struct {
 	Users   []*User     `gorm:"many2many:user_feeds;" json:"-"`
 }
 
+// UserFeed represents a user's subscription to a feed.
 type UserFeed struct {
 	CommonFields
 	Name   string `json:"name"`
@@ -43,6 +48,7 @@ type UserFeed struct {
 	User   *User  `json:"-"`
 }
 
+// FeedItem represents an item in a feed.
 type FeedItem struct {
 	CommonFields
 	URL                string  `gorm:"uniqueIndex:feeditemuidx" json:"url"`
@@ -58,6 +64,7 @@ type FeedItem struct {
 	Users              []*User `gorm:"many2many:user_feed_items;" json:"-"`
 }
 
+// UserFeedItem represents a user's relationship with a feed item.
 type UserFeedItem struct {
 	CommonFields
 	Unread     bool      `json:"unread"`
@@ -67,6 +74,7 @@ type UserFeedItem struct {
 	User       *User     `json:"-"`
 }
 
+// UnreadFeedItem represents a feed item with unread status and feed metadata.
 type UnreadFeedItem struct {
 	FeedItem
 	FeedID         uint   `json:"feed_id"`
@@ -79,11 +87,13 @@ type UnreadFeedItem struct {
 	Unread         bool
 }
 
+// UserFeedSummary represents a user feed with item count.
 type UserFeedSummary struct {
 	UserFeed
 	Count uint
 }
 
+// GetFeeds retrieves all feeds from the database.
 func GetFeeds() ([]*Feed, error) {
 	var res []*Feed
 	err := DB.
@@ -93,6 +103,7 @@ func GetFeeds() ([]*Feed, error) {
 	return res, err
 }
 
+// GetFeedItem retrieves a specific feed item by feed ID and URL.
 func GetFeedItem(fid uint, u string) (*FeedItem, error) {
 	var i *FeedItem
 	err := DB.
@@ -102,6 +113,8 @@ func GetFeedItem(fid uint, u string) (*FeedItem, error) {
 	return i, err
 }
 
+// GetUserFeeds retrieves all feeds for a user with item counts.
+// If unread is true item count contains only unread items.
 func GetUserFeeds(uid uint, unread bool) ([]*UserFeedSummary, error) {
 	var res []*UserFeedSummary
 	q := DB.
@@ -121,6 +134,7 @@ func GetUserFeeds(uid uint, unread bool) ([]*UserFeedSummary, error) {
 	return res, err
 }
 
+// GetUserFeed retrieves a specific user feed by user ID and feed ID.
 func GetUserFeed(uid uint, fid string) (*UserFeed, error) {
 	var f *UserFeed
 	res := DB.
@@ -137,6 +151,8 @@ func GetUserFeed(uid uint, fid string) (*UserFeed, error) {
 	return f, nil
 }
 
+// DeleteUserFeed deletes a user's feed subscription and associated items.
+// If this is the last subscription to the feed, the feed itself is also deleted.
 func DeleteUserFeed(f *UserFeed) error {
 	if err := DB.Delete(
 		&UserFeedItem{},
@@ -167,6 +183,7 @@ func DeleteUserFeed(f *UserFeed) error {
 	return nil
 }
 
+// GetFeedByURL retrieves a feed by its URL.
 func GetFeedByURL(u string) (*Feed, error) {
 	var f *Feed
 	err := DB.Table("feeds").
@@ -175,6 +192,7 @@ func GetFeedByURL(u string) (*Feed, error) {
 	return f, err
 }
 
+// GetFeedByID retrieves a feed by its ID.
 func GetFeedByID(id uint) (*Feed, error) {
 	var f *Feed
 	err := DB.Table("feeds").
@@ -183,6 +201,8 @@ func GetFeedByID(id uint) (*Feed, error) {
 	return f, err
 }
 
+// AddFeedItem adds a new feed item and notifies subscribed users.
+// Returns the number of users notified about the new item.
 func AddFeedItem(i *FeedItem) int64 {
 	f, err := GetFeedByID(i.FeedID)
 	if f == nil || err != nil {
@@ -221,6 +241,7 @@ func AddFeedItem(i *FeedItem) int64 {
 	return DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&uis).RowsAffected
 }
 
+// GetUnreadFeedItems retrieves unread feed items for a user.
 func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 	var res []*UnreadFeedItem
 	DB.
@@ -237,6 +258,7 @@ func GetUnreadFeedItems(uid, limit uint) []*UnreadFeedItem {
 	return res
 }
 
+// GetUnreadFeedItemCount returns the number of unread feed items for a user.
 func GetUnreadFeedItemCount(uid uint) int64 {
 	var res int64
 	DB.
@@ -248,6 +270,8 @@ func GetUnreadFeedItemCount(uid uint) int64 {
 	return res
 }
 
+// SearchFeedItems searches feed items by query string with optional filters.
+// Returns matching items and total count.
 func SearchFeedItems(uid, limit uint, query string, feedID uint, includeRead bool) ([]*UnreadFeedItem, int64, error) {
 	var res []*UnreadFeedItem
 	var resCount int64

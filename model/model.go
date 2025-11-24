@@ -2,6 +2,34 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+// Package model provides database models and data access layer for Omnom.
+//
+// This package defines all database entities and their relationships, including:
+//   - Users: User accounts with authentication tokens
+//   - Bookmarks: Saved web pages with metadata, tags, and collections
+//   - Snapshots: Archived copies of bookmarked web pages
+//   - Tags: User-defined labels for organizing bookmarks
+//   - Collections: Hierarchical bookmark organization
+//   - Feeds: RSS/Atom and ActivityPub feed subscriptions
+//   - FeedItems: Individual posts from subscribed feeds
+//   - Resources: Embedded media and assets from web pages
+//   - ActivityPub: Federation followers and interactions
+//
+// The package uses GORM as the ORM layer and supports both SQLite and PostgreSQL
+// databases. All models embed CommonFields which provide ID, timestamps, and
+// soft-delete functionality.
+//
+// Database migrations are handled automatically through the Init function which
+// sets up the database connection and runs necessary schema updates.
+//
+// Example usage:
+//
+//	err := model.Init(cfg)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	user := model.GetUser("username")
+//	bookmarks, _, err := model.SearchBookmarks(user.ID, 50, "golang")
 package model
 
 import (
@@ -18,18 +46,26 @@ import (
 	"gorm.io/driver/sqlite"
 )
 
+// DBTypedef represents the type of database being used.
 type DBTypedef int
 
 const (
+	// Sqlite represents SQLite database type.
 	Sqlite DBTypedef = iota
+	// Psql represents PostgreSQL database type.
 	Psql
 )
 
+// ErrDBType is returned when an unknown database type is encountered.
 const ErrDBType = utils.StringError("Unknown database type")
 
+// DB is the global database instance.
 var DB *gorm.DB
+
+// DBType holds the type of the database being used.
 var DBType = Sqlite
 
+// Init initializes the database connection and runs migrations.
 func Init(c *config.Config) error {
 	dbCfg := &gorm.Config{}
 	if c.App.DebugSQL {
@@ -91,11 +127,13 @@ func automigrate() error {
 	)
 }
 
+// Database represents the database version tracking table.
 type Database struct {
 	ID      uint `gorm:"primaryKey"`
 	Version uint
 }
 
+// CommonFields contains fields common to all models.
 type CommonFields struct {
 	ID        uint       `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time  `json:"created_at"`

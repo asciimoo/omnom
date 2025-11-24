@@ -8,6 +8,7 @@ import (
 	"fmt"
 )
 
+// User represents a user account.
 type User struct {
 	CommonFields
 	Username         string      `gorm:"unique" json:"username"`
@@ -20,6 +21,7 @@ type User struct {
 	FeedsItems       []*FeedItem `gorm:"many2many:user_feed_items;" json:"feed_items"`
 }
 
+// GetUser retrieves a user by username or email.
 func GetUser(name string) *User {
 	var u User
 	err := DB.Where("LOWER(username) == LOWER(?) or LOWER(email) == LOWER(?)", name, name).First(&u).Error
@@ -29,6 +31,7 @@ func GetUser(name string) *User {
 	return &u
 }
 
+// GetUserByLoginToken retrieves a user by their login token.
 func GetUserByLoginToken(tok string) *User {
 	var u User
 	err := DB.Where(&User{LoginToken: tok}).First(&u).Error
@@ -38,6 +41,7 @@ func GetUserByLoginToken(tok string) *User {
 	return &u
 }
 
+// GetUserByOAuthID retrieves a user by their OAuth ID.
 func GetUserByOAuthID(id string) *User {
 	var u User
 	err := DB.Where(&User{OAuthID: &id}).First(&u).Error
@@ -47,6 +51,7 @@ func GetUserByOAuthID(id string) *User {
 	return &u
 }
 
+// GetUserBySubmissionToken retrieves a user by their submission token.
 func GetUserBySubmissionToken(tok string) *User {
 	if tok == "" {
 		return nil
@@ -60,6 +65,7 @@ func GetUserBySubmissionToken(tok string) *User {
 	return &u
 }
 
+// CreateUser creates a new user with the specified username and email.
 func CreateUser(username, email string) error {
 	if GetUser(username) != nil {
 		return fmt.Errorf("User already exists")

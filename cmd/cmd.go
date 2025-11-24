@@ -2,6 +2,36 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+// Package cmd provides command-line interface functionality for Omnom.
+//
+// This package implements the CLI using the Cobra library and provides various
+// subcommands for managing the Omnom application:
+//
+//   - listen: Start the web server
+//   - create-user: Create a new user account
+//   - create-token: Generate login or addon tokens
+//   - set-token: Set a specific token value
+//   - show-user: Display user information
+//   - create-bookmark: Add a bookmark from the command line
+//   - create-config: Generate a default configuration file
+//   - update-feeds: Manually update all RSS/Atom feeds
+//   - generate-api-docs-md: Generate Markdown API documentation
+//
+// The package handles configuration loading, database initialization, and
+// command-line argument parsing. It also sets up logging with configurable
+// levels and pretty-printed output.
+//
+// Example usage:
+//
+//	// In main.go
+//	cmd.Execute(embeddedFS)
+//
+// Command examples:
+//
+//	omnom listen --address :8080
+//	omnom create-user alice alice@example.com
+//	omnom create-bookmark alice "Example" https://example.com
+//	omnom update-feeds
 package cmd
 
 import (

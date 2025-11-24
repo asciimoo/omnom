@@ -4,6 +4,7 @@
 
 package model
 
+// Snapshot represents a saved webpage snapshot.
 type Snapshot struct {
 	CommonFields
 	Title      string     `json:"title"`
@@ -15,6 +16,7 @@ type Snapshot struct {
 	Resources  []Resource `gorm:"many2many:snapshot_resources;" json:"resources"`
 }
 
+// GetSnapshotWithResources retrieves a snapshot with its associated resources.
 func GetSnapshotWithResources(key string) (*Snapshot, error) {
 	var s *Snapshot
 	if err := DB.Where("key = ?", key).Preload("Resources").First(&s).Error; err != nil {

@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// CreateGlob converts a search string into a SQL LIKE pattern.
 func CreateGlob(s string) string {
 	if strings.Contains(s, "*") {
 		return strings.ReplaceAll(s, "*", "%")

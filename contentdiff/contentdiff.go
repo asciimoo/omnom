@@ -1,3 +1,31 @@
+// Package contentdiff provides HTML comparison and difference detection functionality.
+//
+// This package compares HTML documents to identify changes between different versions
+// of a bookmarked web page. It extracts and compares:
+//   - Text content (rendered text from the page)
+//   - Links (href and anchor text)
+//   - Multimedia elements (images, videos)
+//
+// The comparison uses the Myers diff algorithm (via sergi/go-diff) to compute
+// differences in text content. For links and multimedia, it performs set-based
+// comparison to identify additions and removals.
+//
+// The package is used to show users what has changed on a bookmarked page between
+// snapshots, making it easy to track content updates, new links, or removed sections.
+//
+// Example usage:
+//
+//	reader1 := strings.NewReader(oldHTML)
+//	reader2 := strings.NewReader(newHTML)
+//	diffs, err := contentdiff.DiffHTML(reader1, reader2)
+//	if err != nil {
+//	    return err
+//	}
+//
+//	// Display text changes
+//	for _, d := range diffs.Text {
+//	    fmt.Printf("[%s] %s\n", d.Type, d.Text)
+//	}
 package contentdiff
 
 import (
@@ -11,33 +39,39 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
+// TextDiff represents a text difference.
 type TextDiff struct {
 	Text string `json:"text"`
 	Type string `json:"type"`
 }
 
+// LinkDiff represents a link difference.
 type LinkDiff struct {
 	Link Link   `json:"link"`
 	Type string `json:"type"`
 }
 
+// Diffs contains all types of differences between two HTML documents.
 type Diffs struct {
 	Text       []TextDiff `json:"text"`
 	Multimedia []TextDiff `json:"multimedia"`
 	Link       []LinkDiff `json:"link"`
 }
 
+// HTMLContent represents extracted content from an HTML document.
 type HTMLContent struct {
 	Links      []Link   `json:"links"`
 	Multimedia []string `json:"multimedia"`
 	Text       string   `json:"text"`
 }
 
+// Link represents a hyperlink in HTML content.
 type Link struct {
 	Href string `json:"href"`
 	Text string `json:"text"`
 }
 
+// DiffHTML compares two HTML documents and returns their differences.
 func DiffHTML(r1, r2 io.Reader) (*Diffs, error) {
 	c1 := ExtractHTMLContent(r1)
 	c2 := ExtractHTMLContent(r2)
@@ -49,6 +83,7 @@ func DiffHTML(r1, r2 io.Reader) (*Diffs, error) {
 	return ds, nil
 }
 
+// DiffText compares two text strings and returns their differences.
 func DiffText(t1, t2 string) []TextDiff {
 	dmp := diffmatchpatch.New()
 	ds := dmp.DiffMain(t1, t2, false)
@@ -69,6 +104,7 @@ func DiffText(t1, t2 string) []TextDiff {
 	return r
 }
 
+// DiffLink compares two sets of links and returns their differences.
 func DiffLink(l1, l2 []Link) []LinkDiff {
 	r := make([]LinkDiff, 0)
 	for _, v1 := range l1 {
@@ -120,6 +156,7 @@ func DiffLink(l1, l2 []Link) []LinkDiff {
 	return r
 }
 
+// DiffList compares two string lists and returns their differences.
 func DiffList(l1, l2 []string) []TextDiff {
 	r := make([]TextDiff, 0)
 	for _, v := range l1 {
@@ -135,6 +172,7 @@ func DiffList(l1, l2 []string) []TextDiff {
 	return r
 }
 
+// ExtractHTMLContent extracts text, links, and multimedia from an HTML document.
 func ExtractHTMLContent(r io.Reader) *HTMLContent {
 	doc := html.NewTokenizer(r)
 	capture := false

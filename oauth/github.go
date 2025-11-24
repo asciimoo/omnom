@@ -16,13 +16,16 @@ const (
 	scopeUserEmail ScopeValue = "user:email"
 )
 
+// GitHubOAuth implements OAuth 2.0 authentication for GitHub.
 type GitHubOAuth struct {
 	AuthURL  string
 	TokenURL string
 }
 
+// Prepare initializes the GitHub OAuth provider. No preparation needed for GitHub.
 func (g GitHubOAuth) Prepare(_ context.Context, _ *PrepareRequest) error { return nil }
 
+// GetRedirectURL constructs the GitHub authorization URL for redirecting users.
 func (g GitHubOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	params := &url.Values{}
 
@@ -34,6 +37,7 @@ func (g GitHubOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	return g.AuthURL + "?" + params.Encode()
 }
 
+// GetToken exchanges an authorization code for an access token.
 func (g GitHubOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Response, error) {
 	params := &url.Values{}
 
@@ -50,6 +54,7 @@ func (g GitHubOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Res
 	return http.DefaultClient.Do(tokenReq)
 }
 
+// GetUserInfo fetches user information from GitHub using the access token.
 func (g GitHubOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*UserInfoResponse, error) {
 	v, err := url.ParseQuery(string(response))
 	if err != nil {
@@ -96,6 +101,7 @@ func (g GitHubOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*
 	}, nil
 }
 
+// GetScope returns the OAuth scopes required for GitHub authentication.
 func (g GitHubOAuth) GetScope() (ScopeName, ScopeValue) {
 	str := &strings.Builder{}
 

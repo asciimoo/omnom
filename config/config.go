@@ -2,6 +2,31 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+// Package config provides configuration management for the Omnom application.
+//
+// This package handles loading, parsing, and validating application configuration
+// from YAML files. It supports configuration for various components including:
+//   - Application settings (logging, pagination, snapshots)
+//   - Server settings (address, base URL, cookies)
+//   - Database configuration (type and connection parameters)
+//   - Storage backends (filesystem, future cloud storage)
+//   - SMTP email settings
+//   - ActivityPub federation (key management)
+//   - OAuth provider configuration
+//
+// The configuration can be loaded from multiple locations in order of precedence:
+//  1. Path specified via --config flag
+//  2. ./config.yml in the current directory
+//  3. ~/.omnomrc in the user's home directory
+//  4. ~/.config/omnom/config.yml in the user's config directory
+//
+// Example usage:
+//
+//	cfg, err := config.Load("config.yml")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Println("Server address:", cfg.Server.Address)
 package config
 
 import (
@@ -22,6 +47,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Config holds the application configuration.
 type Config struct {
 	fname       string
 	App         App          `yaml:"app"`
@@ -34,6 +60,7 @@ type Config struct {
 	OAuth       OAuth        `yaml:"oauth"`
 }
 
+// App holds application-specific settings.
 type App struct {
 	LogLevel                 string `yaml:"log_level"`
 	ResultsPerPage           uint   `yaml:"results_per_page"`
@@ -44,6 +71,7 @@ type App struct {
 	DebugSQL                 bool   `yaml:"debug_sql"`
 }
 
+// Server holds server configuration.
 type Server struct {
 	Address          string `yaml:"address"`
 	BaseURL          string `yaml:"base_url"`
@@ -51,23 +79,28 @@ type Server struct {
 	RemoteUserHeader string `yaml:"remote_user_header"`
 }
 
+// DB holds database configuration.
 type DB struct {
 	Connection string `yaml:"connection"`
 	Type       string `yaml:"type"`
 }
 
+// Feed holds feed-related configuration.
 type Feed struct {
 	ItemsPerPage uint `yaml:"items_per_page"`
 }
 
+// Storage holds storage backend configuration.
 type Storage struct {
 	Filesystem *StorageFilesystem `yaml:"fs"`
 }
 
+// StorageFilesystem holds filesystem storage configuration.
 type StorageFilesystem struct {
 	RootDir string `yaml:"root_dir"`
 }
 
+// SMTP holds email server configuration.
 type SMTP struct {
 	Host              string `yaml:"host"`
 	Port              int    `yaml:"port"`
@@ -80,6 +113,7 @@ type SMTP struct {
 	ConnectionTimeout int    `yaml:"connection_timeout"`
 }
 
+// ActivityPub holds ActivityPub configuration including key paths.
 type ActivityPub struct {
 	PubKeyPath  string `yaml:"pubkey"`
 	PrivKeyPath string `yaml:"privkey"`
@@ -87,8 +121,10 @@ type ActivityPub struct {
 	PrivK       *rsa.PrivateKey
 }
 
+// OAuth maps provider names to their OAuth configurations.
 type OAuth map[string]OAuthEntry
 
+// OAuthEntry holds configuration for a single OAuth provider.
 type OAuthEntry struct {
 	ClientID         string   `yaml:"client_id"`
 	ClientSecret     string   `yaml:"client_secret"`
@@ -123,6 +159,7 @@ func readConfigFile(filename string) ([]byte, string, error) {
 	return b, "", errors.New("configuration file not found. Use --config to specify a custom config file")
 }
 
+// Load reads and parses the configuration from the specified file.
 func Load(filename string) (*Config, error) {
 	b, fn, err := readConfigFile(filename)
 	if err != nil {
@@ -140,6 +177,7 @@ func Load(filename string) (*Config, error) {
 	return c, nil
 }
 
+// CreateDefaultConfig returns a new Config with default values.
 func CreateDefaultConfig() *Config {
 	return &Config{
 		App: App{
@@ -229,6 +267,7 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 	return c, nil
 }
 
+// Filename returns the path of the loaded configuration file.
 func (c *Config) Filename() string {
 	if c.fname == "" {
 		return "*Default Config*"
@@ -242,6 +281,7 @@ func (c *Config) setDefaultStorage() {
 	}
 }
 
+// BaseURL constructs a full URL by appending the given path to the server's base URL.
 func (c *Config) BaseURL(u string) string {
 	if strings.HasPrefix(u, "/") && strings.HasSuffix(c.Server.BaseURL, "/") {
 		u = u[1:]
@@ -252,6 +292,7 @@ func (c *Config) BaseURL(u string) string {
 	return c.Server.BaseURL + u
 }
 
+// ExportPrivKey exports the private key in PEM format.
 func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
 	if ap.PrivK == nil {
 		var err error
@@ -271,6 +312,7 @@ func (ap *ActivityPub) ExportPrivKey() ([]byte, error) {
 	return privkeyPem, nil
 }
 
+// ParsePrivKey parses a private key from PEM format.
 func (ap *ActivityPub) ParsePrivKey(privPEM []byte) error {
 	block, _ := pem.Decode(privPEM)
 	if block == nil {
@@ -282,6 +324,7 @@ func (ap *ActivityPub) ParsePrivKey(privPEM []byte) error {
 	return err
 }
 
+// ExportPubKey exports the public key in PEM format.
 func (ap *ActivityPub) ExportPubKey() ([]byte, error) {
 	pubkeyBytes, err := x509.MarshalPKIXPublicKey(ap.PubK)
 	if err != nil {
@@ -297,6 +340,7 @@ func (ap *ActivityPub) ExportPubKey() ([]byte, error) {
 	return pubkeyPem, nil
 }
 
+// ParsePubKey parses a public key from PEM format.
 func (ap *ActivityPub) ParsePubKey(pubPEM []byte) error {
 	block, _ := pem.Decode(pubPEM)
 	if block == nil {

@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Bookmark represents a saved webpage bookmark.
 type Bookmark struct {
 	CommonFields
 	URL          string      `json:"url"`
@@ -30,6 +31,7 @@ type Bookmark struct {
 	User         User        `json:"-"`
 }
 
+// GetOrCreateBookmark retrieves an existing bookmark or creates a new one.
 // TODO use Bookmark as parameter instead of strings
 func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon, collection, unread string) (*Bookmark, bool, error) {
 	url, err := url.Parse(urlString)
@@ -89,6 +91,7 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 	return b, new, nil
 }
 
+// GetUnreadBookmarkItems retrieves unread bookmarks for a user.
 func GetUnreadBookmarkItems(uid, limit uint) []*Bookmark {
 	var res []*Bookmark
 	DB.
@@ -101,6 +104,7 @@ func GetUnreadBookmarkItems(uid, limit uint) []*Bookmark {
 	return res
 }
 
+// GetUnreadBookmarkCount returns the number of unread bookmarks for a user.
 func GetUnreadBookmarkCount(uid uint) int64 {
 	var res int64
 	DB.
@@ -111,6 +115,7 @@ func GetUnreadBookmarkCount(uid uint) int64 {
 	return res
 }
 
+// SearchBookmarks searches bookmarks by query string.
 func SearchBookmarks(uid, limit uint, query string) ([]*Bookmark, int64, error) {
 	var res []*Bookmark
 	var resCount int64

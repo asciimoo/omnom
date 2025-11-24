@@ -16,13 +16,16 @@ const (
 	scopeUserinfoProfile ScopeValue = "https://www.googleapis.com/auth/userinfo.profile"
 )
 
+// GoogleOAuth implements OAuth 2.0 authentication for Google.
 type GoogleOAuth struct {
 	AuthURL  string
 	TokenURL string
 }
 
+// Prepare initializes the Google OAuth provider. No preparation needed for Google.
 func (g GoogleOAuth) Prepare(_ context.Context, _ *PrepareRequest) error { return nil }
 
+// GetRedirectURL constructs the Google authorization URL for redirecting users.
 func (g GoogleOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	params := &url.Values{}
 
@@ -33,6 +36,7 @@ func (g GoogleOAuth) GetRedirectURL(req *RedirectURIRequest) string {
 	return g.AuthURL + "?" + params.Encode()
 }
 
+// GetToken exchanges an authorization code for an access token.
 func (g GoogleOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Response, error) {
 	params := &url.Values{}
 
@@ -52,6 +56,7 @@ func (g GoogleOAuth) GetToken(ctx context.Context, req *TokenRequest) (*http.Res
 	return http.DefaultClient.Do(tokenReq)
 }
 
+// GetUserInfo fetches user information from Google using the access token.
 func (g GoogleOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*UserInfoResponse, error) {
 	var bearer tokenData
 
@@ -103,6 +108,7 @@ func (g GoogleOAuth) GetUserInfo(ctx context.Context, response TokenResponse) (*
 	}, nil
 }
 
+// GetScope returns the OAuth scopes required for Google authentication.
 func (g GoogleOAuth) GetScope() (ScopeName, ScopeValue) {
 	str := &strings.Builder{}
 
