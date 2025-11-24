@@ -133,24 +133,22 @@ func signup(c *gin.Context) {
 
 			setNotification(c, nInfo, "Successful registration", false)
 			c.Redirect(http.StatusFound, baseURL("/"))
-
 			return
-		} else {
-			err = mail.Send(
-				*u.Email,
-				"Successful registration to Omnom",
-				"login",
-				map[string]any{
-					"Token":    u.LoginToken,
-					"Username": u.Username,
-					"URL":      fmt.Sprintf("%s?token=%s", getFullURL(c, URLFor("Login")), u.LoginToken),
-				},
-			)
-			if err != nil {
-				setNotification(c, nError, err.Error(), false)
-				render(c, http.StatusOK, "signup", tplVars)
-				return
-			}
+		}
+		err = mail.Send(
+			*u.Email,
+			"Successful registration to Omnom",
+			"login",
+			map[string]any{
+				"Token":    u.LoginToken,
+				"Username": u.Username,
+				"URL":      fmt.Sprintf("%s?token=%s", getFullURL(c, URLFor("Login")), u.LoginToken),
+			},
+		)
+		if err != nil {
+			setNotification(c, nError, err.Error(), false)
+			render(c, http.StatusOK, "signup", tplVars)
+			return
 		}
 		render(c, http.StatusOK, "signup-confirm", nil)
 		return

@@ -20,7 +20,7 @@ type TagCount struct {
 // GetFrequentPublicTags retrieves the most frequently used public tags.
 func GetFrequentPublicTags(count int) []*TagCount {
 	var tags []*TagCount
-	DB.Limit(20).Table("tags").Select("tags.text as tag, count(tags.text) as `count`").Joins("join bookmark_tags on bookmark_tags.tag_id == tags.id").Joins("join bookmarks on bookmarks.id == bookmark_tags.bookmark_id").Where("bookmarks.public = true").Group("tags.text").Order("`count` desc, tag asc").Find(&tags)
+	DB.Limit(20).Table("tags").Select("tags.text as tag, count(tags.text) as `count`").Joins("join bookmark_tags on bookmark_tags.tag_id == tags.id").Joins("join bookmarks on bookmarks.id == bookmark_tags.bookmark_id").Where("bookmarks.public = true").Group("tags.text").Order("`count` desc, tag asc").Limit(count).Find(&tags)
 	return tags
 }
 

@@ -154,9 +154,8 @@ func getFullURL(c *gin.Context, u string) string {
 func truncate(s string, maxLen int) string {
 	if len(s) > maxLen {
 		return s[:maxLen] + "[..]"
-	} else {
-		return s
 	}
+	return s
 }
 
 func addTemplate(r multitemplate.DynamicRender, root fs.FS, hasBase bool, name, filename string) {
@@ -371,10 +370,10 @@ func resolveDynamicPath(p string, v []string) string {
 		if vRef >= len(v) {
 			break
 		}
-		maxParts += 1
+		maxParts++
 		if strings.HasPrefix(f, ":") {
 			pParts[i] = v[vRef]
-			vRef += 1
+			vRef++
 		}
 		if strings.HasPrefix(f, "*") {
 			pParts[i] = v[vRef]
@@ -396,7 +395,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	_ = e.SetTrustedProxies([]string{"127.0.0.1"})
 	e.Use(sessions.Sessions("SID", store))
 	e.Use(SessionMiddleware(cfg))
-	e.Use(LocalizationMiddleware(cfg))
+	e.Use(LocalizationMiddleware())
 	e.Use(ConfigMiddleware(cfg))
 	e.Use(CSRFMiddleware())
 	e.Use(ErrorLoggerMiddleware())
@@ -537,7 +536,7 @@ func authRequiredMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-// ConfigMiddleware initializes session handling for requests.
+// SessionMiddleware initializes session handling for requests.
 func SessionMiddleware(cfg *config.Config) gin.HandlerFunc {
 	if cfg.Server.RemoteUserHeader != "" {
 		// Always trust the username sent in the RemoteUserHeader. The user set
@@ -604,7 +603,7 @@ func ConfigMiddleware(cfg *config.Config) gin.HandlerFunc {
 }
 
 // LocalizationMiddleware handles request localization.
-func LocalizationMiddleware(cfg *config.Config) gin.HandlerFunc {
+func LocalizationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		if c.PostForm("lang") != "" {

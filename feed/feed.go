@@ -592,7 +592,7 @@ func resolveURL(base *url.URL, u string) string {
 	}
 	q := pu.Query()
 	qChange := false
-	for k, _ := range q {
+	for k := range q {
 		if k == "utm" || strings.HasPrefix(k, "utm_") {
 			qChange = true
 			q.Del(k)

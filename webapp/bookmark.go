@@ -151,21 +151,20 @@ func myBookmarks(c *gin.Context) {
 		setNotification(c, nError, err.Error(), false)
 		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
-	} else {
-		if !reflect.DeepEqual(*sp, searchParams{}) {
-			hasSearch = true
-			filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
-			_ = filterFromDate(sp.FromDate, q, cq)
-			_ = filterToDate(sp.ToDate, q, cq)
-			filterDomain(sp.Domain, q, cq)
-			filterTag(sp.Tag, q, cq)
-			filterCollection(sp.Collection, uid, q, cq)
-			if sp.IsPublic {
-				filterPublic(q, cq)
-			}
-			if sp.IsPrivate {
-				filterPublic(q, cq)
-			}
+	}
+	if !reflect.DeepEqual(*sp, searchParams{}) {
+		hasSearch = true
+		filterText(sp.Q, sp.SearchInNote, sp.SearchInSnapshot, q, cq)
+		_ = filterFromDate(sp.FromDate, q, cq)
+		_ = filterToDate(sp.ToDate, q, cq)
+		filterDomain(sp.Domain, q, cq)
+		filterTag(sp.Tag, q, cq)
+		filterCollection(sp.Collection, uid, q, cq)
+		if sp.IsPublic {
+			filterPublic(q, cq)
+		}
+		if sp.IsPrivate {
+			filterPublic(q, cq)
 		}
 	}
 	cq.Count(&bookmarkCount)
@@ -224,7 +223,7 @@ func createBookmark(c *gin.Context) {
 			bsCreated = true
 		}
 	}
-	b, new, err := model.GetOrCreateBookmark(
+	b, isNew, err := model.GetOrCreateBookmark(
 		u,
 		c.PostForm("url"),
 		c.PostForm("title"),
@@ -240,7 +239,7 @@ func createBookmark(c *gin.Context) {
 		c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
 		return
 	}
-	if new {
+	if isNew {
 		go apNotifyFollowers(c, b)
 	}
 	if bsCreated {
@@ -331,7 +330,7 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	b, new, err := model.GetOrCreateBookmark(
+	b, isNew, err := model.GetOrCreateBookmark(
 		u,
 		c.PostForm("url"),
 		c.PostForm("title"),
@@ -349,7 +348,7 @@ func addBookmark(c *gin.Context) {
 		})
 		return
 	}
-	if new {
+	if isNew {
 		go apNotifyFollowers(c, b)
 	}
 	snapshotFile, _, err := c.Request.FormFile("snapshot")

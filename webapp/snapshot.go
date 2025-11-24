@@ -29,7 +29,7 @@ import (
 	"github.com/tdewolff/parse/v2/css"
 )
 
-var resourceAttributes map[string]string = map[string]string{
+var resourceAttributes = map[string]string{
 	"img":    "src",
 	"link":   "href",
 	"iframe": "src",
@@ -296,7 +296,7 @@ func snapshots(c *gin.Context) {
 		render(c, http.StatusOK, "snapshots", nil)
 		return
 	}
-	var uid uint = 0
+	var uid uint
 	u, ok := c.Get("user")
 	if ok && u != nil {
 		uid = u.(*model.User).ID

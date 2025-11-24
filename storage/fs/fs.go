@@ -4,7 +4,7 @@
 
 // Package fs implements filesystem-based storage for Omnom snapshots and resources.
 //
-// This package provides the FSStorage type which implements the storage.Storage
+// This package provides the Storage type which implements the storage.Storage
 // interface using the local filesystem. All content is stored in a configurable
 // base directory with the following structure:
 //
@@ -44,13 +44,13 @@ import (
 	"github.com/asciimoo/omnom/config"
 )
 
-// FSStorage implements filesystem-based storage for snapshots and resources.
-type FSStorage struct {
+// Storage implements filesystem-based storage for snapshots and resources.
+type Storage struct {
 	baseDir string
 }
 
 // New creates a new filesystem storage backend.
-func New(cfg config.StorageFilesystem) (*FSStorage, error) {
+func New(cfg config.StorageFilesystem) (*Storage, error) {
 	var err error
 	baseDir, err := filepath.Abs(cfg.RootDir)
 	if err != nil {
@@ -59,13 +59,13 @@ func New(cfg config.StorageFilesystem) (*FSStorage, error) {
 	if err := mkdir(filepath.Join(baseDir, "snapshots")); err != nil {
 		return nil, err
 	}
-	return &FSStorage{
+	return &Storage{
 		baseDir: baseDir,
 	}, nil
 }
 
 // FS returns the storage directory as an io/fs.FS for filesystem operations.
-func (s *FSStorage) FS() (fs.FS, error) {
+func (s *Storage) FS() (fs.FS, error) {
 	root, err := os.OpenRoot(s.baseDir)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (s *FSStorage) FS() (fs.FS, error) {
 
 // GetSnapshot retrieves a snapshot file by its key.
 // Returns nil if the snapshot doesn't exist or cannot be opened.
-func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {
+func (s *Storage) GetSnapshot(key string) io.ReadCloser {
 	path := s.getSnapshotPath(key)
 	f, err := os.Open(path)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *FSStorage) GetSnapshot(key string) io.ReadCloser {
 
 // GetSnapshotSize returns the size in bytes of a stored snapshot file.
 // Returns 0 if the snapshot doesn't exist or an error occurs.
-func (s *FSStorage) GetSnapshotSize(key string) uint {
+func (s *Storage) GetSnapshotSize(key string) uint {
 	path := s.getSnapshotPath(key)
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -97,7 +97,7 @@ func (s *FSStorage) GetSnapshotSize(key string) uint {
 
 // GetResource retrieves a gzip-compressed resource file by its key.
 // Returns nil if the resource doesn't exist or cannot be opened.
-func (s *FSStorage) GetResource(key string) io.ReadCloser {
+func (s *Storage) GetResource(key string) io.ReadCloser {
 	path := s.getResourcePath(key)
 	f, err := os.Open(path)
 	if err != nil {
@@ -108,7 +108,7 @@ func (s *FSStorage) GetResource(key string) io.ReadCloser {
 
 // GetResourceSize returns the size in bytes of a stored resource file.
 // Returns 0 if the resource doesn't exist or an error occurs.
-func (s *FSStorage) GetResourceSize(key string) uint {
+func (s *Storage) GetResourceSize(key string) uint {
 	path := s.getResourcePath(key)
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -119,13 +119,13 @@ func (s *FSStorage) GetResourceSize(key string) uint {
 
 // GetResourceURL constructs the HTTP URL path for accessing a resource.
 // The URL path includes a two-character prefix directory for distribution.
-func (s *FSStorage) GetResourceURL(key string) string {
+func (s *Storage) GetResourceURL(key string) string {
 	return filepath.Join("/static/data/resources/", getPrefix(key), key)
 }
 
 // SaveSnapshot saves a snapshot to disk with gzip compression.
 // Creates the necessary directory structure if it doesn't exist.
-func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
+func (s *Storage) SaveSnapshot(key string, snapshot []byte) error {
 	path := s.getSnapshotPath(key)
 	err := mkdir(filepath.Dir(path))
 	if err != nil {
@@ -140,7 +140,7 @@ func (s *FSStorage) SaveSnapshot(key string, snapshot []byte) error {
 
 // SaveResource saves a resource to disk with gzip compression.
 // Creates the necessary directory structure if it doesn't exist.
-func (s *FSStorage) SaveResource(key string, resource []byte) error {
+func (s *Storage) SaveResource(key string, resource []byte) error {
 	path := s.getResourcePath(key)
 	err := mkdir(filepath.Dir(path))
 	if err != nil {
@@ -163,12 +163,12 @@ func mkdir(dir string) error {
 	return nil
 }
 
-func (s *FSStorage) getSnapshotPath(key string) string {
+func (s *Storage) getSnapshotPath(key string) string {
 	fname := filepath.Base(key) + ".gz"
 	return filepath.Join(s.baseDir, "snapshots", getPrefix(key), fname)
 }
 
-func (s *FSStorage) getResourcePath(key string) string {
+func (s *Storage) getResourcePath(key string) string {
 	key = filepath.Base(key)
 	if len(key) < 32 {
 		key = ""

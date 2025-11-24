@@ -44,7 +44,7 @@ func snapshotDiff(c *gin.Context) {
 	tdLen := 0
 	for _, d := range tds {
 		if d.Type != "0" && strings.TrimSpace(d.Text) != "" {
-			tdLen += 1
+			tdLen++
 		}
 	}
 

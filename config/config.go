@@ -230,7 +230,7 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 			return nil, errors.New("user signups must be disabled when remote user header is enabled")
 		}
 	}
-	for pn, _ := range c.OAuth {
+	for pn := range c.OAuth {
 		if _, ok := oauth.Providers[pn]; !ok {
 			return nil, errors.New("invalid oauth provider: " + pn)
 		}
@@ -256,7 +256,7 @@ func parseConfig(rawConfig []byte) (*Config, error) {
 	}
 	count := 0
 	if c.Storage.Filesystem != nil {
-		count += 1
+		count++
 	}
 	if count > 1 {
 		return nil, errors.New("only one storage backend can be configured")

@@ -74,7 +74,7 @@ func exit(errno int, msg string) {
 	os.Exit(errno)
 }
 
-func initDB(cmd *cobra.Command, args []string) {
+func initDB(_ *cobra.Command, _ []string) {
 	err := model.Init(cfg)
 	if err != nil {
 		exit(1, err.Error())
@@ -150,7 +150,7 @@ var listenCmd = &cobra.Command{
 	Short:  "start server",
 	Long:   ``,
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		setStrArg(cmd, "address", &cfg.Server.Address)
 		setUintArg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
 		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
@@ -194,7 +194,7 @@ var showUserCmd = &cobra.Command{
 	Long:   `show-user USERNAME`,
 	Args:   cobra.ExactArgs(1),
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		u := model.GetUser(args[0])
 		if u == nil {
 			exit(1, "Cannot find user")
@@ -219,7 +219,7 @@ var showUnreadCmd = &cobra.Command{
 	Long:   `show-unread USERNAME`,
 	Args:   cobra.ExactArgs(1),
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		u := model.GetUser(args[0])
 		if u == nil {
 			exit(1, "Cannot find user")
@@ -234,7 +234,7 @@ var createUserCmd = &cobra.Command{
 	Long:   `create-user USERNAME EMAIL`,
 	Args:   cobra.ExactArgs(2),
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		err := model.CreateUser(args[0], args[1])
 		if err != nil {
 			exit(1, "Cannot create new user: "+err.Error())
@@ -290,7 +290,7 @@ var updateFeedsCmd = &cobra.Command{
 	Long:   `update-feeds`,
 	Args:   cobra.ExactArgs(0),
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		initStorage()
 		err := feed.Update()
 		if err != nil {
@@ -304,7 +304,7 @@ var generateAPIDocsMDCmd = &cobra.Command{
 	Use:   "generate-api-docs-md",
 	Short: "Generate Markdown API documentation",
 	Long:  `generate-api-docs-md`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Printf("# API documentation\n\n")
 		fmt.Printf("## Endpoints\n\n")
 		for _, e := range webapp.Endpoints {
@@ -340,12 +340,12 @@ var generateAPIDocsMDCmd = &cobra.Command{
 	},
 }
 
-func createToken(cmd *cobra.Command, args []string) {
+func createToken(_ *cobra.Command, args []string) {
 	tok := model.GenerateToken()
 	changeToken(args, tok)
 }
 
-func setToken(cmd *cobra.Command, args []string) {
+func setToken(_ *cobra.Command, args []string) {
 	changeToken(args, args[2])
 }
 
@@ -383,7 +383,7 @@ func changeToken(args []string, tok string) {
 	}
 }
 
-func createConfig(cmd *cobra.Command, args []string) {
+func createConfig(_ *cobra.Command, args []string) {
 	fname := args[0]
 	if _, err := os.Stat(fname); err == nil {
 		exit(1, fmt.Sprintf(`File "%s" already exists`, fname))
@@ -428,7 +428,7 @@ func createBookmark(cmd *cobra.Command, args []string) {
 	if v, err := cmd.Flags().GetString("collection"); err == nil {
 		collection = v
 	}
-	_, new, err := model.GetOrCreateBookmark(
+	_, isNew, err := model.GetOrCreateBookmark(
 		u,
 		args[2],
 		args[1],
@@ -442,7 +442,7 @@ func createBookmark(cmd *cobra.Command, args []string) {
 	if err != nil {
 		exit(1, "Failed to add bookmark: "+err.Error())
 	}
-	if !new {
+	if !isNew {
 		exit(0, "Bookmark already exists")
 	}
 	fmt.Println("Bookmark successfully added")
@@ -511,7 +511,7 @@ func init() {
 			return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
 		},
 	}
-	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
+	zerolog.CallerMarshalFunc = func(_ uintptr, file string, line int) string {
 		dir, fn := filepath.Split(file)
 		if dir == "" {
 			return fn + ":" + strconv.Itoa(line)

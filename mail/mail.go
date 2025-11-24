@@ -173,7 +173,7 @@ func (t *Templates) RenderHTML(tname string, args map[string]any) (string, error
 	return s, nil
 }
 
-// RenderHTML renders text template with given arguments.
+// RenderText renders text template with given arguments.
 func (t *Templates) RenderText(tname string, args map[string]any) (string, error) {
 	m := templates.Text.Lookup(tname + ".txt.tpl")
 	if m == nil {

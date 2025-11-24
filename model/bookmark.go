@@ -35,11 +35,11 @@ type Bookmark struct {
 // TODO use Bookmark as parameter instead of strings
 func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon, collection, unread string) (*Bookmark, bool, error) {
 	url, err := url.Parse(urlString)
-	new := false
+	isNew := false
 	if err != nil || url.Hostname() == "" || url.Scheme == "" {
-		return nil, new, errors.New("invalid URL")
+		return nil, isNew, errors.New("invalid URL")
 	}
-	var b *Bookmark = nil
+	var b *Bookmark
 	r := DB.
 		Model(&Bookmark{}).
 		Preload("Snapshots").
@@ -48,12 +48,11 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 		Where("url = ? and user_id = ?", url.String(), u.ID).
 		First(&b)
 	if r.RowsAffected >= 1 {
-		return b, new, nil
-	} else {
-		new = true
+		return b, isNew, nil
 	}
+	isNew = true
 	if title == "" {
-		return nil, new, errors.New("missing title")
+		return nil, isNew, errors.New("missing title")
 	}
 	b = &Bookmark{
 		Title:     title,
@@ -86,9 +85,9 @@ func GetOrCreateBookmark(u *User, urlString, title, tags, notes, public, favicon
 		b.CollectionID = col.ID
 	}
 	if err := DB.Save(b).Error; err != nil {
-		return nil, new, err
+		return nil, isNew, err
 	}
-	return b, new, nil
+	return b, isNew, nil
 }
 
 // GetUnreadBookmarkItems retrieves unread bookmarks for a user.
@@ -100,6 +99,7 @@ func GetUnreadBookmarkItems(uid, limit uint) []*Bookmark {
 		Where("users.id = ?", uid).
 		Where("bookmarks.unread = ?", true).
 		Order("bookmarks.id asc").
+		Limit(int(limit)). //nolint:gosec // TODO
 		Find(&res)
 	return res
 }

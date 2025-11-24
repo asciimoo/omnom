@@ -36,7 +36,7 @@ func migrate() error {
 			}
 			dbVer = int64(i) + 1
 			DB.Model(&Database{}).Where("id = 1").Update("version", dbVer)
-			migCount += 1
+			migCount++
 		}
 	}
 	if migCount > 0 {
