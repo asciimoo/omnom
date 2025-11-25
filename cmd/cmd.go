@@ -50,6 +50,7 @@ import (
 	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
+	"github.com/asciimoo/omnom/validator"
 	"github.com/asciimoo/omnom/webapp"
 
 	"github.com/rs/zerolog"
@@ -349,6 +350,25 @@ var diffHTML = &cobra.Command{
 	Run:   handleDiffHTML,
 }
 
+var validateHTML = &cobra.Command{
+	Use:   "validate-html FILE",
+	Short: "validate-html FILE",
+	Long:  `validate-html FILE`,
+	Args:  cobra.ExactArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		b, err := os.ReadFile(args[0])
+		if err != nil {
+			exit(1, err.Error())
+		}
+		res := validator.ValidateHTML(b)
+		if res.Error != nil {
+			fmt.Printf("Error found: %v\n", res.Error)
+			return
+		}
+		fmt.Println("No errors found")
+	},
+}
+
 func createToken(_ *cobra.Command, args []string) {
 	tok := model.GenerateToken()
 	changeToken(args, tok)
@@ -479,6 +499,7 @@ func init() {
 	rootCmd.AddCommand(updateFeedsCmd)
 	rootCmd.AddCommand(showUnreadCmd)
 	rootCmd.AddCommand(diffHTML)
+	rootCmd.AddCommand(validateHTML)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
