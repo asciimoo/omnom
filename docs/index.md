@@ -36,4 +36,5 @@ Essentially, Omnom is for anyone who values the ability to capture the web as th
 
 ## See Also
 
+ - [Web interface](docs/web_interface)
  - [Extension](docs/extension)
