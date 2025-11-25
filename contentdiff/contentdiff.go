@@ -30,6 +30,7 @@ package contentdiff
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -45,17 +46,23 @@ type TextDiff struct {
 	Type string `json:"type"`
 }
 
+// TextDiffs is a list of TextDiff items
+type TextDiffs []TextDiff
+
 // LinkDiff represents a link difference.
 type LinkDiff struct {
 	Link Link   `json:"link"`
 	Type string `json:"type"`
 }
 
+// LinkDiffs is a list of LinkDiff items
+type LinkDiffs []LinkDiff
+
 // Diffs contains all types of differences between two HTML documents.
 type Diffs struct {
-	Text       []TextDiff `json:"text"`
-	Multimedia []TextDiff `json:"multimedia"`
-	Link       []LinkDiff `json:"link"`
+	Text       TextDiffs `json:"text"`
+	Multimedia TextDiffs `json:"multimedia"`
+	Link       LinkDiffs `json:"link"`
 }
 
 // HTMLContent represents extracted content from an HTML document.
@@ -84,10 +91,10 @@ func DiffHTML(r1, r2 io.Reader) (*Diffs, error) {
 }
 
 // DiffText compares two text strings and returns their differences.
-func DiffText(t1, t2 string) []TextDiff {
+func DiffText(t1, t2 string) TextDiffs {
 	dmp := diffmatchpatch.New()
 	ds := dmp.DiffMain(t1, t2, false)
-	r := make([]TextDiff, len(ds))
+	r := make(TextDiffs, len(ds))
 	for i, d := range dmp.DiffCleanupSemantic(ds) {
 		r[i] = TextDiff{
 			Text: d.Text,
@@ -105,8 +112,8 @@ func DiffText(t1, t2 string) []TextDiff {
 }
 
 // DiffLink compares two sets of links and returns their differences.
-func DiffLink(l1, l2 []Link) []LinkDiff {
-	r := make([]LinkDiff, 0)
+func DiffLink(l1, l2 []Link) LinkDiffs {
+	r := make(LinkDiffs, 0)
 	for _, v1 := range l1 {
 		found := false
 		for _, v2 := range l2 {
@@ -157,8 +164,8 @@ func DiffLink(l1, l2 []Link) []LinkDiff {
 }
 
 // DiffList compares two string lists and returns their differences.
-func DiffList(l1, l2 []string) []TextDiff {
-	r := make([]TextDiff, 0)
+func DiffList(l1, l2 []string) TextDiffs {
+	r := make(TextDiffs, 0)
 	for _, v := range l1 {
 		if !slices.Contains(l2, v) {
 			r = append(r, TextDiff{Text: v, Type: "-"})
@@ -258,4 +265,27 @@ func ExtractHTMLContent(r io.Reader) *HTMLContent {
 	}
 	c.Text = strings.Join(strs, "")
 	return c
+}
+
+func (lds LinkDiffs) String() string {
+	r := make([]string, len(lds))
+	for i, l := range lds {
+		t := "removed"
+		if l.Type == "+" {
+			t = "added"
+		}
+		r[i] = fmt.Sprintf("%s %s (%s)", l.Link.Href, l.Link.Text, t)
+	}
+	return strings.Join(r, "\n")
+}
+
+func (tds TextDiffs) String() string {
+	r := make([]string, 0, 8)
+	for _, t := range tds {
+		if t.Type == "0" {
+			continue
+		}
+		r = append(r, fmt.Sprintf("%s %#v", t.Type, t.Text))
+	}
+	return strings.Join(r, "\n")
 }

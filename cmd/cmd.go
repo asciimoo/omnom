@@ -45,6 +45,7 @@ import (
 	"strings"
 
 	"github.com/asciimoo/omnom/config"
+	"github.com/asciimoo/omnom/contentdiff"
 	"github.com/asciimoo/omnom/feed"
 	"github.com/asciimoo/omnom/mail"
 	"github.com/asciimoo/omnom/model"
@@ -340,6 +341,14 @@ var generateAPIDocsMDCmd = &cobra.Command{
 	},
 }
 
+var diffHTML = &cobra.Command{
+	Use:   "diff-html FILE1 FILE2",
+	Short: "diff-html FILE1 FILE2",
+	Long:  `diff-html FILE1 FILE2`,
+	Args:  cobra.ExactArgs(2),
+	Run:   handleDiffHTML,
+}
+
 func createToken(_ *cobra.Command, args []string) {
 	tok := model.GenerateToken()
 	changeToken(args, tok)
@@ -469,6 +478,7 @@ func init() {
 	rootCmd.AddCommand(createBookmarkCmd)
 	rootCmd.AddCommand(updateFeedsCmd)
 	rootCmd.AddCommand(showUnreadCmd)
+	rootCmd.AddCommand(diffHTML)
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
@@ -499,6 +509,8 @@ func init() {
 	createBookmarkCmd.Flags().String("tags", "", "Comma separated list of tags")
 	createBookmarkCmd.Flags().String("notes", "", "Bookmark notes")
 	createBookmarkCmd.Flags().String("collection", "", "Collection name")
+
+	diffHTML.Flags().StringP("type", "t", "all", `Specify types to diff. Possible values are "all", "text", "link", "media"`)
 
 	cobra.OnInitialize(initialize)
 
@@ -578,4 +590,68 @@ func initActivityPub() error {
 		return err
 	}
 	return nil
+}
+
+func handleDiffHTML(cmd *cobra.Command, args []string) {
+	var t string
+	var err error
+	if t, err = cmd.Flags().GetString("type"); err != nil {
+		exit(1, err.Error())
+	}
+	f1, err := os.Open(args[0])
+	if err != nil {
+		exit(1, err.Error())
+	}
+	defer f1.Close()
+	f2, err := os.Open(args[1])
+	if err != nil {
+		exit(1, err.Error())
+	}
+	defer f2.Close()
+
+	diff, err := contentdiff.DiffHTML(f1, f2)
+	if err != nil {
+		exit(1, err.Error())
+	}
+	switch t {
+	case "all":
+		if len(diff.Link) > 0 {
+			fmt.Println("=== Link diffs ===")
+			fmt.Println(diff.Link)
+		} else {
+			fmt.Println("=== No link diffs found ===")
+		}
+		tdlen := 0
+		for _, t := range diff.Text {
+			if t.Type != "0" {
+				tdlen++
+			}
+		}
+		if tdlen > 0 {
+			fmt.Println("=== Text diffs ===")
+			fmt.Println(diff.Text)
+		} else {
+			fmt.Println("=== No text diffs found ===")
+		}
+		if len(diff.Multimedia) > 0 {
+			fmt.Println("=== Media diffs ===")
+			fmt.Println(diff.Multimedia)
+		} else {
+			fmt.Println("=== No media diffs found ===")
+		}
+	case "text":
+		if d := diff.Text.String(); d != "" {
+			fmt.Println(d)
+		}
+	case "media":
+		if d := diff.Multimedia.String(); d != "" {
+			fmt.Println(d)
+		}
+	case "link":
+		if d := diff.Link.String(); d != "" {
+			fmt.Println(d)
+		}
+	default:
+		exit(1, fmt.Sprintf("Unknown diff type: %s", t))
+	}
 }
