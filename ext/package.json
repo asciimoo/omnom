@@ -5,10 +5,11 @@
   "scripts": {
     "build": "NODE_ENV=production webpack --stats-error-details",
     "build-test": "TEST=1 NODE_ENV=development webpack --stats-error-details",
-    "start": "NODE_ENV=development webpack --stats-error-details --watch"
+    "start": "NODE_ENV=development webpack --stats-error-details --watch",
+    "build-doc": "jsdoc2md ./src/js/module.js ./src/js/modules/document.js ./src/js/modules/get-dom-data.js > API_DOC.md"
   },
   "files": [
-      "omnom-ext.js"
+    "omnom-ext.js"
   ],
   "devDependencies": {
     "clean-webpack-plugin": "^4.0.0",
@@ -18,6 +19,7 @@
     "fs-extra": "^10.0.0",
     "html-loader": "^3.0.1",
     "html-webpack-plugin": "^5.5.0",
+    "jsdoc-to-markdown": "^9.1.3",
     "mini-css-extract-plugin": "^2.4.5",
     "rxjs": "^7.4.0",
     "style-loader": "^3.3.1",
@@ -29,7 +31,6 @@
     "write-file-webpack-plugin": "^4.5.1"
   },
   "main": "omnom-ext.js",
-  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/asciimoo/omnom.git"

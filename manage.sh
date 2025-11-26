@@ -39,6 +39,7 @@ build_css            - Build css files
 build_addon          - Build addon
 build_test_addon     - Build test addon
 build_addon_artifact - Build addon artifacts to distribute to addon stores
+build_addon_doc      - Build addon/js module documentation
 
 Other
 -----
@@ -94,6 +95,12 @@ build_addon() {
     echo "[!] Warning: The default manifest.json is for chrome browsers, overwrite it with manifest_ff.json for firefox"
     cd ext
     npm run build
+    cd ..
+}
+
+build_addon_doc() {
+    cd ext
+    npm run build-doc
     cd ..
 }
 
