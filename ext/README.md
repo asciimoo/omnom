@@ -15,6 +15,8 @@ const data = getDomData();
 console.log(data.html, data.text, data.url, data.doctype, data.title, data.attributes);
 ```
 
+see [API_DOCS.md](API documentation)
+
 ## License
 
 AGPLv3
