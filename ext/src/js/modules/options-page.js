@@ -1,6 +1,12 @@
 // SPDX-FileContributor: Adam Tauber <asciimoo@gmail.com>
 //
 // SPDX-License-Identifier: AGPLv3+
+
+/**
+ * @fileoverview Options page functionality for extension settings.
+ * Handles saving and loading of Omnom server URL and authentication token.
+ */
+
 import {
     getOmnomSettings,
     renderError,
@@ -8,7 +14,15 @@ import {
     validateOptions
 } from './utils';
 
+/**
+ * Main entry point for options page
+ * Initializes the options interface and event handlers
+ */
 export default function () {
+    /**
+     * Handles options form submission
+     * @param {Event} e - Form submit event
+     */
     function saveOptions(e) {
         const serverUrlErrMsg = `Invalid server URL. Use <code>http[s]://youromnom.tld/</code> format.`;
         let serverUrl = document.querySelector('#url').value;
@@ -36,6 +50,11 @@ export default function () {
 		});
         e.preventDefault();
     }
+    
+    /**
+     * Persists settings to browser storage
+     * @param {string} serverUrl - The Omnom server URL
+     */
     function persistSettings(serverUrl) {
         chrome.storage.local.set({
             omnom_url: serverUrl,
@@ -46,6 +65,9 @@ export default function () {
         setTimeout(window.close, 2000);
     }
 
+    /**
+     * Loads the options page content into the DOM
+     */
     function loadContent() {
         const template = document.getElementById('options-body');
         const container = document.createElement('div');
@@ -58,6 +80,9 @@ export default function () {
         document.querySelector('form').addEventListener('submit', saveOptions);
     }
 
+    /**
+     * Restores saved options from storage and populates the form
+     */
     function restoreOptions() {
         const optionsElement = document.getElementById('omnom-options');
         if (optionsElement) {
@@ -76,6 +101,9 @@ export default function () {
         }
     }
 
+    /**
+     * Validates the form and enables/disables back button
+     */
     function isFormValid() {
         const serverUrl = document.querySelector('#url');
         const backButton = document.querySelector('#back');

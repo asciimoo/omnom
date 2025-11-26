@@ -2,6 +2,11 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview Main popup functionality for the Omnom browser extension.
+ * Handles bookmark creation, form management, and snapshot processing.
+ */
+
 import { Document } from "./document";
 import { renderProgressBar, destroyProgressBar } from './file-download';
 import { getDomData } from "./get-dom-data";
@@ -23,28 +28,89 @@ import {
     validateOptions
 } from './utils';
 
+/**
+ * Map of message handlers for content script communication
+ * @type {Map<string, Function>}
+ */
 const messageHandlers = new Map([
     ['pong', handlePongMessage],
     ['domData', handleDomDataMessage]
 ]);
+
+/**
+ * Browser detection flags
+ */
 const is_ff = typeof InstallTrigger !== 'undefined';
 const is_chrome = !is_ff;
 
+/**
+ * Controller for tag input functionality
+ * @type {TagInputController|null}
+ */
 let tagInput = null;
+
+/**
+ * Map of template elements for dynamic UI rendering
+ * @type {Map<string, HTMLTemplateElement>}
+ */
 let templates = new Map();
+
+/**
+ * State variables for template visibility
+ * @type {Object}
+ */
 let boundVars = { onoptions: false, onafterdownload: false, onmain: true };
+
+/**
+ * Main content container element
+ * @type {HTMLElement|null}
+ */
 let contentContainer = null;
+
+/**
+ * Form data for bookmark submission
+ * @type {FormData|null}
+ */
 let form = null;
+
+/**
+ * Communication channel with content script
+ * @type {Object|null}
+ */
 let commChan = null;
+
+/**
+ * Number of pages (including iframes) being processed
+ * @type {number}
+ */
 let numberOfPages = 0;
+
+/**
+ * Main document object
+ * @type {Document|null}
+ */
 let doc = null;
+
+/**
+ * Array of iframe documents
+ * @type {Array<Document>}
+ */
 let iframes = [];
+
+/**
+ * Maximum size for blob uploads (7MB)
+ * @type {number}
+ */
 let blobSizeLimit = 7 * 1024 * 1024; // 7Mb
 
 /* ---------------------------------*
  * Content js messaging             *
  * ---------------------------------*/
 
+/**
+ * Sets up communication channel with content scripts
+ * @param {Object} [msg] - Optional initial message to send
+ */
 function setupComms(msg) {
     br.tabs.query({
         active: true,
@@ -76,10 +142,20 @@ function setupComms(msg) {
     });
 }
 
+/**
+ * Handles pong response from content scripts
+ * @async
+ * @param {Object} msg - The pong message
+ */
 async function handlePongMessage(msg) {
     numberOfPages += 1;
 }
 
+/**
+ * Handles DOM data received from content scripts
+ * @async
+ * @param {Object} msg - Message containing DOM data
+ */
 async function handleDomDataMessage(msg) {
     if (!doc) {
         let data = await executeScriptToPromise(getDomData, br);
@@ -104,6 +180,10 @@ async function handleDomDataMessage(msg) {
     }
 }
 
+/**
+ * Opens a debug window with the given content (Chrome) or replaces current content (Firefox)
+ * @param {string} content - HTML content to display for debugging
+ */
 function debugPopup(content) {
     if (is_chrome) {
         const win = window.open('', 'omnomDebug', 'menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes');
@@ -117,6 +197,9 @@ function debugPopup(content) {
  * Diplay extension popup           *
  * ---------------------------------*/
 
+/**
+ * Initializes and displays the extension popup
+ */
 function displayPopup() {
     setTemplates();
     evaluateTemplates();
@@ -125,6 +208,9 @@ function displayPopup() {
     console.log('Omnom popup loaded!');
 }
 
+/**
+ * Sets up event listeners for popup UI elements
+ */
 function setEventListeners() {
     const tagsInput = document.getElementById('tags');
     const chipContainer = document.getElementById('tag-chips');
@@ -143,6 +229,10 @@ function setEventListeners() {
     bookmarkForm?.addEventListener('submit', createBookmark);
 }
 
+/**
+ * Fills form fields with data from the current tab and extension settings
+ * @async
+ */
 async function fillFormFields() {
     document.querySelector('form').action = `${getOmnomUrl()}add_bookmark`;
     document.getElementById('token').value = getOmnomToken();
@@ -170,6 +260,10 @@ async function fillFormFields() {
 
 }
 
+/**
+ * Fetches page information (tags, collections) from the Omnom server
+ * @async
+ */
 async function fetchPageInfo() {
     let pageTextData = await executeScriptToPromise(extractVisibleTextBlocks);
     let pageText = '';
@@ -203,6 +297,9 @@ async function fetchPageInfo() {
  * Event handlers                   *
  * ---------------------------------*/
 
+/**
+ * Handles back button click to return to main form
+ */
 function backHandler() {
     chrome.storage.local.get(['omnom_url', 'omnom_token'], function (data) {
         validateOptions(data.omnom_url, data.omnom_token).then(response => {
@@ -217,6 +314,10 @@ function backHandler() {
     });
 }
 
+/**
+ * Handles options button click to display settings
+ * @async
+ */
 async function optionsHandler() {
     updateBoundVar([{ 'onoptions': true }, { 'onmain': false }]);
 
@@ -229,6 +330,9 @@ async function optionsHandler() {
     contentContainer.appendChild(copyScript(script));
 }
 
+/**
+ * Handles close button click to close the popup
+ */
 function closeHandler() {
     window.close();
 }
@@ -237,6 +341,11 @@ function closeHandler() {
  * Save bookmarks                   *
  * ---------------------------------*/
 
+/**
+ * Creates a bookmark from form data and initiates snapshot process
+ * @async
+ * @param {Event} e - Form submit event
+ */
 async function createBookmark(e) {
     e.preventDefault();
     form = new FormData(document.forms['add']);
@@ -265,6 +374,11 @@ async function createBookmark(e) {
         }
     }
 }
+
+/**
+ * Saves the bookmark and snapshot to the Omnom server
+ * @async
+ */
 async function saveBookmark() {
     console.time('createSnapshot');
     const snapshotData = await createSnapshot(doc);
@@ -343,12 +457,18 @@ async function saveBookmark() {
  * Template management                 *
  * ------------------------------------*/
 
+/**
+ * Extracts and stores templates from the DOM
+ */
 function setTemplates() {
     const templateElements = document.querySelectorAll('template');
     contentContainer = document.getElementById('omnom-content');
     [...templateElements].forEach(template => templates.set(template.id, template));
 }
 
+/**
+ * Evaluates templates based on bound variables and renders/hides them accordingly
+ */
 function evaluateTemplates() {
     [...templates.values()].forEach(template => {
         const templateData = Object.keys(template.dataset);
@@ -372,6 +492,10 @@ function evaluateTemplates() {
     });
 }
 
+/**
+ * Updates bound variables and re-evaluates templates
+ * @param {Array<Object>} keys - Array of key-value pairs to update
+ */
 function updateBoundVar(keys) {
     let changed = null;
     keys.forEach(key => {
@@ -384,6 +508,9 @@ function updateBoundVar(keys) {
     setEventListeners();
 }
 
+/**
+ * Clears all non-template content from the content container
+ */
 function clearContentContainer() {
     const templates = contentContainer.querySelectorAll('template');
     [...contentContainer.children].forEach(child => {

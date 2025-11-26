@@ -2,13 +2,46 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview Utility functions for the Omnom browser extension.
+ * Provides URL handling, encoding/decoding, storage access, and browser API wrappers.
+ */
+
+/**
+ * Browser API reference (Chrome)
+ * @type {Object}
+ */
 const browser = chrome;
 
+/**
+ * Current site URL being processed
+ * @type {string}
+ */
 let siteUrl = '';
+
+/**
+ * Omnom server URL
+ * @type {string}
+ */
 let omnomUrl = '';
+
+/**
+ * Omnom authentication token
+ * @type {string}
+ */
 let omnomToken = '';
+
+/**
+ * Default bookmark visibility setting
+ * @type {boolean}
+ */
 let defaultPublic = false;
 
+/**
+ * Converts an ArrayBuffer to a base64-encoded string
+ * @param {ArrayBuffer} buffer - The buffer to convert
+ * @returns {string} Base64-encoded string
+ */
 function arrayBufferToBase64(buffer) {
     let binary = '';
     const bytes = [].slice.call(new Uint8Array(buffer));
@@ -17,6 +50,11 @@ function arrayBufferToBase64(buffer) {
     return btoa(binary);
 }
 
+/**
+ * Checks if an HTTP response is successful
+ * @param {Response} res - The fetch response object
+ * @returns {Promise<Response>} Resolved promise if OK, rejected if not
+ */
 function checkStatus(res) {
     if (!res.ok) {
         return Promise.reject(res);
@@ -24,6 +62,11 @@ function checkStatus(res) {
     return Promise.resolve(res);
 }
 
+/**
+ * Executes a script in the active tab and returns result as a promise
+ * @param {Function} functionToExecute - The function to execute in the tab
+ * @returns {Promise} Promise that resolves with script execution result
+ */
 function executeScriptToPromise(functionToExecute) {
     //let [tab] = await chrome.tabs.query({ active: true, currentWindow: true }
     return new Promise(resolve => {
@@ -39,20 +82,40 @@ function executeScriptToPromise(functionToExecute) {
     });
 }
 
+/**
+ * Converts a relative URL to absolute URL using the current site URL
+ * @param {string} url - The URL to convert
+ * @returns {string} Absolute URL
+ */
 function fullURL(url) {
     return new URL(url, siteUrl).href
 }
 
+/**
+ * Converts a relative URL to absolute URL using a specified base URL
+ * @param {string} base - The base URL
+ * @param {string} url - The URL to convert
+ * @returns {string} Absolute URL
+ */
 function absoluteURL(base, url) {
     return new URL(url, base).href
 }
 
+/**
+ * Queries for the active tab and returns it as a promise
+ * @returns {Promise<Tab>} Promise resolving to the active tab
+ */
 function queryTabsToPromise() {
     return new Promise(resolve => {
         browser.tabs.query({ active: true, currentWindow: true }, ([tab]) => resolve(tab));
     });
 }
 
+/**
+ * Renders an error message in the UI
+ * @param {string} errorMessage - The error message to display
+ * @param {Response} [error] - Optional response object for additional error info
+ */
 function renderError(errorMessage, error) {
     if (error) {
         error.json().then(data => console.log({ error, data }));
@@ -64,12 +127,23 @@ function renderError(errorMessage, error) {
     }
 }
 
+/**
+ * Opens a link in a new tab (event handler)
+ * @param {Event} ev - The click event
+ * @returns {boolean} Always returns false to prevent default
+ */
 function openOnNewTab(ev) {
     chrome.tabs.create({url: this.getAttribute('href')});
     ev.preventDefault();
     return false;
 }
 
+/**
+ * Renders a success message in the UI with optional bookmark links
+ * @async
+ * @param {string} successMessage - The success message to display
+ * @param {Object} [bookmarkInfo] - Optional bookmark information with URLs
+ */
 async function renderSuccess(successMessage, bookmarkInfo) {
     if(bookmarkInfo) {
         const omnomData = await getOmnomDataFromLocal().catch(renderError);
@@ -90,6 +164,11 @@ async function renderSuccess(successMessage, bookmarkInfo) {
     // setTimeout(window.close, 2000);
 }
 
+/**
+ * Sets the current site URL
+ * @async
+ * @param {string} [url] - The URL to set, or queries active tab if not provided
+ */
 async function setSiteUrl(url) {
     if (url) {
         siteUrl = url;
@@ -101,10 +180,19 @@ async function setSiteUrl(url) {
     }
 }
 
+/**
+ * Gets the current site URL
+ * @returns {string} The current site URL
+ */
 function getSiteUrl() {
     return siteUrl;
 }
 
+/**
+ * Loads and sets Omnom settings from storage
+ * @async
+ * @returns {Promise} Resolves on success, rejects with error message on failure
+ */
 async function setOmnomSettings() {
     const omnomData = await getOmnomDataFromLocal().catch(renderError);
     await setSiteUrl();
@@ -120,6 +208,10 @@ async function setOmnomSettings() {
     return Promise.resolve();
 }
 
+/**
+ * Retrieves Omnom settings from local storage
+ * @returns {Promise<Object>} Promise resolving to settings object
+ */
 function getOmnomDataFromLocal() {
     return new Promise((resolve, reject) => {
         browser.storage.local.get(['omnom_url', 'omnom_token', 'omnom_public'], (data) => {
@@ -128,41 +220,84 @@ function getOmnomDataFromLocal() {
     });
 }
 
+/**
+ * Gets the Omnom server URL
+ * @returns {string} The Omnom server URL
+ */
 function getOmnomUrl() {
     return omnomUrl;
 }
 
+/**
+ * Gets the Omnom authentication token
+ * @returns {string} The authentication token
+ */
 function getOmnomToken() {
     return omnomToken;
 }
 
+/**
+ * Checks if bookmarks are public by default
+ * @returns {boolean} True if default is public
+ */
 function isOmnomDefaultPublic() {
     return defaultPublic;
 }
 
+/**
+ * Sets the Omnom server URL
+ * @param {string} url - The server URL
+ */
 function setOmnomUrl(url) {
     omnomUrl = url;
 }
 
+/**
+ * Sets the default bookmark visibility
+ * @param {boolean} isPublic - Whether bookmarks are public by default
+ */
 function setDefaultPublic(isPublic) {
     defaultPublic = isPublic;
 }
 
+/**
+ * Sets the Omnom authentication token
+ * @param {string} token - The authentication token
+ */
 function setOmnomToken(token) {
     omnomToken = token;
 }
 
+/**
+ * Creates a copy of a script element
+ * @param {HTMLScriptElement} script - The script element to copy
+ * @returns {HTMLScriptElement} New script element with same source
+ */
 function copyScript(script) {
     const newScript = document.createElement('script');
     newScript.src = script.src;
     return newScript;
 }
 
+/**
+ * Class for resolving relative URLs to absolute URLs
+ * @class
+ */
 class UrlResolver {
+    /**
+     * Creates a UrlResolver instance
+     * @param {string} rootUrl - The root URL for resolution
+     */
     constructor(rootUrl) {
         this.url = rootUrl;
         this.hasBaseUrl = false;
     }
+    
+    /**
+     * Resolves a relative URL to absolute
+     * @param {string} url - The URL to resolve
+     * @returns {string} Absolute URL
+     */
     resolve(url) {
         if (!url) {
             return this.url;
@@ -177,20 +312,41 @@ class UrlResolver {
         }
         return new URL(url, this.url).href;
     }
+    
+    /**
+     * Sets a new base URL for resolution
+     * @param {string} url - The new base URL
+     */
     setBaseUrl(url) {
         this.hasBaseUrl = true;
         this.url = this.resolve(url);
     }
 }
 
+/**
+ * Decodes a base64 string with UTF-8 support
+ * @param {string} s - Base64 string to decode
+ * @returns {string} Decoded string
+ */
 function base64Decode(s) {
     return decodeURIComponent(escape(atob(s)));
 }
 
+/**
+ * Encodes a string to base64 with UTF-8 support
+ * @param {string} s - String to encode
+ * @returns {string} Base64-encoded string
+ */
 function base64Encode(s) {
     return btoa(unescape(encodeURIComponent(s)));
 }
 
+/**
+ * Computes SHA-256 hash of data
+ * @async
+ * @param {string|ArrayBuffer} data - Data to hash
+ * @returns {Promise<string>} Hex string of hash
+ */
 async function sha256(data) {
     // __proto__.constructor.name
     if (data.__proto__.constructor.name == 'String') {
@@ -204,6 +360,13 @@ async function sha256(data) {
     return hashHex;
 }
 
+/**
+ * Validates Omnom server URL and token by checking with server
+ * @async
+ * @param {string} serverUrl - The server URL to validate
+ * @param {string} token - The authentication token to validate
+ * @returns {Promise<Response>} Fetch response from validation endpoint
+ */
 async function validateOptions(serverUrl, token) {
     let formData = new FormData();
     formData.append('token', token);
@@ -213,6 +376,10 @@ async function validateOptions(serverUrl, token) {
     });
 }
 
+/**
+ * Retrieves Omnom settings from storage and calls callback
+ * @param {Function} cb - Callback function to receive settings
+ */
 function getOmnomSettings(cb) {
     chrome.storage.local.get(['omnom_url', 'omnom_token', 'omnom_public'], function(data) {
         if(!data['omnom_url']) {
@@ -228,6 +395,11 @@ function getOmnomSettings(cb) {
     });
 }
 
+/**
+ * Extracts visible text blocks from a DOM element
+ * @param {HTMLElement} [el] - Element to extract text from (defaults to document.body)
+ * @returns {Array<string>} Array of visible text blocks
+ */
 function extractVisibleTextBlocks(el) {
     if(!el) {
         el = document.body;

@@ -2,6 +2,22 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview Extracts DOM data from web pages.
+ * Captures HTML, text content, canvas elements, iframes, and shadow DOM.
+ */
+
+/**
+ * Extracts complete DOM data from the current page
+ * @returns {Object} Object containing HTML, text, title, URL, and other metadata
+ * @property {string} html - The serialized HTML content
+ * @property {Object} attributes - HTML element attributes
+ * @property {string} title - Page title
+ * @property {string} doctype - Document type declaration
+ * @property {number} iframeCount - Number of iframes in the page
+ * @property {string} url - Page URL
+ * @property {string} text - Extracted visible text content
+ */
 function getDomData() {
     // TODO find better way to use extractVisibleTextBlocks.
     // Currently it's a copy of utils:extractVisibleTextBlocks, because browser.scripting.executeScript() cannot handle imported function calls

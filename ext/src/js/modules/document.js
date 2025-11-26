@@ -2,6 +2,11 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview Document class for processing and transforming HTML documents.
+ * Handles resource extraction, sanitization, and DOM transformations for snapshotting.
+ */
+
 import { downloadFile } from './file-download';
 import { ResourceStorage } from './resources';
 import { Sanitizer } from './sanitize';
@@ -11,7 +16,20 @@ import {
     base64Encode
 } from './utils';
 
+/**
+ * Represents an HTML document with transformation capabilities
+ * @class
+ */
 class Document {
+    /**
+     * Creates a Document instance
+     * @param {string} html - The HTML content
+     * @param {string} text - The extracted text content
+     * @param {string} url - The document URL
+     * @param {string} doctype - The document type declaration
+     * @param {string} title - The document title
+     * @param {Object} htmlAttributes - Attributes from the HTML element
+     */
     constructor(html, text, url, doctype, title, htmlAttributes) {
         this.doctype = doctype;
         this.dom = document.createElement('html');
@@ -37,14 +55,27 @@ class Document {
         ]);
     }
 
+    /**
+     * Converts a relative URL to absolute using document's base URL
+     * @param {string} url - The URL to convert
+     * @returns {string} Absolute URL
+     */
     absoluteUrl(url) {
         return this.resolver.resolve(url);
     }
 
+    /**
+     * Gets the complete document as text (doctype + HTML)
+     * @returns {string} The complete document text
+     */
     getDomAsText() {
         return `${this.doctype}${this.dom.outerHTML}`;
     }
 
+    /**
+     * Transforms the DOM by processing all nodes and downloading resources
+     * @async
+     */
     async transformDom() {
         await this.walkDOM(this.dom);
         if (!this.favicon) {
@@ -58,6 +89,12 @@ class Document {
         }
     }
 
+    /**
+     * Recursively walks and transforms the DOM tree
+     * @async
+     * @param {Node} node - The node to process
+     * @returns {Promise} Promise that resolves when all nodes are processed
+     */
     async walkDOM(node) {
         await this.transformNode(node);
         const children = [...node.childNodes];
@@ -66,6 +103,11 @@ class Document {
         }));
     }
 
+    /**
+     * Transforms a single node based on its type
+     * @async
+     * @param {Node} node - The node to transform
+     */
     async transformNode(node) {
         if (node.nodeType !== Node.ELEMENT_NODE) {
             return;
@@ -82,6 +124,11 @@ class Document {
         }
     }
 
+    /**
+     * Transforms LINK elements (stylesheets, icons, preloads)
+     * @async
+     * @param {HTMLLinkElement} node - The link element to transform
+     */
     async transformLink(node) {
         const rel = (node.getAttribute('rel') || '').trim().toLowerCase();
         let res = null;
@@ -166,11 +213,21 @@ class Document {
         }
     }
 
+    /**
+     * Transforms STYLE elements by sanitizing CSS
+     * @async
+     * @param {HTMLStyleElement} node - The style element to transform
+     */
     async transformStyle(node) {
         const innerText = await this.sanitizer.sanitizeCSS(node.textContent, this.absoluteUrl());
         node.textContent = innerText;
     }
 
+    /**
+     * Transforms IMG elements by downloading and embedding images
+     * @async
+     * @param {HTMLImageElement} node - The image element to transform
+     */
     async transformImg(node) {
         if (node.getAttribute('src') && !node.getAttribute('src').startsWith('data:')) {
             const src = this.absoluteUrl(node.getAttribute('src'));
@@ -201,6 +258,11 @@ class Document {
         }
     }
 
+    /**
+     * Transforms IFRAME elements by embedding their content
+     * @async
+     * @param {HTMLIFrameElement} node - The iframe element to transform
+     */
     async transformIframe(node) {
         const dataHtmlAttr = 'data-omnom-iframe-html';
         const dataUrlAttr = 'data-omnom-iframe-url';
@@ -234,15 +296,31 @@ class Document {
         node.setAttribute('src', '');
     }
 
+    /**
+     * Transforms TEMPLATE elements by processing their content
+     * @async
+     * @param {HTMLTemplateElement} node - The template element to transform
+     */
     async transformTemplate(node) {
         await this.walkDOM(node.content);
     }
 
+    /**
+     * Processes BASE elements to update the base URL
+     * @async
+     * @param {HTMLBaseElement} node - The base element to process
+     */
     async setUrl(node) {
         this.resolver.setBaseUrl(node.getAttribute('href'));
         node.removeAttribute('href');
     }
 
+    /**
+     * Rewrites node attributes (sanitize event handlers, resolve URLs, sanitize styles)
+     * @async
+     * @param {HTMLElement} node - The element whose attributes to rewrite
+     * @returns {Promise} Promise that resolves when all attributes are processed
+     */
     async rewriteAttributes(node) {
         const nodeAttributeArray = [...node.attributes];
         return Promise.allSettled(nodeAttributeArray.map(async (attr) => {

@@ -2,9 +2,18 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview File download utilities for fetching and tracking resource downloads.
+ * Provides progress tracking and status updates via RxJS subjects.
+ */
+
 import { Subject } from 'rxjs';
 import { arrayBufferToBase64, checkStatus, fullURL } from './utils';
 
+/**
+ * Download status enumeration
+ * @enum {string}
+ */
 const downloadStatus = {
     DOWNLOADING: 'downloading',
     DOWNLOADED: 'downloaded',
@@ -17,13 +26,48 @@ const initialBar = `<div class="file-download">
 <h3>Failed requests: <span id="failed-counter">0</span></h3>
 </div>`;
 
+/**
+ * Counter for successfully downloaded files
+ * @type {number}
+ */
 let downloadedCount = 0;
+
+/**
+ * Total number of files to download
+ * @type {number}
+ */
 let downloadCount = 0;
+
+/**
+ * Counter for failed downloads
+ * @type {number}
+ */
 let failedCount = 0;
+
+/**
+ * RxJS Subject for download state updates
+ * @type {Subject|null}
+ */
 let downloadState = null;
+
+/**
+ * DOM element where progress bar is rendered
+ * @type {HTMLElement|null}
+ */
 let componentTarget = null;
+
+/**
+ * Document fragment for progress bar
+ * @type {DocumentFragment|null}
+ */
 let fragment = null;
 
+/**
+ * Downloads a file from the given URL and converts it to base64 data URI
+ * @async
+ * @param {string} url - The URL of the file to download
+ * @returns {Promise<string>} Base64-encoded data URI or empty string on error
+ */
 async function downloadFile(url) {
     if (!url || (url || '').startsWith('data:')) {
         return url;
@@ -56,6 +100,12 @@ async function downloadFile(url) {
     return `${base64Flag}${arrayBufferToBase64(buff)}`
 }
 
+/**
+ * Fetches a URL and returns the response object
+ * @async
+ * @param {string} url - The URL to fetch
+ * @returns {Promise<Response|string>} Response object or empty string on error
+ */
 async function fetchURL(url) {
     const options = {
         method: 'GET',
@@ -75,6 +125,10 @@ async function fetchURL(url) {
     return '';
 }
 
+/**
+ * Updates the download status counters and notifies subscribers
+ * @param {string} status - The download status (DOWNLOADING, DOWNLOADED, or FAILED)
+ */
 function updateStatus(status) {
     switch (status) {
         case downloadStatus.DOWNLOADING: {
@@ -95,6 +149,10 @@ function updateStatus(status) {
     }
 }
 
+/**
+ * Renders the progress bar UI in the specified target element
+ * @param {HTMLElement} target - The DOM element to render the progress bar into
+ */
 function renderProgressBar(target) {
     downloadState = new Subject();
     componentTarget = target;
@@ -111,6 +169,9 @@ function renderProgressBar(target) {
     });
 }
 
+/**
+ * Removes the progress bar from the DOM and resets counters
+ */
 function destroyProgressBar() {
     downloadState.unsubscribe();
     const el = componentTarget.querySelector('.file-download');
@@ -120,6 +181,11 @@ function destroyProgressBar() {
     failedCount = 0;
 }
 
+/**
+ * Creates a document fragment from an HTML string
+ * @param {string} componentString - HTML string to convert to fragment
+ * @returns {DocumentFragment|undefined} Document fragment or undefined
+ */
 function createFragment(componentString) {
     if (componentTarget) {
         const range = document.createRange();

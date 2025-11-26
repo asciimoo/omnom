@@ -2,9 +2,22 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview CSS and HTML sanitization utilities.
+ * Sanitizes CSS rules, resolves URLs in stylesheets, and removes potentially harmful attributes.
+ */
+
 import { absoluteURL } from './utils';
 
+/**
+ * Sanitizes CSS and HTML content for safe snapshotting
+ * @class
+ */
 class Sanitizer {
+    /**
+     * Creates a Sanitizer instance
+     * @param {ResourceStorage} resources - Resource storage for managing downloaded assets
+     */
     constructor(resources) {
         this.resources = resources;
 

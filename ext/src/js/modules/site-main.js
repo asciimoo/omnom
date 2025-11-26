@@ -2,13 +2,25 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview Content script for site integration and communication.
+ * Handles message passing between the page and extension.
+ */
+
 import { getDomData } from "./get-dom-data";
 
+/**
+ * Map of message handlers for incoming messages
+ * @type {Map<string, Function>}
+ */
 const messageHandlers = new Map([
     ['ping', handlePingMessage],
     ['getDom', handleGetDomMessage]
 ]);
 
+/**
+ * Initializes communication channels with the extension
+ */
 function initComms() {
 
     // messages from background.js
@@ -42,6 +54,12 @@ function initComms() {
     });
 }
 
+/**
+ * Handles ping messages from the extension
+ * @async
+ * @param {Object} msg - The ping message
+ * @param {Object} commChan - The communication channel
+ */
 async function handlePingMessage(msg, commChan) {
     commChan.postMessage({type: 'pong'});
     if(chrome.runtime.lastError) {
@@ -49,6 +67,12 @@ async function handlePingMessage(msg, commChan) {
     }
 }
 
+/**
+ * Handles requests for DOM data from the extension
+ * @async
+ * @param {Object} msg - The DOM data request message
+ * @param {Object} commChan - The communication channel
+ */
 async function handleGetDomMessage(msg, commChan) {
     commChan.postMessage({
         type: 'domData',
@@ -61,6 +85,10 @@ async function handleGetDomMessage(msg, commChan) {
     }
 }
 
+/**
+ * Main entry point for site integration
+ * Initializes the communication system
+ */
 export default function () {
     initComms();
 

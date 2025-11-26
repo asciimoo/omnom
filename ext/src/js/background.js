@@ -2,22 +2,45 @@
 //
 // SPDX-License-Identifier: AGPLv3+
 
+/**
+ * @fileoverview Background script for the Omnom browser extension.
+ * Handles message passing between the extension, content scripts, and external sites.
+ */
+
 "use strict";
 
 import { getOmnomSettings } from './modules/utils';
 
+/**
+ * Pending settings object awaiting user confirmation
+ * @type {Object|null}
+ */
 let pending_settings = null;
 
+/**
+ * Map of message handlers for external site messages
+ * @type {Map<string, Function>}
+ */
 const siteMessageHandlers = new Map([
     ['ping', handlePing],
     ['set-settings', handleSetSettings],
 ]);
 
+/**
+ * Map of message handlers for content script messages
+ * @type {Map<string, Function>}
+ */
 const cjsMessageHandlers = new Map([
     ['accept-settings', handleAcceptSettings],
     ['reject-settings', handleRejectSettings],
 ]);
 
+/**
+ * Handles messages from external sites
+ * @param {Object} msg - The message object
+ * @param {Object} sender - The message sender
+ * @param {Function} send - Response callback function
+ */
 function siteMsgHandler(msg, sender, send) {
     const msgHandler = siteMessageHandlers.get(msg.action);
     if(msgHandler) {
@@ -27,6 +50,11 @@ function siteMsgHandler(msg, sender, send) {
     }
 }
 
+/**
+ * Handles messages from content scripts
+ * @param {Object} msg - The message object
+ * @param {Object} sender - The message sender
+ */
 function cjsMsgHandler(msg, sender) {
     const msgHandler = cjsMessageHandlers.get(msg.action);
     if(msgHandler) {
@@ -36,6 +64,12 @@ function cjsMsgHandler(msg, sender) {
     }
 }
 
+/**
+ * Handles ping messages from external sites to verify extension settings
+ * @param {Object} msg - The ping message
+ * @param {Object} sender - The message sender
+ * @param {Function} send - Response callback function
+ */
 function handlePing(msg, sender, send) {
     if(!sender.url.startsWith(msg.url)) {
         return;
@@ -53,6 +87,12 @@ function handlePing(msg, sender, send) {
     });
 }
 
+/**
+ * Handles requests to update extension settings
+ * @param {Object} msg - The settings message containing url and token
+ * @param {Object} sender - The message sender
+ * @param {Function} send - Response callback function
+ */
 function handleSetSettings(msg, sender, send) {
     msg['send'] = send;
     pending_settings = msg;
@@ -66,6 +106,11 @@ function handleSetSettings(msg, sender, send) {
         .catch(err => console.log("failed to receive msg from page:", err, msg, sender.tab));
 }
 
+/**
+ * Handles acceptance of pending settings changes
+ * @param {Object} msg - The acceptance message
+ * @param {Object} sender - The message sender
+ */
 function handleAcceptSettings(msg, sender) {
     if(!pending_settings) {
         return;
@@ -79,6 +124,11 @@ function handleAcceptSettings(msg, sender) {
     });
 }
 
+/**
+ * Handles rejection of pending settings changes
+ * @param {Object} msg - The rejection message
+ * @param {Object} sender - The message sender
+ */
 function handleRejectSettings(msg, sender) {
     if(!pending_settings) {
         return;
