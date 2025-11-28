@@ -12,10 +12,10 @@
     {{ else }}
         <h3>No snapshot found</h3>
         {{ if .AllowSnapshotCreation }}
+        <a href="{{ URLFor "Create bookmark form" }}?url={{ .URL }}">Create snapshot</a>
+        {{ else }}
         <h4>Server side snapshot creation is disabled</h4>
         <p>Create a snapshot with your extension by visiting <a href="{{ .URL }}">{{ Truncate .URL 100 }}</a></p>
-        {{ else }}
-        <a href="{{ URLFor "Create bookmark form" }}?url={{ .URL }}">Create snapshot</a>
         {{ end }}
     {{ end }}
     </div>

@@ -19,6 +19,7 @@ import (
 
 	"golang.org/x/net/html"
 
+	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
 	"github.com/asciimoo/omnom/storage"
 
@@ -408,8 +409,10 @@ func snapshotArchive(c *gin.Context) {
 		})
 		return
 	}
+	cfg, _ := c.Get("config")
 	render(c, http.StatusOK, "snapshot-archive", map[string]any{
-		"Snapshot": s,
-		"URL":      su,
+		"Snapshot":              s,
+		"URL":                   su,
+		"AllowSnapshotCreation": cfg.(*config.Config).App.CreateSnapshotFromWebapp,
 	})
 }
