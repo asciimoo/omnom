@@ -179,6 +179,7 @@ func createRenderer(tplFS fs.FS) multitemplate.Renderer {
 	addTemplate(r, tplFS, true, "my-bookmarks", "my_bookmarks.tpl")
 	addTemplate(r, tplFS, true, "profile", "profile.tpl")
 	addTemplate(r, tplFS, true, "snapshot-wrapper", "snapshot_wrapper.tpl")
+	addTemplate(r, tplFS, true, "snapshot-archive", "snapshot_archive.tpl")
 	addTemplate(r, tplFS, true, "snapshot-details", "snapshot_details.tpl")
 	addTemplate(r, tplFS, true, "view-bookmark", "view_bookmark.tpl")
 	addTemplate(r, tplFS, true, "edit-bookmark", "edit_bookmark.tpl")

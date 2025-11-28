@@ -205,6 +205,14 @@ func init() {
 			},
 		},
 		&Endpoint{
+			Name:         "Archive",
+			Path:         "/archive/*url",
+			Method:       GET,
+			AuthRequired: false,
+			Handler:      snapshotArchive,
+			Description:  "View snapshot as webarchive",
+		},
+		&Endpoint{
 			Name:         "User",
 			Path:         "/users/:username",
 			Method:       GET,

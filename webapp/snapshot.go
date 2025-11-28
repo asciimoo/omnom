@@ -377,3 +377,39 @@ func snapshotDetails(c *gin.Context) {
 		"Bookmark":      b,
 	})
 }
+
+func snapshotArchive(c *gin.Context) {
+	su := c.Param("url")
+	if strings.HasPrefix(su, "/") {
+		su = su[1:]
+	}
+	if su == "" {
+		c.Redirect(http.StatusFound, URLFor("Snapshots"))
+		return
+	}
+	q := c.Request.URL.RawQuery
+	if q != "" {
+		su += "?" + q
+	}
+	var uid uint
+	if u, ok := c.Get("user"); ok {
+		uid = u.(*model.User).ID
+	}
+	var s *model.Snapshot
+	err := model.DB.
+		Model(&model.Snapshot{}).
+		Joins("join bookmarks on bookmarks.id = snapshots.bookmark_id").
+		Where("bookmarks.user_id = ? or bookmarks.public = 1", uid).
+		Where("bookmarks.url = ?", su).
+		Order("bookmarks.id desc").First(&s).Error
+	if err != nil {
+		render(c, http.StatusOK, "snapshot-archive", map[string]any{
+			"URL": su,
+		})
+		return
+	}
+	render(c, http.StatusOK, "snapshot-archive", map[string]any{
+		"Snapshot": s,
+		"URL":      su,
+	})
+}
