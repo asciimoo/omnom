@@ -10,19 +10,19 @@
             <div class="field">
                 <label class="label">{{ .Tr.Msg "url" }}</label>
                 <div class="control">
-                    <input class="input" type="text" placeholder="URL" name="url">
+                    <input class="input" type="text" placeholder="URL" value="{{ .URL }}" name="url">
                 </div>
             </div>
             <div class="field">
                 <label class="label">{{ .Tr.Msg "title" }}</label>
                 <div class="control">
-                    <input class="input" type="text" placeholder="Title" name="title">
+                    <input class="input" type="text" placeholder="Title" value="{{ .Title }}" name="title">
                 </div>
             </div>
             <div class="field">
                 <label class="label">{{ .Tr.Msg "tags" }}</label>
                 <div class="control">
-                    <input class="input" type="text" placeholder="Tags" name="tags">
+                    <input class="input" type="text" placeholder="Tags" value="{{ .Tags }}" name="tags">
                 </div>
             </div>
             {{ block "collectionFilter" . }}{{ end }}

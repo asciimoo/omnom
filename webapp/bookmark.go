@@ -203,6 +203,9 @@ func createBookmarkForm(c *gin.Context) {
 	render(c, http.StatusOK, "create-bookmark", map[string]any{
 		"Collections":           cols,
 		"Submenu":               bookmarkSubmenu,
+		"URL":                   c.Query("url"),
+		"Title":                 c.Query("title"),
+		"Tags":                  c.Query("tags"),
 		"AllowSnapshotCreation": cfg.(*config.Config).App.CreateSnapshotFromWebapp,
 	})
 }
