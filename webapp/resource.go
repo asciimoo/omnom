@@ -5,10 +5,8 @@
 package webapp
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/asciimoo/omnom/model"
@@ -70,7 +68,7 @@ func addResource(c *gin.Context) {
 			})
 			return
 		}
-		resource, err := io.ReadAll(resourceFile)
+		key, err := storage.SaveResource("."+m.Extension, resourceFile)
 		if err != nil {
 			setNotification(c, nError, err.Error(), false)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -78,20 +76,9 @@ func addResource(c *gin.Context) {
 			})
 			return
 		}
-		if !bytes.Equal(resource, []byte("")) {
-			key := storage.Hash(resource) + "." + m.Extension
-			err = storage.SaveResource(key, resource)
-			if err != nil {
-				setNotification(c, nError, err.Error(), false)
-				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			size := storage.GetResourceSize(key)
-			s.Size += size
-			s.Resources = append(s.Resources, model.GetOrCreateResource(key, m.Mimetype, m.Filename, size))
-		}
+		size := storage.GetResourceSize(key)
+		s.Size += size
+		s.Resources = append(s.Resources, model.GetOrCreateResource(key, m.Mimetype, m.Filename, size))
 	}
 	model.DB.Save(s)
 	c.JSON(200, map[string]any{

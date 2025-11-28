@@ -278,10 +278,7 @@ func AddActivityPubFeedItem(cfg *config.Config, f *model.Feed, u *model.User, d 
 			oa, err := ap.FetchActor(d.Object.AttributedTo, userKey, pk)
 			if err == nil {
 				fi.OriginalAuthorName = oa.GetName()
-				err = oa.SaveFavicon()
-				if err == nil {
-					fi.Favicon = oa.GetFaviconPath()
-				}
+				fi.Favicon, _ = oa.SaveFavicon()
 			}
 		}
 	}
@@ -658,15 +655,11 @@ func saveResource(u string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(mts) < 1 {
-		return "", errors.New("failed to identify file extension")
+	ext := ".ext"
+	if len(mts) > 0 {
+		ext = mts[0]
 	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	key := storage.Hash(body) + mts[0]
-	err = storage.SaveResource(key, body)
+	key, err := storage.SaveResource(ext, resp.Body)
 	if err != nil {
 		return "", err
 	}

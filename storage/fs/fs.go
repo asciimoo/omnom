@@ -36,17 +36,35 @@ package fs
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
+	"fmt"
+	"hash"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/asciimoo/omnom/config"
+
+	"github.com/google/uuid"
 )
 
 // Storage implements filesystem-based storage for snapshots and resources.
 type Storage struct {
 	baseDir string
+}
+
+type hashReader struct {
+	r io.Reader
+	h hash.Hash
+}
+
+func (hr *hashReader) Read(b []byte) (int, error) {
+	n, err := hr.r.Read(b)
+	if hr.h != nil && n > 0 {
+		hr.h.Write(b[:n])
+	}
+	return n, err
 }
 
 // New creates a new filesystem storage backend.
@@ -140,17 +158,40 @@ func (s *Storage) SaveSnapshot(key string, snapshot []byte) error {
 
 // SaveResource saves a resource to disk with gzip compression.
 // Creates the necessary directory structure if it doesn't exist.
-func (s *Storage) SaveResource(key string, resource []byte) error {
-	path := s.getResourcePath(key)
-	err := mkdir(filepath.Dir(path))
+func (s *Storage) SaveResource(ext string, resource io.Reader) (string, error) {
+	tmpPath := s.getResourcePath(uuid.NewString())
+	err := mkdir(filepath.Dir(tmpPath))
 	if err != nil {
-		return err
+		return "", err
 	}
-	var b bytes.Buffer
-	w := gzip.NewWriter(&b)
-	_, _ = w.Write(resource)
-	w.Close()
-	return os.WriteFile(path, b.Bytes(), 0600)
+	f, err := os.Create(tmpPath)
+	if err != nil {
+		return "", err
+	}
+	hr := &hashReader{
+		r: resource,
+		h: sha256.New(),
+	}
+	w := gzip.NewWriter(f)
+	defer w.Close()
+	_, err = io.Copy(w, hr)
+	if err != nil {
+		// TODO remove empty folder(s) as well
+		os.Remove(tmpPath)
+		return "", err
+	}
+	path := s.getResourcePath(fmt.Sprintf("%x%s", hr.h.Sum(nil), ext))
+	err = mkdir(filepath.Dir(path))
+	if err != nil {
+		os.Remove(tmpPath)
+		return "", err
+	}
+	err = os.Rename(tmpPath, path)
+	if err != nil {
+		os.Remove(tmpPath)
+		return "", err
+	}
+	return path, err
 }
 
 func mkdir(dir string) error {

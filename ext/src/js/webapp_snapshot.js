@@ -29,6 +29,7 @@ async function createOmnomSnapshot() {
         'resources':  [],
         'text': data.text,
         'title': data.title,
+        'multimedia_count': doc.multimediaCount,
     };
     for(let res of doc.resources.getAll()) {
         res.content = Array.from(new Uint8Array(res.content));

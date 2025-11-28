@@ -9,9 +9,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"time"
+
+	"golang.org/x/net/html"
 
 	"github.com/asciimoo/omnom/config"
 	"github.com/asciimoo/omnom/model"
@@ -67,11 +71,12 @@ var bookmarkSubmenu = []struct {
 }
 
 type browserSnapshotResponse struct {
-	DOM       string `json:"dom"`
-	Favicon   string `json:"favicon"`
-	Title     string `json:"string"`
-	Text      string `json:"string"`
-	Resources []struct {
+	DOM             string `json:"dom"`
+	Favicon         string `json:"favicon"`
+	Title           string `json:"title"`
+	Text            string `json:"text"`
+	MultimediaCount int    `json:"multimedia_count"`
+	Resources       []struct {
 		Content   []byte `json:"content"`
 		Mimetype  string `json:"mimetype"`
 		Filename  string `json:"filename"`
@@ -246,7 +251,7 @@ func createBookmark(c *gin.Context) {
 		go apNotifyFollowers(c, b)
 	}
 	if bsCreated {
-		key, err := storeSnapshot([]byte(bs.DOM))
+		key, sRes, err := storeSnapshot([]byte(bs.DOM), bs.MultimediaCount > 0)
 		if err != nil {
 			setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
 			c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
@@ -260,12 +265,15 @@ func createBookmark(c *gin.Context) {
 			BookmarkID: b.ID,
 			Size:       storage.GetSnapshotSize(key),
 		}
+		for _, r := range sRes {
+			s.Resources = append(s.Resources, r)
+			s.Size += r.Size
+		}
 		for _, r := range bs.Resources {
 			if bytes.Equal(r.Content, []byte("")) {
 				continue
 			}
-			key := storage.Hash(r.Content) + "." + r.Extension
-			err = storage.SaveResource(key, r.Content)
+			key, err = storage.SaveResource("."+r.Extension, bytes.NewReader(r.Content))
 			if err != nil {
 				setNotification(c, nError, "Failed to create bookmark: "+err.Error(), true)
 				c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
@@ -374,7 +382,8 @@ func addBookmark(c *gin.Context) {
 	var sSize uint
 	var sKey = ""
 	if !bytes.Equal(snapshot, []byte("")) {
-		key, err := storeSnapshot(snapshot)
+		mc := c.PostForm("multimedia_count")
+		key, sRes, err := storeSnapshot(snapshot, mc != "" && mc != "0")
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to validate snapshot HTML")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -388,6 +397,10 @@ func addBookmark(c *gin.Context) {
 			Title:      c.PostForm("snapshot_title"),
 			BookmarkID: b.ID,
 			Size:       storage.GetSnapshotSize(key),
+		}
+		for _, r := range sRes {
+			s.Resources = append(s.Resources, r)
+			s.Size += r.Size
 		}
 		if err := model.DB.Save(s).Error; err != nil {
 			log.Error().Err(err).Msg("Failed to create snapshot DB entry")
@@ -611,22 +624,32 @@ func deleteTag(c *gin.Context) {
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
 
-func storeSnapshot(sb []byte) (string, error) {
+func storeSnapshot(sb []byte, hasMultimedia bool) (string, []*model.Resource, error) {
 	vr := validator.ValidateHTML(sb)
 	if vr.Error != nil {
-		return "", vr.Error
+		return "", nil, vr.Error
 	}
 
 	if vr.HasShadowDOM {
 		sb = append(sb, shadowDOMScript...)
 	}
 
-	key := storage.Hash(sb)
-	err := storage.SaveSnapshot(key, sb)
-	if err != nil {
-		return "", err
+	var rs []*model.Resource
+	var err error
+	if hasMultimedia {
+		var nsb []byte
+		nsb, rs, err = saveMultimedia(sb)
+		if len(rs) > 0 {
+			sb = nsb
+		}
 	}
-	return key, nil
+
+	key := storage.Hash(sb)
+	err = storage.SaveSnapshot(key, sb)
+	if err != nil {
+		return "", nil, err
+	}
+	return key, rs, nil
 }
 
 func pageInfo(c *gin.Context) {
@@ -647,4 +670,70 @@ func pageInfo(c *gin.Context) {
 		Tags:        tags,
 	}
 	c.IndentedJSON(http.StatusOK, ret)
+}
+
+func saveMultimedia(h []byte) ([]byte, []*model.Resource, error) {
+	r := bytes.NewReader(h)
+	d, err := html.Parse(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	rs := make([]*model.Resource, 0, 4)
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type != html.ElementNode {
+			return
+		}
+		switch n.Data {
+		case "video":
+		case "audio":
+		case "source":
+			for _, attr := range n.Attr {
+				if attr.Key == "src" {
+					u := attr.Val
+					c := &http.Client{Timeout: requestTimeout}
+					req, err := http.NewRequest("GET", u, nil)
+					if err != nil {
+						break
+					}
+					r, err := c.Do(req)
+					if err != nil {
+						break
+					}
+					defer r.Body.Close()
+					ext := ".ext"
+					exts, err := mime.ExtensionsByType(r.Header.Get("Content-Type"))
+					if err == nil && len(exts) > 0 {
+						ext = exts[0]
+					}
+					mimeType := "multimedia"
+					m, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+					if err != nil {
+						mimeType = m
+					}
+					key, err := storage.SaveResource(ext, r.Body)
+					if err != nil {
+						break
+					}
+					size := storage.GetResourceSize(key)
+					// TODO check error in GetOrCreateResource
+					rs = append(rs, model.GetOrCreateResource(key, mimeType, filepath.Base(u), size))
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+
+	f(d)
+	if len(rs) == 0 {
+		return nil, nil, nil
+	}
+	ret := bytes.NewBuffer(nil)
+	err = html.Render(ret, d)
+	if err != nil {
+		return nil, nil, err
+	}
+	return ret.Bytes(), rs, nil
 }

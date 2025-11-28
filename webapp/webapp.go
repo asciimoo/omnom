@@ -82,6 +82,7 @@ const (
 )
 
 var baseURL func(string) string
+var requestTimeout = 5 * time.Second
 
 // URLFor generates URLs for named routes.
 var URLFor func(string, ...string) string

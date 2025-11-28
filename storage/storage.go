@@ -54,7 +54,7 @@ type Storage interface {
 	GetSnapshot(string) io.ReadCloser
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
-	SaveResource(string, []byte) error
+	SaveResource(string, io.Reader) (string, error)
 	GetResource(string) io.ReadCloser
 	GetResourceSize(string) uint
 	GetResourceURL(string) string
@@ -148,15 +148,16 @@ func SaveSnapshot(key string, snapshot []byte) error {
 	return store.SaveSnapshot(key, snapshot)
 }
 
-// SaveResource stores a resource with the given key.
+// SaveResource stores a resource with the given file extension.
 // Resources are typically images, stylesheets, or other embedded assets.
 // The resource data is compressed before storage to save disk space.
+// Returns with the key required to access the resouce on success.
 // Returns ErrUninitialized if storage is not initialized, or an error if saving fails.
-func SaveResource(key string, resource []byte) error {
+func SaveResource(ext string, resource io.Reader) (string, error) {
 	if store == nil {
-		return ErrUninitialized
+		return "", ErrUninitialized
 	}
-	return store.SaveResource(key, resource)
+	return store.SaveResource(ext, resource)
 }
 
 // GetSnapshotSize returns the size in bytes of a stored snapshot.

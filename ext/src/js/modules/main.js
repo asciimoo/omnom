@@ -387,6 +387,7 @@ async function saveBookmark() {
     form.append('snapshot', snapshotBlob);
     form.append('snapshot_text', doc.text);
     form.append('snapshot_title', doc.title);
+    form.append('multimedia_count', doc.multimediaCount);
     form.set('favicon', snapshotData['favicon']);
     const requestBody = {
         method: 'POST',
