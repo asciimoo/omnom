@@ -80,11 +80,15 @@ Basic management actions are available using the command line tool (`go run omno
   create-config        create default configuration file
   create-token         create new login/addon token for a user
   create-user          create new user
+  diff-html            diff-html FILE1 FILE2
   generate-api-docs-md Generate Markdown API documentation
   help                 Help about any command
   listen               start server
   set-token            set new login/addon token for a user
+  show-unread          show unread details
   show-user            show user details
+  update-feeds         update RSS/Atom feeds
+  validate-html        validate-html FILE
   completion           Generate the autocompletion script for the specified shell
 ```
 
