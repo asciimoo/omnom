@@ -263,14 +263,28 @@ class Document {
     }
 
     /**
-     * Transforms audio and video elements, rewrite references to absolute URLs so the omnom server can download them
+     * Transforms audio, video and source elements, rewrite references to absolute URLs so the omnom server can download them
      * @async
-     * @param {HTMLImageElement} node - The video element to transform
+     * @param {HTMLImageElement} node - The audio/video/source element to transform
      */
     async transformMultimedia(node) {
         if (node.getAttribute('src') && !node.getAttribute('src').startsWith('data:')) {
             this.multimedia_count++;
             node.setAttribute('src', this.absoluteUrl(node.getAttribute('src')));
+        }
+        if (node.getAttribute('srcset')) {
+            if (node.getAttribute('src')) {
+                node.removeAttribute('srcset');
+            } else {
+                this.multimedia_count++;
+                let newParts = [];
+                for (let s of node.getAttribute('srcset').split(',')) {
+                    let srcParts = s.trim().split(' ');
+                    srcParts[0] = this.absoluteUrl(srcParts[0]);
+                    newParts.push(srcParts.join(' '));
+                }
+                node.setAttribute('srcset', newParts.join(', '));
+            }
         }
     }
 
