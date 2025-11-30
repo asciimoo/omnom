@@ -36,17 +36,35 @@ package fs
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
+	"fmt"
+	"hash"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/asciimoo/omnom/config"
+
+	"github.com/google/uuid"
 )
 
 // Storage implements filesystem-based storage for snapshots and resources.
 type Storage struct {
 	baseDir string
+}
+
+type hashReader struct {
+	r io.Reader
+	h hash.Hash
+}
+
+func (hr *hashReader) Read(b []byte) (int, error) {
+	n, err := hr.r.Read(b)
+	if hr.h != nil && n > 0 {
+		hr.h.Write(b[:n])
+	}
+	return n, err
 }
 
 // New creates a new filesystem storage backend.
@@ -106,6 +124,17 @@ func (s *Storage) GetResource(key string) io.ReadCloser {
 	return f
 }
 
+// GetStream retrieves a streamable content file by its key.
+// Returns nil if the resource doesn't exist or cannot be opened.
+func (s *Storage) GetStream(key string) io.ReadCloser {
+	path := s.getStreamPath(key)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	return f
+}
+
 // GetResourceSize returns the size in bytes of a stored resource file.
 // Returns 0 if the resource doesn't exist or an error occurs.
 func (s *Storage) GetResourceSize(key string) uint {
@@ -117,10 +146,27 @@ func (s *Storage) GetResourceSize(key string) uint {
 	return uint(fi.Size())
 }
 
+// GetStreamSize returns the size in bytes of a stored streamable file.
+// Returns 0 if the resource doesn't exist or an error occurs.
+func (s *Storage) GetStreamSize(key string) uint {
+	path := s.getStreamPath(key)
+	fi, err := os.Stat(path)
+	if err != nil {
+		return 0
+	}
+	return uint(fi.Size())
+}
+
 // GetResourceURL constructs the HTTP URL path for accessing a resource.
 // The URL path includes a two-character prefix directory for distribution.
 func (s *Storage) GetResourceURL(key string) string {
 	return filepath.Join("/static/data/resources/", getPrefix(key), key)
+}
+
+// GetStreamURL constructs the HTTP URL path for accessing a streamable content.
+// The URL path includes a two-character prefix directory for distribution.
+func (s *Storage) GetStreamURL(key string) string {
+	return filepath.Join("/static/data/streams/", getPrefix(key), key)
 }
 
 // SaveSnapshot saves a snapshot to disk with gzip compression.
@@ -140,17 +186,77 @@ func (s *Storage) SaveSnapshot(key string, snapshot []byte) error {
 
 // SaveResource saves a resource to disk with gzip compression.
 // Creates the necessary directory structure if it doesn't exist.
-func (s *Storage) SaveResource(key string, resource []byte) error {
-	path := s.getResourcePath(key)
-	err := mkdir(filepath.Dir(path))
+func (s *Storage) SaveResource(ext string, resource io.Reader) (string, error) {
+	tmpPath := s.getResourcePath(uuid.NewString())
+	err := mkdir(filepath.Dir(tmpPath))
 	if err != nil {
-		return err
+		return "", err
 	}
-	var b bytes.Buffer
-	w := gzip.NewWriter(&b)
-	_, _ = w.Write(resource)
-	w.Close()
-	return os.WriteFile(path, b.Bytes(), 0600)
+	f, err := os.Create(tmpPath)
+	if err != nil {
+		return "", err
+	}
+	hr := &hashReader{
+		r: resource,
+		h: sha256.New(),
+	}
+	w := gzip.NewWriter(f)
+	defer w.Close()
+	_, err = io.Copy(w, hr)
+	if err != nil {
+		// TODO remove empty folder(s) as well
+		os.Remove(tmpPath)
+		return "", err
+	}
+	path := s.getResourcePath(fmt.Sprintf("%x%s", hr.h.Sum(nil), ext))
+	err = mkdir(filepath.Dir(path))
+	if err != nil {
+		os.Remove(tmpPath)
+		return "", err
+	}
+	err = os.Rename(tmpPath, path)
+	if err != nil {
+		os.Remove(tmpPath)
+		return "", err
+	}
+	return filepath.Base(path), err
+}
+
+// SaveStream saves a streamable content to disk.
+// Creates the necessary directory structure if it doesn't exist.
+func (s *Storage) SaveStream(ext string, resource io.Reader) (string, error) {
+	// TODO refactor with SaveResource
+	tmpPath := s.getStreamPath(uuid.NewString())
+	err := mkdir(filepath.Dir(tmpPath))
+	if err != nil {
+		return "", err
+	}
+	f, err := os.Create(tmpPath)
+	if err != nil {
+		return "", err
+	}
+	hr := &hashReader{
+		r: resource,
+		h: sha256.New(),
+	}
+	_, err = io.Copy(f, hr)
+	if err != nil {
+		// TODO remove empty folder(s) as well
+		os.Remove(tmpPath)
+		return "", err
+	}
+	path := s.getStreamPath(fmt.Sprintf("%x%s", hr.h.Sum(nil), ext))
+	err = mkdir(filepath.Dir(path))
+	if err != nil {
+		os.Remove(tmpPath)
+		return "", err
+	}
+	err = os.Rename(tmpPath, path)
+	if err != nil {
+		os.Remove(tmpPath)
+		return "", err
+	}
+	return filepath.Base(path), err
 }
 
 func mkdir(dir string) error {
@@ -174,6 +280,14 @@ func (s *Storage) getResourcePath(key string) string {
 		key = ""
 	}
 	return filepath.Join(s.baseDir, "resources", getPrefix(key), key)
+}
+
+func (s *Storage) getStreamPath(key string) string {
+	key = filepath.Base(key)
+	if len(key) < 32 {
+		key = ""
+	}
+	return filepath.Join(s.baseDir, "streams", getPrefix(key), key)
 }
 
 func getPrefix(s string) string {

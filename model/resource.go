@@ -15,10 +15,10 @@ type Resource struct {
 }
 
 // GetOrCreateResource retrieves an existing resource or creates a new one.
-func GetOrCreateResource(key string, mimeType string, fname string, size uint) Resource {
-	var r Resource
+func GetOrCreateResource(key string, mimeType string, fname string, size uint) *Resource {
+	var r *Resource
 	if err := DB.Where("key = ?", key).First(&r).Error; err != nil {
-		r = Resource{
+		r = &Resource{
 			Key:              key,
 			MimeType:         mimeType,
 			OriginalFilename: fname,

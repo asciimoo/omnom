@@ -36,8 +36,9 @@ import (
 
 // Result contains HTML validation results.
 type Result struct {
-	Error        error
-	HasShadowDOM bool
+	Error         error
+	HasShadowDOM  bool
+	HasMultimedia bool
 }
 
 // ValidateHTML validates HTML content for security issues.
@@ -60,6 +61,9 @@ func ValidateHTML(h []byte) Result {
 			if bytes.Equal(tn, []byte("script")) {
 				ret.Error = errors.New("script tag found")
 				return ret
+			}
+			if bytes.Equal(tn, []byte("audio")) || bytes.Equal(tn, []byte("video")) || bytes.Equal(tn, []byte("source")) {
+				ret.HasMultimedia = true
 			}
 			if hasAttr {
 				for {

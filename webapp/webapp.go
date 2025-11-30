@@ -82,25 +82,24 @@ const (
 )
 
 var baseURL func(string) string
+var requestTimeout = 5 * time.Second
 
 // URLFor generates URLs for named routes.
 var URLFor func(string, ...string) string
 
 var tplFuncMap = template.FuncMap{
-	"HasPrefix":  strings.HasPrefix,
-	"ToHTML":     func(s string) template.HTML { return template.HTML(s) },         //nolint: gosec // HTML is well formed.
-	"ToAttr":     func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, //nolint: gosec // HTML is well formed.
-	"ToURL":      func(s string) template.URL { return template.URL(s) },           //nolint: gosec // HTML is well formed.
-	"ToDate":     func(t time.Time) string { return t.Format("2006-01-02") },
-	"ToDateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
-	"Replace":    strings.ReplaceAll,
-	"ToLower":    strings.ToLower,
-	"Capitalize": strings.Title,
-	"inc":        func(i uint) uint { return i + 1 },
-	"dec":        func(i uint) uint { return i - 1 },
-	"SnapshotURL": func(key string) string {
-		return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
-	},
+	"HasPrefix":   strings.HasPrefix,
+	"ToHTML":      func(s string) template.HTML { return template.HTML(s) },         //nolint: gosec // HTML is well formed.
+	"ToAttr":      func(s string) template.HTMLAttr { return template.HTMLAttr(s) }, //nolint: gosec // HTML is well formed.
+	"ToURL":       func(s string) template.URL { return template.URL(s) },           //nolint: gosec // HTML is well formed.
+	"ToDate":      func(t time.Time) string { return t.Format("2006-01-02") },
+	"ToDateTime":  func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+	"Replace":     strings.ReplaceAll,
+	"ToLower":     strings.ToLower,
+	"Capitalize":  strings.Title,
+	"inc":         func(i uint) uint { return i + 1 },
+	"dec":         func(i uint) uint { return i - 1 },
+	"SnapshotURL": getSnapshotURL,
 	"AddURLParam": addURLParam,
 	"Truncate":    truncate,
 	"KVData":      utils.KVData,
@@ -156,6 +155,14 @@ func truncate(s string, maxLen int) string {
 		return s[:maxLen] + "[..]"
 	}
 	return s
+}
+
+func getSnapshotURL(key string) string {
+	return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
+}
+
+func getResourceURL(key string) string {
+	return fmt.Sprintf("%s%s/%s", baseURL("/static/data/resources/"), key[:2], key)
 }
 
 func addTemplate(r multitemplate.DynamicRender, root fs.FS, hasBase bool, name, filename string) {
@@ -471,7 +478,9 @@ func staticFS(e *gin.Engine, prefix string, staticfs fs.FS, snapshotfs fs.FS) {
 			if strings.HasPrefix(name, "data/snapshots/") {
 				c.Header("Content-Type", "text/html; charset=utf-8")
 			}
-			c.Header("Content-Encoding", "gzip")
+			if !strings.HasPrefix(name, "data/streams/") {
+				c.Header("Content-Encoding", "gzip")
+			}
 		}
 		http.ServeContent(c.Writer, c.Request, name, info.ModTime(), seeker)
 	}

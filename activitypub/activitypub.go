@@ -365,43 +365,26 @@ func FetchActor(us string, keyID string, key *rsa.PrivateKey) (*Identity, error)
 }
 
 // SaveFavicon downloads and saves user favicon as a storage resource.
-func (i *Identity) SaveFavicon() error {
+func (i *Identity) SaveFavicon() (string, error) {
 	var uri string
 	if i.Icon != nil && i.Icon.Type == imageType {
 		uri = i.Icon.URL
 	} else if i.Image != nil {
 		uri = i.Image.URL
 	} else {
-		return nil
+		return "", nil
 	}
 	c := &http.Client{Timeout: apRequestTimeout}
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	r, err := c.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer r.Body.Close()
-	rb, err := io.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-	key := i.GetFaviconPath()
-	return storage.SaveResource(key, rb)
-}
-
-// GetFaviconPath returns the storage path for the actor's favicon.
-// The path is based on a hash of the actor ID plus the file extension.
-func (i *Identity) GetFaviconPath() string {
-	var uri string
-	if i.Icon != nil && i.Icon.Type == imageType {
-		uri = i.Icon.URL
-	} else if i.Image != nil {
-		uri = i.Image.URL
-	}
-	return storage.Hash([]byte(i.ID)) + utils.GetExtension(uri)
+	return storage.SaveResource(utils.GetExtension(uri), r.Body)
 }
 
 // GetName returns the best available display name for the actor.

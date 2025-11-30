@@ -40,6 +40,7 @@ class Document {
         this.resolver = new UrlResolver(url);
         this.resources = new ResourceStorage();
         this.sanitizer = new Sanitizer(this.resources);
+        this.multimediaCount = 0;
         this.text = text;
         for (const k in htmlAttributes) {
             this.dom.setAttribute(k, htmlAttributes[k]);
@@ -50,6 +51,9 @@ class Document {
             ['LINK', this.transformLink],
             ['STYLE', this.transformStyle],
             ['IMG', this.transformImg],
+            ['AUDIO', this.transformMultimedia],
+            ['SOURCE', this.transformMultimedia],
+            ['VIDEO', this.transformMultimedia],
             ['IFRAME', this.transformIframe],
             ['BASE', this.setUrl]
         ]);
@@ -252,6 +256,32 @@ class Document {
                         srcParts[0] = res.src;
                         newParts.push(srcParts.join(' '));
                     }
+                }
+                node.setAttribute('srcset', newParts.join(', '));
+            }
+        }
+    }
+
+    /**
+     * Transforms audio, video and source elements, rewrite references to absolute URLs so the omnom server can download them
+     * @async
+     * @param {HTMLImageElement} node - The audio/video/source element to transform
+     */
+    async transformMultimedia(node) {
+        if (node.getAttribute('src') && !node.getAttribute('src').startsWith('data:')) {
+            this.multimedia_count++;
+            node.setAttribute('src', this.absoluteUrl(node.getAttribute('src')));
+        }
+        if (node.getAttribute('srcset')) {
+            if (node.getAttribute('src')) {
+                node.removeAttribute('srcset');
+            } else {
+                this.multimedia_count++;
+                let newParts = [];
+                for (let s of node.getAttribute('srcset').split(',')) {
+                    let srcParts = s.trim().split(' ');
+                    srcParts[0] = this.absoluteUrl(srcParts[0]);
+                    newParts.push(srcParts.join(' '));
                 }
                 node.setAttribute('srcset', newParts.join(', '));
             }
