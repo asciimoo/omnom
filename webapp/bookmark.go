@@ -33,6 +33,7 @@ import (
 const (
 	dateAsc  = "date_asc"
 	dateDesc = "date_desc"
+	srcset   = "srcset"
 )
 
 var snapshotJS string
@@ -638,7 +639,7 @@ func storeSnapshot(sb []byte) (string, []*model.Resource, error) {
 	var err error
 	if vr.HasMultimedia {
 		var nsb []byte
-		nsb, rs, err = saveMultimedia(sb)
+		nsb, rs, _ = saveMultimedia(sb)
 		if len(rs) > 0 {
 			sb = nsb
 		}
@@ -687,13 +688,13 @@ func saveMultimedia(h []byte) ([]byte, []*model.Resource, error) {
 			case "audio":
 			case "source":
 				for i, attr := range n.Attr {
-					if attr.Key == "src" || attr.Key == "srcset" {
+					if attr.Key == "src" || attr.Key == srcset {
 						u := attr.Val
-						if attr.Key == "srcset" {
+						if attr.Key == srcset {
 							// TODO proper srcset handling
 							u = strings.Split(strings.Split(u, " ")[0], ",")[0]
 						}
-						r, err := saveStream(attr.Val)
+						r, err := saveStream(u)
 						if err != nil {
 							continue
 						}

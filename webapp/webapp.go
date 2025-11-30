@@ -161,10 +161,6 @@ func getSnapshotURL(key string) string {
 	return fmt.Sprintf("%s%s/%s.gz", baseURL("/static/data/snapshots/"), key[:2], key)
 }
 
-func getResourceURL(key string) string {
-	return fmt.Sprintf("%s%s/%s", baseURL("/static/data/resources/"), key[:2], key)
-}
-
 func addTemplate(r multitemplate.DynamicRender, root fs.FS, hasBase bool, name, filename string) {
 	if hasBase {
 		r.AddFromFSFuncs(name, tplFuncMap, root, "layout/base.tpl", filename)

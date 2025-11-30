@@ -173,7 +173,7 @@ func SaveSnapshot(key string, snapshot []byte) error {
 // SaveResource stores a resource with the given file extension.
 // Resources are typically images, stylesheets, or other embedded assets.
 // The resource data is compressed before storage to save disk space.
-// Returns with the key required to access the resouce on success.
+// Returns with the key required to access the resource on success.
 // Returns ErrUninitialized if storage is not initialized, or an error if saving fails.
 func SaveResource(ext string, resource io.Reader) (string, error) {
 	if store == nil {
@@ -183,7 +183,7 @@ func SaveResource(ext string, resource io.Reader) (string, error) {
 }
 
 // SaveResource stores a streamable content with the given file extension.
-// Returns with the key required to access the resouce on success.
+// Returns with the key required to access the resource on success.
 // Returns ErrUninitialized if storage is not initialized, or an error if saving fails.
 func SaveStream(ext string, resource io.Reader) (string, error) {
 	if store == nil {
