@@ -55,9 +55,13 @@ type Storage interface {
 	GetSnapshotSize(string) uint
 	SaveSnapshot(string, []byte) error
 	SaveResource(string, io.Reader) (string, error)
+	SaveStream(string, io.Reader) (string, error)
 	GetResource(string) io.ReadCloser
+	GetStream(string) io.ReadCloser
 	GetResourceSize(string) uint
+	GetStreamSize(string) uint
 	GetResourceURL(string) string
+	GetStreamURL(string) string
 }
 
 // ErrUninitialized is returned when storage is accessed before initialization.
@@ -71,6 +75,9 @@ var ErrSnapshotNotFound = errors.New("snapshot not found")
 
 // ErrResourceNotFound is returned when a resource cannot be found.
 var ErrResourceNotFound = errors.New("resource not found")
+
+// ErrStreamNotFound is returned when a streamable content cannot be found.
+var ErrStreamNotFound = errors.New("streamable content not found")
 
 var store Storage
 
@@ -138,6 +145,21 @@ func GetResource(key string) (io.ReadCloser, error) {
 	return r, nil
 }
 
+// GetStream retrieves a streamable content by its key and returns a reader for its contents.
+// The returned reader must be closed by the caller when done.
+// Returns ErrUninitialized if storage is not initialized, or ErrStreamNotFound
+// if the resource doesn't exist.
+func GetStream(key string) (io.ReadCloser, error) {
+	if store == nil {
+		return nil, ErrUninitialized
+	}
+	r := store.GetStream(key)
+	if r == nil {
+		return nil, ErrStreamNotFound
+	}
+	return r, nil
+}
+
 // SaveSnapshot stores a snapshot with the given key.
 // The snapshot data is compressed before storage to save disk space.
 // Returns ErrUninitialized if storage is not initialized, or an error if saving fails.
@@ -160,6 +182,16 @@ func SaveResource(ext string, resource io.Reader) (string, error) {
 	return store.SaveResource(ext, resource)
 }
 
+// SaveResource stores a streamable content with the given file extension.
+// Returns with the key required to access the resouce on success.
+// Returns ErrUninitialized if storage is not initialized, or an error if saving fails.
+func SaveStream(ext string, resource io.Reader) (string, error) {
+	if store == nil {
+		return "", ErrUninitialized
+	}
+	return store.SaveStream(ext, resource)
+}
+
 // GetSnapshotSize returns the size in bytes of a stored snapshot.
 // Returns 0 if the snapshot doesn't exist.
 // Panics if storage has not been initialized.
@@ -180,6 +212,16 @@ func GetResourceSize(key string) uint {
 	return store.GetResourceSize(key)
 }
 
+// GetStreamSize returns the size in bytes of a stored streamable content.
+// Returns 0 if the resource doesn't exist.
+// Panics if storage has not been initialized.
+func GetStreamSize(key string) uint {
+	if store == nil {
+		panic("Uninitialized storage")
+	}
+	return store.GetStreamSize(key)
+}
+
 // GetResourceURL returns the URL path for accessing a resource via HTTP.
 // This is typically used to generate URLs for embedded images and assets in HTML.
 // Panics if storage has not been initialized.
@@ -188,6 +230,15 @@ func GetResourceURL(key string) string {
 		panic("Uninitialized storage")
 	}
 	return store.GetResourceURL(key)
+}
+
+// GetStreamURL returns the URL path for accessing a streamable content via HTTP.
+// Panics if storage has not been initialized.
+func GetStreamURL(key string) string {
+	if store == nil {
+		panic("Uninitialized storage")
+	}
+	return store.GetStreamURL(key)
 }
 
 // Hash computes a SHA256 hash of the given bytes and returns it as a hexadecimal string.

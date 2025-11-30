@@ -251,7 +251,7 @@ func createBookmark(c *gin.Context) {
 		go apNotifyFollowers(c, b)
 	}
 	if bsCreated {
-		key, sRes, err := storeSnapshot([]byte(bs.DOM), bs.MultimediaCount > 0)
+		key, sRes, err := storeSnapshot([]byte(bs.DOM))
 		if err != nil {
 			setNotification(c, nError, "Failed to create snapshot: "+err.Error(), true)
 			c.Redirect(http.StatusFound, URLFor("Create bookmark form"))
@@ -382,8 +382,7 @@ func addBookmark(c *gin.Context) {
 	var sSize uint
 	var sKey = ""
 	if !bytes.Equal(snapshot, []byte("")) {
-		mc := c.PostForm("multimedia_count")
-		key, sRes, err := storeSnapshot(snapshot, mc != "" && mc != "0")
+		key, sRes, err := storeSnapshot(snapshot)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to validate snapshot HTML")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -624,7 +623,7 @@ func deleteTag(c *gin.Context) {
 	c.Redirect(http.StatusFound, baseURL("/edit_bookmark?id="+bid))
 }
 
-func storeSnapshot(sb []byte, hasMultimedia bool) (string, []*model.Resource, error) {
+func storeSnapshot(sb []byte) (string, []*model.Resource, error) {
 	vr := validator.ValidateHTML(sb)
 	if vr.Error != nil {
 		return "", nil, vr.Error
@@ -636,7 +635,7 @@ func storeSnapshot(sb []byte, hasMultimedia bool) (string, []*model.Resource, er
 
 	var rs []*model.Resource
 	var err error
-	if hasMultimedia {
+	if vr.HasMultimedia {
 		var nsb []byte
 		nsb, rs, err = saveMultimedia(sb)
 		if len(rs) > 0 {
@@ -681,43 +680,45 @@ func saveMultimedia(h []byte) ([]byte, []*model.Resource, error) {
 	rs := make([]*model.Resource, 0, 4)
 	var f func(*html.Node)
 	f = func(n *html.Node) {
-		if n.Type != html.ElementNode {
-			return
-		}
-		switch n.Data {
-		case "video":
-		case "audio":
-		case "source":
-			for _, attr := range n.Attr {
-				if attr.Key == "src" {
-					u := attr.Val
-					c := &http.Client{Timeout: requestTimeout}
-					req, err := http.NewRequest("GET", u, nil)
-					if err != nil {
-						break
+		if n.Type == html.ElementNode {
+			switch n.Data {
+			case "video":
+			case "audio":
+			case "source":
+				// TODO handle srcsets
+				for i, attr := range n.Attr {
+					if attr.Key == "src" {
+						u := attr.Val
+						c := &http.Client{Timeout: requestTimeout}
+						req, err := http.NewRequest("GET", u, nil)
+						if err != nil {
+							break
+						}
+						r, err := c.Do(req)
+						if err != nil {
+							break
+						}
+						defer r.Body.Close()
+						ext := ".ext"
+						exts, err := mime.ExtensionsByType(r.Header.Get("Content-Type"))
+						if err == nil && len(exts) > 0 {
+							ext = exts[0]
+						}
+						mimeType := "multimedia"
+						m, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+						if err != nil {
+							mimeType = m
+						}
+						fmt.Println(mimeType, r.Header.Get("Content-Type"), exts)
+						key, err := storage.SaveStream(ext, r.Body)
+						if err != nil {
+							break
+						}
+						size := storage.GetStreamSize(key)
+						n.Attr[i].Val = baseURL(storage.GetStreamURL(key))
+						// TODO check error in GetOrCreateResource
+						rs = append(rs, model.GetOrCreateResource(key, mimeType, filepath.Base(u), size))
 					}
-					r, err := c.Do(req)
-					if err != nil {
-						break
-					}
-					defer r.Body.Close()
-					ext := ".ext"
-					exts, err := mime.ExtensionsByType(r.Header.Get("Content-Type"))
-					if err == nil && len(exts) > 0 {
-						ext = exts[0]
-					}
-					mimeType := "multimedia"
-					m, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-					if err != nil {
-						mimeType = m
-					}
-					key, err := storage.SaveResource(ext, r.Body)
-					if err != nil {
-						break
-					}
-					size := storage.GetResourceSize(key)
-					// TODO check error in GetOrCreateResource
-					rs = append(rs, model.GetOrCreateResource(key, mimeType, filepath.Base(u), size))
 				}
 			}
 		}
@@ -728,7 +729,7 @@ func saveMultimedia(h []byte) ([]byte, []*model.Resource, error) {
 
 	f(d)
 	if len(rs) == 0 {
-		return nil, nil, nil
+		return h, nil, nil
 	}
 	ret := bytes.NewBuffer(nil)
 	err = html.Render(ret, d)
