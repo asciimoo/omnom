@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"golang.org/x/net/html"
@@ -685,39 +686,20 @@ func saveMultimedia(h []byte) ([]byte, []*model.Resource, error) {
 			case "video":
 			case "audio":
 			case "source":
-				// TODO handle srcsets
 				for i, attr := range n.Attr {
-					if attr.Key == "src" {
+					if attr.Key == "src" || attr.Key == "srcset" {
 						u := attr.Val
-						c := &http.Client{Timeout: requestTimeout}
-						req, err := http.NewRequest("GET", u, nil)
+						if attr.Key == "srcset" {
+							// TODO proper srcset handling
+							u = strings.Split(strings.Split(u, " ")[0], ",")[0]
+						}
+						r, err := saveStream(attr.Val)
 						if err != nil {
-							break
+							continue
 						}
-						r, err := c.Do(req)
-						if err != nil {
-							break
-						}
-						defer r.Body.Close()
-						ext := ".ext"
-						exts, err := mime.ExtensionsByType(r.Header.Get("Content-Type"))
-						if err == nil && len(exts) > 0 {
-							ext = exts[0]
-						}
-						mimeType := "multimedia"
-						m, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-						if err != nil {
-							mimeType = m
-						}
-						fmt.Println(mimeType, r.Header.Get("Content-Type"), exts)
-						key, err := storage.SaveStream(ext, r.Body)
-						if err != nil {
-							break
-						}
-						size := storage.GetStreamSize(key)
-						n.Attr[i].Val = baseURL(storage.GetStreamURL(key))
+						n.Attr[i].Val = baseURL(storage.GetStreamURL(r.Key))
 						// TODO check error in GetOrCreateResource
-						rs = append(rs, model.GetOrCreateResource(key, mimeType, filepath.Base(u), size))
+						rs = append(rs, r)
 					}
 				}
 			}
@@ -737,4 +719,32 @@ func saveMultimedia(h []byte) ([]byte, []*model.Resource, error) {
 		return nil, nil, err
 	}
 	return ret.Bytes(), rs, nil
+}
+
+func saveStream(u string) (*model.Resource, error) {
+	c := &http.Client{Timeout: requestTimeout}
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	r, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+	ext := ".ext"
+	exts, err := mime.ExtensionsByType(r.Header.Get("Content-Type"))
+	if err == nil && len(exts) > 0 {
+		ext = exts[0]
+	}
+	mimeType := "multimedia"
+	m, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil {
+		mimeType = m
+	}
+	key, err := storage.SaveStream(ext, r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return model.GetOrCreateResource(key, mimeType, filepath.Base(u), storage.GetStreamSize(key)), nil
 }
