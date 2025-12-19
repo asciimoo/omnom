@@ -154,6 +154,7 @@ var listenCmd = &cobra.Command{
 	PreRun: initDB,
 	Run: func(cmd *cobra.Command, _ []string) {
 		setStrArg(cmd, "address", &cfg.Server.Address)
+		setStrArg(cmd, "base-url", &cfg.Server.BaseURL)
 		setUintArg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
 		setIntArg(cmd, "webapp-snapshotter-timeout", &cfg.App.WebappSnapshotterTimeout)
 		setBoolArg(cmd, "create-snapshot-from-webapp", &cfg.App.CreateSnapshotFromWebapp)
@@ -503,6 +504,7 @@ func init() {
 
 	dcfg := config.CreateDefaultConfig()
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
+	listenCmd.Flags().StringP("base-url", "b", dcfg.Server.BaseURL, "Base URL")
 	listenCmd.Flags().String("data-directory", "./static/data", "Data directory location to store snapshots and resources using file system storage")
 	listenCmd.Flags().Uint("results-per-page", dcfg.App.ResultsPerPage, "Number of bookmarks/snapshots per page")
 	//nolint: gosec // conversion is safe. TODO use uint by default
