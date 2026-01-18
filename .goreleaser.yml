@@ -1,8 +1,46 @@
 version: 2
 
 builds:
-  - ignore:
-      - goarch: 386
+  - id: build_cgo
+    binary: omnom
+    env:
+    - CGO_ENABLED=1
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -tags=netgo,osusergo
+    ignore:
+      - goos: windows
+        goarch: arm64
+    overrides:
+      - goos: windows
+        goarch: amd64
+        env:
+          - CC=x86_64-w64-mingw32-gcc
+          - CGO_LDFLAGS=-lssp -static
+      - goos: linux
+        goarch: amd64
+        env:
+          - CC=x86_64-linux-gnu-gcc
+          - CGO_LDFLAGS=-static
+      - goos: linux
+        goarch: arm64
+        env:
+          - CC=aarch64-linux-gnu-gcc
+          - CGO_LDFLAGS=-static
+      - goos: darwin
+        goarch: amd64
+        env:
+          - CC=o64-clang
+      - goos: darwin
+        goarch: arm64
+        env:
+          - CC=oa64-clang
 
 archives:
   - formats: ["binary"]
