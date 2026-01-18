@@ -23,6 +23,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
 
+        # Mark the checkout as 'safe' despite being owned by `root`
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: git config --global --add safe.directory "$(pwd)"
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@master
         with:
