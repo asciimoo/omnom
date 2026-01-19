@@ -37,7 +37,7 @@ Omnom browser addon is available for
 
 ## Installation
 
-Single file binary release is available [here](https://github.com/asciimoo/omnom/releases/latest).
+Single file binary release is available [here](https://github.com/asciimoo/omnom/releases/latest). (Don't forget to `chmod +x`)
 
 Docker image is also available available, more details [here](https://github.com/asciimoo/omnom/wiki/Docker).
 
