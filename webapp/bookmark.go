@@ -659,16 +659,20 @@ func pageInfo(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, nil)
 		return
 	}
-	tags, err := model.GetUserTagsFromText(c.PostForm("text"), u.ID)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to query user tags")
-	}
 	ret := struct {
 		Collections []*model.Collection `json:"collections"`
 		Tags        []*model.Tag        `json:"tags"`
 	}{
 		Collections: model.GetCollections(u.ID),
-		Tags:        tags,
+	}
+	cfg, _ := c.Get("config")
+	if !cfg.(*config.Config).App.DisableTagSuggestions {
+		tags, err := model.GetUserTagsFromText(c.PostForm("text"), u.ID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to query user tags")
+		} else {
+			ret.Tags = tags
+		}
 	}
 	c.IndentedJSON(http.StatusOK, ret)
 }

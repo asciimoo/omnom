@@ -69,6 +69,7 @@ type App struct {
 	CreateSnapshotFromWebapp bool   `yaml:"create_snapshot_from_webapp"`
 	WebappSnapshotterTimeout int    `yaml:"webapp_snapshotter_timeout"`
 	DebugSQL                 bool   `yaml:"debug_sql"`
+	DisableTagSuggestions    bool   `yaml:"disable_tag_suggestions"`
 }
 
 // Server holds server configuration.
