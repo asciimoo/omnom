@@ -70,7 +70,7 @@ type Outbox struct {
 
 // OutboxItem represents a single activity in an outbox.
 type OutboxItem struct {
-	Context   string       `json:"@context"`
+	Context   any          `json:"@context"`
 	ID        string       `json:"id"`
 	Type      string       `json:"type"`
 	Actor     string       `json:"actor"`
@@ -95,6 +95,14 @@ type OutboxObject struct {
 	Published    string            `json:"published"`
 	Tag          []Tag             `json:"tag"`
 	Replies      map[string]string `json:"replies"`
+	Name         string            `json:"name"`
+	Source       SourceObject      `json:"source"`
+	Attachments  []Attachment      `json:"attachment"`
+}
+
+type SourceObject struct {
+	Content   string `json:"content"`
+	MediaType string `json:"mediaType"`
 }
 
 // Tag represents a tag or mention in ActivityPub content.
@@ -208,9 +216,10 @@ type FollowResponseObject struct {
 // Attachment represents a media attachment in an ActivityPub post.
 type Attachment struct {
 	Type      string `json:"type"`
-	MediaType string `json:"mediaType"`
-	URL       string `json:"url"`
-	Name      string `json:"name"`
+	MediaType string `json:"mediaType,omitempty"`
+	URL       string `json:"url,omitempty"`
+	Href      string `json:"href,omitempty"`
+	Name      string `json:"name,omitempty"`
 }
 
 // https://docs.joinmastodon.org/spec/security/#ld
