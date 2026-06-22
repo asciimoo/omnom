@@ -95,10 +95,15 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.O
 		body = fmt.Sprintf("<p>%s</p>", truncate(b.Notes, 350-len(title)))
 	}
 	item := &ap.OutboxItem{
-		Context: "https://www.w3.org/ns/activitystreams",
-		ID:      id + "#activity",
-		Type:    createAction,
-		Actor:   actor,
+		Context: []any{
+			"https://www.w3.org/ns/activitystreams",
+			map[string]string{
+				"Hashtag": "https://www.w3.org/ns/activitystreams#Hashtag",
+			},
+		},
+		ID:    id + "#activity",
+		Type:  createAction,
+		Actor: actor,
 		To: []string{
 			"https://www.w3.org/ns/activitystreams#Public",
 		},
@@ -107,10 +112,10 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.O
 		Object: ap.OutboxObject{
 			ID:           id,
 			Type:         noteAction,
-			Summary:      "",
 			Content:      fmt.Sprintf(contentTpl, b.URL, title, body, id),
-			URL:          b.URL,
+			URL:          id,
 			URI:          b.URL,
+			Summary:      "",
 			AttributedTo: actor,
 			To: []string{
 				"https://www.w3.org/ns/activitystreams#Public",
@@ -119,6 +124,17 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.O
 			Published: published,
 			Tag:       make([]ap.Tag, len(b.Tags)),
 			Replies:   map[string]string{},
+			Name:      b.Title,
+			Source: ap.SourceObject{
+				Content:   b.Notes,
+				MediaType: "text/plain",
+			},
+			Attachments: []ap.Attachment{
+				{
+					Type: "Link",
+					Href: b.URL,
+				},
+			},
 		},
 	}
 	for i, t := range b.Tags {
@@ -126,7 +142,7 @@ func apCreateBookmarkItem(c *gin.Context, b *model.Bookmark, actor string) *ap.O
 		item.Object.Tag[i] = ap.Tag{
 			Type: "Hashtag",
 			Href: tagBase + t.Text,
-			Name: t.Text,
+			Name: "#" + t.Text,
 		}
 	}
 	return item
