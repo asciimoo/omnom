@@ -30,8 +30,10 @@
 package config
 
 import (
+	"crypto/hkdf"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -78,6 +80,17 @@ type Server struct {
 	BaseURL          string `yaml:"base_url"`
 	SecureCookie     bool   `yaml:"secure_cookie"`
 	RemoteUserHeader string `yaml:"remote_user_header"`
+}
+
+// SessionSigningKey derives a cookie signing key from the initialized private key.
+// The HKDF context separates session signing from other uses of the key. Encoding
+// the parsed key as DER keeps sessions valid when only PEM formatting changes.
+func (c *Config) SessionSigningKey() ([]byte, error) {
+	if c.ActivityPub == nil || c.ActivityPub.PrivK == nil {
+		return nil, errors.New("ActivityPub private key must be initialized before deriving the session signing key")
+	}
+	privateKey := x509.MarshalPKCS1PrivateKey(c.ActivityPub.PrivK)
+	return hkdf.Key(sha256.New, privateKey, nil, "omnom/session-signing/v1", 32)
 }
 
 // DB holds database configuration.

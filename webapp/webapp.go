@@ -387,9 +387,13 @@ func resolveDynamicPath(p string, v []string) string {
 	return strings.Join(pParts[:maxParts], "/")
 }
 
-func createEngine(cfg *config.Config) *gin.Engine {
+func createEngine(cfg *config.Config) (*gin.Engine, error) {
+	key, err := cfg.SessionSigningKey()
+	if err != nil {
+		return nil, err
+	}
 	e := gin.Default()
-	store := cookie.NewStore([]byte("secret"))
+	store := cookie.NewStore(key)
 	store.Options(sessions.Options{
 		Secure: cfg.Server.SecureCookie,
 	})
@@ -431,7 +435,7 @@ func createEngine(cfg *config.Config) *gin.Engine {
 	}
 	e.NoRoute(notFoundView)
 	e.HTMLRender = createRenderer(templates.FS)
-	return e
+	return e, nil
 }
 
 func openStaticFS(name string, staticfs fs.FS, snapshotfs fs.FS) (fs.File, bool, error) {
@@ -486,15 +490,15 @@ func staticFS(e *gin.Engine, prefix string, staticfs fs.FS, snapshotfs fs.FS) {
 }
 
 // Run starts the web application server.
-func Run(cfg *config.Config) {
+func Run(cfg *config.Config) error {
 	gin.SetMode(gin.ReleaseMode)
 
-	engine := createEngine(cfg)
-	log.Info().Str("Address", cfg.Server.Address).Str("URL", cfg.BaseURL("/")).Msg("Starting server")
-	err := engine.Run(cfg.Server.Address)
+	engine, err := createEngine(cfg)
 	if err != nil {
-		log.Error().Err(err).Msg("Cannot start server")
+		return err
 	}
+	log.Info().Str("Address", cfg.Server.Address).Str("URL", cfg.BaseURL("/")).Msg("Starting server")
+	return engine.Run(cfg.Server.Address)
 }
 
 func notFoundView(c *gin.Context) {

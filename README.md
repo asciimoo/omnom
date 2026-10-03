@@ -60,6 +60,17 @@ Settings can be configured in `config.yml` config file - don't forget to restart
 
 Execute `./omnom create-config config.yml` to generate a configuration file with the default configuration values.
 
+Session cookies are signed with a key derived using HKDF-SHA256 from the configured
+ActivityPub private key (`activitypub.privkey`, default `./private.pem`). No separate
+session secret is needed. Omnom generates the key pair on first startup. Keep the
+private key protected and persistent across restarts; Docker deployments should
+persist `/omnom/config`, which contains the key pair by default.
+
+Upgrading from the old shared cookie signing key signs all users out once.
+Replacing the private key also invalidates login sessions and changes the
+ActivityPub identity key. Replicas of one deployment must use the same private key
+to accept each other's session cookies.
+
 
 ## User handling
 

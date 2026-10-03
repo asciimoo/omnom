@@ -37,6 +37,7 @@ smtp:
   connection_timeout: 5 # seconds
 activitypub:
   # Note: Omnom going to generate these keys in case files can't be opened
+  # The private key also derives the session signing key. Keep it private and persistent.
   pubkey: "./public.pem"
   privkey: "./private.pem"
 oauth:

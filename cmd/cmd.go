@@ -152,7 +152,7 @@ var listenCmd = &cobra.Command{
 	Short:  "start server",
 	Long:   ``,
 	PreRun: initDB,
-	Run: func(cmd *cobra.Command, _ []string) {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		setStrArg(cmd, "address", &cfg.Server.Address)
 		setStrArg(cmd, "base-url", &cfg.Server.BaseURL)
 		setUintArg(cmd, "results-per-page", &cfg.App.ResultsPerPage)
@@ -187,7 +187,7 @@ var listenCmd = &cobra.Command{
 			exit(1, "Failed to initialize ActivityPub keys: "+err.Error())
 		}
 		go feed.UpdateLoop()
-		webapp.Run(cfg)
+		return webapp.Run(cfg)
 	},
 }
 

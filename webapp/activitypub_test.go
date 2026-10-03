@@ -67,7 +67,11 @@ func initTestApp() *gin.Engine {
 	if err != nil {
 		panic(err)
 	}
-	return createEngine(testCfg)
+	router, err := createEngine(testCfg)
+	if err != nil {
+		panic(err)
+	}
+	return router
 }
 
 func TestAPIdentity(t *testing.T) {
