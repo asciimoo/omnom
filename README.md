@@ -27,6 +27,14 @@ Check out our [wiki](https://github.com/asciimoo/omnom/wiki) for more informatio
  - Flexible filtering - by date, free text search in content, tags, users, domains, URLs, etc..
  - [Documented API](https://github.com/asciimoo/omnom/wiki/API-documentation)
 
+## Why Omnom?
+
+The web changes. Pages disappear, content gets rewritten, and bookmarks only save a link.
+
+Omnom preserves what you actually saw — capturing rendered pages, resources, and snapshots so you can revisit, search, and compare them later.
+
+
+
 
 ## Browser addon
 
